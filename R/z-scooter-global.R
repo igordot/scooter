@@ -31,4 +31,3 @@
 # https://stackoverflow.com/questions/28246952/global-variable-in-a-package-which-approach-is-more-recommended
 # https://github.com/tidyverse/ggplot2/blob/1c09bae2aa24320bcb4891c664cccc16efc86a8a/R/zzz.r
 
-# should try panglaodb + xcell
