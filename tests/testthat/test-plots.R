@@ -11,16 +11,16 @@ test_that("color scheme", {
   expect_gt(length(colors), 10)
 })
 
-test_that("tSNE point size", {
-  point_size <- get_tsne_point_size(num_cells = 10)
+test_that("dimensionality reduction plot point size", {
+  point_size <- get_dr_point_size(num_cells = 10)
   expect_type(point_size, "double")
   expect_gt(point_size, 0)
   expect_lt(point_size, 10)
-  point_size <- get_tsne_point_size(num_cells = 1000)
+  point_size <- get_dr_point_size(num_cells = 1000)
   expect_type(point_size, "double")
   expect_gt(point_size, 0)
   expect_lt(point_size, 10)
-  point_size <- get_tsne_point_size(num_cells = 100000)
+  point_size <- get_dr_point_size(num_cells = 100000)
   expect_type(point_size, "double")
   expect_gt(point_size, 0)
   expect_lt(point_size, 10)

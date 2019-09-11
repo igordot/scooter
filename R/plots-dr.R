@@ -27,7 +27,7 @@ get_color_scheme <- function(type = "clusters") {
 get_dr_point_size <- function(num_cells) {
 
   pt_size <- 1.8
-  if (num_cells) > 1000) pt_size <- 1.2
+  if (num_cells > 1000) pt_size <- 1.2
   if (num_cells > 5000) pt_size <- 1.0
   if (num_cells > 10000) pt_size <- 0.8
   if (num_cells > 25000) pt_size <- 0.6

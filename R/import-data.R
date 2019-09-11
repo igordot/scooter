@@ -8,12 +8,9 @@
 #'
 #' @return Seurat object.
 #'
-#' @examples
-#' create_seurat_obj(counts_matrix = counts_matrix)
-#'
 #' @import Matrix dplyr readr tibble
 #' @importFrom glue glue
-#' @importFrom Seurat CreateSeuratObject AddMetaData GenePlot
+#' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
 create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, out_dir = ".", color_scheme = NULL) {
 
@@ -44,17 +41,13 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
   write_csv(raw_data, path = "counts.raw.csv.gz")
 
   s_obj <- CreateSeuratObject(
-    raw.data = counts_matrix,
-    min.cells = min_cells, min.genes = min_genes, project = "proj",
-    names.field = 1, names.delim = ":"
+    counts = counts_matrix,
+    min.cells = min_cells,
+    min.features = min_genes,
+    project = "proj",
+    names.field = 1,
+    names.delim = ":"
   )
-
-  message(glue("usable cells: {ncol(s_obj@data)}"))
-  message(glue("usable genes: {nrow(s_obj@data)}"))
-
-  # log to file
-  write(glue("usable cells: {ncol(s_obj@data)}"), file = "create.log", append = TRUE)
-  write(glue("usable genes: {nrow(s_obj@data)}"), file = "create.log", append = TRUE)
 
   # nGene and nUMI are automatically calculated for every object by Seurat
   # calculate the percentage of mitochondrial genes here and store it in percent.mito using the AddMetaData
@@ -77,11 +70,11 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
   )
 
   # check for high mitochondrial percentage or low UMI content
-  png("qc.correlations.unfiltered.png", res = 200, width = 10, height = 5, units = "in")
-  par(mfrow = c(1, 2))
-  GenePlot(s_obj, gene1 = "nUMI", gene2 = "percent.mito", cex.use = 0.5, col.use = color_scheme)
-  GenePlot(s_obj, gene1 = "nUMI", gene2 = "nGene", cex.use = 0.5, col.use = color_scheme)
-  dev.off()
+  # png("qc.correlations.unfiltered.png", res = 200, width = 10, height = 5, units = "in")
+  # par(mfrow = c(1, 2))
+  # GenePlot(s_obj, gene1 = "nUMI", gene2 = "percent.mito", cex.use = 0.5, col.use = color_scheme)
+  # GenePlot(s_obj, gene1 = "nUMI", gene2 = "nGene", cex.use = 0.5, col.use = color_scheme)
+  # dev.off()
 
   # check distribution of gene counts and mitochondrial percentage
   # low_quantiles <- c(0.05, 0.02, 0.01, 0.001)
@@ -98,3 +91,4 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
 
   return(s_obj)
 }
+

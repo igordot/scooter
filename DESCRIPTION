@@ -1,7 +1,9 @@
 Package: scooter
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Authors@R: c(
+    person("Igor", "Dolgalev", email = "igor.dolgalev@nyumc.org", role = c("cre", "aut")), 
+    person("Anna", "Yeaton", email = "ahyeaton@gmail.com", role = "aut"))
 Description: What the package does (one paragraph).
 License: MIT
 Encoding: UTF-8

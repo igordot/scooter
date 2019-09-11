@@ -7,9 +7,6 @@
 #'
 #' @return A vector of colors.
 #'
-#' @examples
-#' plot_distribution(so, features, grouping)
-#'
 #' @import ggplot2
 #' @export
 plot_distribution <- function(so, features, grouping, filename, color_scheme = NULL, width = NA, height = NA) {

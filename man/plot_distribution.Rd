@@ -22,7 +22,3 @@ A vector of colors.
 \description{
 Plot the distribution of specified features/variables.
 }
-\examples{
-plot_distribution(so, features, grouping)
-
-}

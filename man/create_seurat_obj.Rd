@@ -24,7 +24,3 @@ Seurat object.
 \description{
 Create a new Seurat object from a matrix.
 }
-\examples{
-create_seurat_obj(counts_matrix = counts_matrix)
-
-}
