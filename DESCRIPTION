@@ -12,5 +12,17 @@ Suggests:
 Imports: 
     rlang (>= 0.1.2),
     magrittr,
-    tibble
-RoxygenNote: 6.1.0
+    tibble,
+    readr,
+    dplyr,
+    tidyr,
+    stringr,
+    glue,
+    ggplot2 (>= 3.0.0),
+    cowplot,
+    RColorBrewer,
+    ggsci,
+    Matrix,
+    Seurat (>= 2.3.1),
+    SingleCellExperiment
+RoxygenNote: 6.1.1

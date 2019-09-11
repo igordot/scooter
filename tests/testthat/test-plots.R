@@ -1,0 +1,27 @@
+context("test plotting-related functions")
+
+test_that("color scheme", {
+  colors <- get_color_scheme()
+  # colors <- getOption("scooter.colors_samples")
+  expect_type(colors, "character")
+  expect_gt(length(colors), 50)
+  colors <- get_color_scheme(type = "samples")
+  # colors <- getOption("scooter.colors_clusters")
+  expect_type(colors, "character")
+  expect_gt(length(colors), 10)
+})
+
+test_that("tSNE point size", {
+  point_size <- get_tsne_point_size(num_cells = 10)
+  expect_type(point_size, "double")
+  expect_gt(point_size, 0)
+  expect_lt(point_size, 10)
+  point_size <- get_tsne_point_size(num_cells = 1000)
+  expect_type(point_size, "double")
+  expect_gt(point_size, 0)
+  expect_lt(point_size, 10)
+  point_size <- get_tsne_point_size(num_cells = 100000)
+  expect_type(point_size, "double")
+  expect_gt(point_size, 0)
+  expect_lt(point_size, 10)
+})
