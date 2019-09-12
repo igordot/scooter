@@ -92,3 +92,116 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
   return(s_obj)
 }
 
+#' Reads in count data from 10x from one path or multiple paths.
+#'
+#' @param sample_names A character vector of sample names.
+#' @param data_path A character vector of paths to each sample /<data_path>/outs.
+#' @param log_file A log filename.
+#'
+#' @return Counts matrix from 10x, merged from several samples or from one.
+#'
+#' @import dplyr
+#' @importFrom glue glue
+#' @importFrom Seurat Read10X
+#' @export
+load_sample_counts_matrix = function(sample_names, data_path, log_file) {
+  # Reads in count data from 10x from one path or multiple paths
+  # FROM IGOR DOLGALEV
+  # Args:
+  #   sample_names: Names to set each sample
+  #   data_path: Paths to each sample /data_path/outs
+  #   log_file: Name of log_file
+  #
+  # Returns:
+  #   Counts matrix from 10x, merged from several samples or from one
+
+  message_str <- "\n\n ========== import cell ranger counts matrix ========== \n\n"
+  write_message(message_str, log_file)
+
+  counts_matrix_total = NULL
+
+  for (i in 1:length(data_path)) {
+
+    sample_name = sample_names[i]
+
+    message_str <- glue("loading counts matrix for sample: {sample_name}")
+    write_message(message_str, log_file)
+
+
+    # check if sample dir is valid
+    if (!dir.exists(data_path)) stop(glue("dir {data_path} does not exist"))
+
+    # determine counts matrix directory (HDF5 is not the preferred option)
+    # "filtered_gene_bc_matrices" for single library
+    # "filtered_gene_bc_matrices_mex" for aggregated
+    # Cell Ranger 3.0: "genes" has been replaced by "features" to account for feature barcoding
+    # Cell Ranger 3.0: the matrix and barcode files are now gzipped
+    data_dir = glue("{data_path}/outs")
+    if (!dir.exists(data_dir)) stop(glue("dir {data_path} does not contain outs directory"))
+    data_dir = list.files(path = data_dir, pattern = "matrix.mtx", full.names = TRUE, recursive = TRUE)
+    data_dir = str_subset(data_dir, "filtered_.*_bc_matri")[1]
+    data_dir = dirname(data_dir)
+    if (!dir.exists(data_dir)) stop(glue("dir {data_path} does not contain matrix.mtx"))
+
+    message_str <- glue("loading counts matrix dir: {data_dir}")
+    write_message(message_str, log_file)
+
+
+    counts_matrix = Read10X(data_dir)
+
+    message_str <- glue("library {sample_name} cells: {ncol(counts_matrix)}
+                        library {sample_name} genes: {nrow(counts_matrix)}")
+    write_message(message_str, log_file)
+
+    # clean up counts matrix to make it more readable
+    counts_matrix = counts_matrix[sort(rownames(counts_matrix)), ]
+    colnames(counts_matrix) = str_c(sample_name, ":", colnames(counts_matrix))
+
+    # combine current matrix with previous
+    if (i == 1) {
+
+      # skip if there is no previous matrix
+      counts_matrix_total = counts_matrix
+
+    } else {
+
+      # check if genes are the same for current and previous matrices
+      if (!identical(rownames(counts_matrix_total), rownames(counts_matrix))) {
+
+        # generate a warning, since this is probably a mistake
+        warning("counts matrix genes are not the same for different libraries")
+        write("counts matrix genes are not the same for different libraries",
+              file = log_file,
+              append = TRUE)
+        Sys.sleep(1)
+
+        # get common genes
+        common_genes = intersect(rownames(counts_matrix_total), rownames(counts_matrix))
+        common_genes = sort(common_genes)
+
+        message_str <- glue("num genes for previous libraries: {length(rownames(counts_matrix_total))}
+                            num genes for current library: {length(rownames(counts_matrix))}
+                            num genes in common: {length(common_genes)}")
+        write_message(message_str, log_file)
+
+        # exit if the number of overlapping genes is too few
+        if (length(common_genes) < (length(rownames(counts_matrix)) * 0.9)) stop("libraries have too few genes in common")
+
+        # subset current and previous matrix to overlapping genes
+        counts_matrix_total = counts_matrix_total[common_genes, ]
+        counts_matrix = counts_matrix[common_genes, ]
+
+      }
+
+      # combine current matrix with previous
+      counts_matrix_total = cbind(counts_matrix_total, counts_matrix)
+      Sys.sleep(1)
+
+    }
+
+  }
+
+  return(counts_matrix_total)
+
+}
+
