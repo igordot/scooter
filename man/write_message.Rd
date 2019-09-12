@@ -4,7 +4,7 @@
 \alias{write_message}
 \title{Small function to write to message and to log file.}
 \usage{
-write_message(message_str, log_file)
+write_message(message_str, log_file = NULL)
 }
 \arguments{
 \item{message_str}{A string to write as a message.}

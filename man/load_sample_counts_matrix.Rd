@@ -4,7 +4,7 @@
 \alias{load_sample_counts_matrix}
 \title{Reads in count data from 10x from one path or multiple paths.}
 \usage{
-load_sample_counts_matrix(sample_names, data_path, log_file)
+load_sample_counts_matrix(sample_names, data_path, log_file = NULL)
 }
 \arguments{
 \item{sample_names}{A character vector of sample names.}

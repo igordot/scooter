@@ -104,7 +104,7 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
 #' @importFrom glue glue
 #' @importFrom Seurat Read10X
 #' @export
-load_sample_counts_matrix = function(sample_names, data_path, log_file) {
+load_sample_counts_matrix = function(sample_names, data_path, log_file = NULL) {
   # Reads in count data from 10x from one path or multiple paths
   # FROM IGOR DOLGALEV
   # Args:
@@ -116,6 +116,8 @@ load_sample_counts_matrix = function(sample_names, data_path, log_file) {
   #   Counts matrix from 10x, merged from several samples or from one
 
   message_str <- "\n\n ========== import cell ranger counts matrix ========== \n\n"
+  # write message will output a message, and write to a log file if a log file is
+  # supplied
   write_message(message_str, log_file)
 
   counts_matrix_total = NULL
