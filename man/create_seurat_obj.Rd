@@ -5,7 +5,7 @@
 \title{Create a new Seurat object from a matrix.}
 \usage{
 create_seurat_obj(counts_matrix, min_cells = 10, min_genes = 100,
-  out_dir = ".", color_scheme = NULL)
+  out_dir = ".", color_scheme = NULL, log_file = NULL)
 }
 \arguments{
 \item{counts_matrix}{A matrix of raw counts.}

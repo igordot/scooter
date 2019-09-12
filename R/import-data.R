@@ -12,7 +12,7 @@
 #' @importFrom glue glue
 #' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
-create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, out_dir = ".", color_scheme = NULL) {
+create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, out_dir = ".", color_scheme = NULL, log_file = NULL) {
 
   # create output directories
   if (!dir.exists(out_dir)) dir.create(out_dir)
@@ -29,12 +29,10 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
   # remove genes with very few counts
   counts_matrix <- counts_matrix[Matrix::rowSums(counts_matrix) > 0, ]
 
-  message("input cells: ", ncol(counts_matrix))
-  message("input genes: ", nrow(counts_matrix))
-
-  # log to file
-  write(glue("input cells: {ncol(counts_matrix)}"), file = "create.log", append = TRUE)
-  write(glue("input genes: {nrow(counts_matrix)}"), file = "create.log", append = TRUE)
+  message_str <- glue("\n\n ========== create seurat object ========== \n\n
+                     input cells: {ncol(counts_matrix)}
+                     input genes: {nrow(counts_matrix)}")
+  write_message(message_str, log_file)
 
   # save counts matrix as a csv file (to be consistent with the rest of the tables)
   raw_data <- counts_matrix %>% as.matrix() %>% as.data.frame() %>% rownames_to_column("gene") %>% arrange(gene)
