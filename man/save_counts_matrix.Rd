@@ -23,11 +23,8 @@ save_counts_matrix(seurat_obj, proj_name = "", label = "",
 \item{log_file}{A log filename.}
 }
 \value{
-A CSV file in the out_dir.
+A csv file in the out_dir.
 }
 \description{
 Function to write Seurat counts matrix to csv.
-}
-\examples{
-
 }

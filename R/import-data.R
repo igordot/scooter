@@ -49,43 +49,18 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
 
   # nGene and nUMI are automatically calculated for every object by Seurat
   # calculate the percentage of mitochondrial genes here and store it in percent.mito using the AddMetaData
-  mt_genes <- grep("^MT-", rownames(s_obj@data), ignore.case = TRUE, value = TRUE)
-  percent_mt <- Matrix::colSums(s_obj@raw.data[mt_genes, ]) / Matrix::colSums(s_obj@raw.data)
+  mt_genes <- grep("^MT-", rownames(s_obj@assays$RNA@counts), ignore.case = TRUE, value = TRUE)
+  percent_mt <- Matrix::colSums(s_obj@assays$RNA@counts[mt_genes, ]) / Matrix::colSums(s_obj@assays$RNA@counts)
   percent_mt <- round(percent_mt * 100, digits = 3)
 
   # add columns to object@meta.data, and is a great place to stash QC stats
   s_obj <- AddMetaData(s_obj, metadata = percent_mt, col.name = "percent.mito")
 
-  # dist_unfilt_plot <- VlnPlot(s_obj, c("nGene", "nUMI", "percent.mito"),
-  #                             nCol = 3, group.by = "orig.ident",
-  #                             point.size.use = 0.1, x.lab.rot = TRUE, size.title.use = 12, cols.use = color_scheme
-  # )
-  # ggsave("qc.distribution.unfiltered.png", plot = dist_unfilt_plot, width = 10, height = 5, units = "in")
   plot_distribution(
     so = s_obj, features = c("nGene", "nUMI", "percent.mito"), grouping = "orig.ident",
     color_scheme = color_scheme,
     filename = glue("{qc_dir}/qc.distribution.unfiltered.png"), width = 10, height = 5
   )
-
-  # check for high mitochondrial percentage or low UMI content
-  # png("qc.correlations.unfiltered.png", res = 200, width = 10, height = 5, units = "in")
-  # par(mfrow = c(1, 2))
-  # GenePlot(s_obj, gene1 = "nUMI", gene2 = "percent.mito", cex.use = 0.5, col.use = color_scheme)
-  # GenePlot(s_obj, gene1 = "nUMI", gene2 = "nGene", cex.use = 0.5, col.use = color_scheme)
-  # dev.off()
-
-  # check distribution of gene counts and mitochondrial percentage
-  # low_quantiles <- c(0.05, 0.02, 0.01, 0.001)
-  # high_quantiles <- c(0.95, 0.98, 0.99, 0.999)
-  # message("nGene low percentiles:")
-  # s_obj@meta.data$nGene %>% quantile(low_quantiles) %>% round(1) %>% print()
-  # message(" ")
-  # message("nGene high percentiles:")
-  # s_obj@meta.data$nGene %>% quantile(high_quantiles) %>% round(1) %>% print()
-  # message(" ")
-  # message("percent.mito high percentiles:")
-  # s_obj@meta.data$percent.mito %>% quantile(high_quantiles) %>% round(1) %>% print()
-  # message(" ")
 
   return(s_obj)
 }

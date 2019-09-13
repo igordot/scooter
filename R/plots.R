@@ -15,7 +15,7 @@ plot_distribution <- function(so, features, grouping, filename, color_scheme = N
   if (is.null(color_scheme)) color_scheme <- get_color_scheme()
 
   # compile the data table
-  dist_tbl <- Seurat::FetchData(object = so, vars.all = c(features, grouping))
+  dist_tbl <- Seurat::FetchData(object = so, vars = c(features, grouping))
   dist_tbl <- dist_tbl %>% tidyr::gather(key = "var", value = "val", -grouping)
 
   plot_dist <-
