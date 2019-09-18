@@ -91,7 +91,7 @@ merge_metadata.default <- function(metadata1, metadata2, log_file = NULL,
   write_message(message_str, log_file)
 
   # check that there is a cell column, if not, make the rownames the cell column
-  if(sum(str_detect("^cell$", colnames(metadata1)))) {
+  if(any(str_detect("^cell$", colnames(metadata1)))) {
     metadata1 = metadata1 %>%
       as_tibble()
   } else {
@@ -102,7 +102,7 @@ merge_metadata.default <- function(metadata1, metadata2, log_file = NULL,
   }
 
   # check that there is a cell column, if not, make the rownames the cell column
-  if(sum(str_detect("^cell$", colnames(metadata2)))){
+  if(any(str_detect("^cell$", colnames(metadata2)))){
     metadata2 = metadata2 %>%
       as_tibble()
   } else {
@@ -133,71 +133,6 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL,
   write_message(message_str, log_file)
 
   metadata1 = metadata1@meta.data
-
-  # check that there is a cell column, if not, make the rownames the cell column
-  if(sum(str_detect("^cell$", colnames(metadata1)))) {
-    metadata1 = metadata1 %>%
-      as_tibble()
-  } else {
-    metadata1 = metadata1 %>%
-      as.data.frame %>%
-      rownames_to_column("cell") %>%
-      as_tibble()
-  }
-
-  # check that there is a cell column, if not, make the rownames the cell column
-  if(sum(str_detect("^cell$", colnames(metadata2)))){
-    metadata2 = metadata2 %>%
-      as_tibble()
-  } else {
-    metadata2 = metadata2 %>%
-      as.data.frame %>%
-      rownames_to_column("cell") %>%
-      as_tibble()
-  }
-
-  # compile all cell metadata into a single table
-  cells_metadata = metadata1 %>%
-    full_join(metadata2, by = "cell") %>%
-    arrange(cell) %>%
-    as.data.frame()
-
-  if(write) {
-    write_excel_csv(cells_metadata, path = glue("{out_dir}.metadata.csv"))
-  }
-
-  return(cells_metadata)
+  merge_metadata(metadata1, metadata2, log_file = log_file, write = write)
 }
 
-#' Function to merge two metadata tables together.
-#'
-#' @param metadata1 A Seurat object or a tibble containing metadata with
-#' either a column called "cell" with cell IDs or rownames with cell IDs.
-#' @param metadata2 A tibble containing metadata with
-#' either a column called "cell" with cell IDs or rownames with cell IDs.
-#' @param log_file A log filename.
-#' @param proj_name Name of the project that will be the prefix of the file name.
-#' @param label An optional label for the file.
-#' @param write Boolean. To write out the metadata or not.
-#' @param out_dir Directory in which to write metadata.
-#'
-#' @return A metadata file merged on cell identifiers.
-#'
-#' @import dplyr
-#' @importFrom glue glue
-#' @importFrom stringr str_detect
-#' @export
-check_metadata_column <- function(metadata){
-
-
-  # check that there is a cell column, if not, make the rownames the cell column
-  if(sum(str_detect("^cell$", colnames(metadata1)))) {
-    metadata1 = metadata1 %>%
-      as_tibble()
-  } else {
-    metadata1 = metadata1 %>%
-      as.data.frame %>%
-      rownames_to_column("cell") %>%
-      as_tibble()
-  }
-}
