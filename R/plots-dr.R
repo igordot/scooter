@@ -35,10 +35,8 @@ get_dr_point_size <- function(num_cells) {
 
 }
 
-
-
 # plot colored by specified variable
-plot_dr_group = function(metadata_tbl, x_var = "UMAP_1", y_var = "UMAP_2", aspect_ratio = 1, color_var, color_scheme) {
+plot_scatter_group = function(metadata_tbl, x_var = "UMAP_1", y_var = "UMAP_2", aspect_ratio = 1, color_var, color_scheme) {
 
   ggplot(metadata_tbl, aes(x = !!sym(x_var), y = !!sym(y_var))) +
     geom_point(aes(color = !!sym(color_var)), size = get_dr_pt_size(metadata_tbl)) +
@@ -53,7 +51,7 @@ plot_dr_group = function(metadata_tbl, x_var = "UMAP_1", y_var = "UMAP_2", aspec
 }
 
 # plot split by specified variable
-plot_dr_split = function(metadata_tbl, x_var = "UMAP_1", y_var = "UMAP_2", aspect_ratio = 1, rows_var = NULL, cols_var = NULL, color_var, color_scheme) {
+plot_scatter_split = function(metadata_tbl, x_var = "UMAP_1", y_var = "UMAP_2", aspect_ratio = 1, rows_var = NULL, cols_var = NULL, color_var, color_scheme) {
 
   gp =
     ggplot(metadata_tbl, aes(x = !!sym(x_var), y = !!sym(y_var))) +
@@ -169,3 +167,16 @@ plot_density_diff = function(metadata_tbl, x_var = "UMAP_1", y_var = "UMAP_2", s
 
 }
 
+# violin plot split by specified group.
+# default group is orig.ident
+plot_violin <- function(metadata_tbl, color_scheme, y_var, x_var = "orig.ident") {
+
+  violin_plot <- ggplot(metadata_tbl, aes(x = !!sym(x_var), y = !!sym(y_var), fill = !!sym(x_var))) +
+    geom_violin() +
+    xlab(x_var) +
+    ylab(y_var) +
+    scale_fill_manual(values = color_scheme,
+                      name = x_var) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  return(violin_plot)
+}

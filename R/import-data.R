@@ -180,3 +180,92 @@ load_sample_counts_matrix = function(sample_names, data_path, log_file = NULL) {
 
 }
 
+#' Filter out cells based on minimum and maximum number of genes and max mito percentage.
+#'
+#' @param metadata_tbl A tibble with metadata.
+#' @param min_genes Minimum number of genes per cell.
+#' @param max_genes Maximim number of genes per cell.
+#' @param max_mt Maximum percentage of mitochondrial reads per cell.
+#'
+#' @return cells to keep
+#'
+#' @import dplyr
+#' @export
+filter_data <- function(metadata, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
+  UseMethod("filter_data")
+}
+
+filter_data.default <- function(metadata_tbl, log_file = NULL, min_genes, max_genes, max_mt) {
+
+  cells_subset =
+    metadata_tbl %>%
+    as.data.frame() %>%
+    rownames_to_column("cell") %>%
+    filter(nFeature_RNA > min_genes & nFeature_RNA < max_genes & percent.mito < max_mt) %>%
+    pull(cell)
+
+  return(cells_subset)
+}
+
+#' @return A filtered Seurat object
+#' @export
+filter_data.Seurat <- function(metadata, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
+  # filter data by number of genes and mitochondrial percentage
+  #
+  # Args:
+  #   seurat_obj: Seurat object
+  #   out_dir: Output directory
+  #   proj_name: Name or project and name of output files
+  #   min_genes: Minimum number of genes
+  #   max_genes: Maximum number of genes
+  #   max_mt: Maximum mito pct
+  #
+  # Results:
+  #   Filtered seurat object
+
+  s_obj = metadata
+
+  message_str <- glue("\n\n ========== filter data matrix ========== \n\n
+                      unfiltered min genes: {min(s_obj$nFeature_RNA)}
+                      unfiltered max genes: {max(s_obj$nFeature_RNA)}
+                      unfiltered mean num genes: {round(mean(s_obj$nFeature_RNA), 3)}
+                      unfiltered median num genes: {median(s_obj$nFeature_RNA)}")
+  write_message(message_str, log_file)
+
+  # convert arguments to integers (command line arguments end up as characters)
+  min_genes = as.numeric(min_genes)
+  max_genes = as.numeric(max_genes)
+  max_mt = as.numeric(max_mt)
+
+  # default cutoffs (gene numbers rounded to nearest 10)
+  # as.numeric() converts NULLs to 0 length numerics, so can't use is.null()
+  if (!length(min_genes)) min_genes = s_obj$nFeature_RNA %>%
+    quantile(0.02, names = FALSE) %>%
+    round(-1)
+
+  if (!length(max_genes)) max_genes = s_obj$nFeature_RNA %>%
+    quantile(0.98, names = FALSE) %>%
+    round(-1)
+
+  if (!length(max_mt)) max_mt = 10
+
+  message_str <- glue("min genes cutoff: {min_genes}
+                      max genes cutoff: {max_genes}
+                      max mitochondrial percentage cutoff: {max_mt}
+                      imported cells: {ncol(s_obj)}
+                      imported genes: {nrow(s_obj)}")
+  write_message(message_str, log_file)
+
+  # filter
+  cells_subset <- filter_data(s_obj@meta.data,
+                              log_file,
+                              min_genes,
+                              max_genes,
+                              max_mt)
+
+  s_obj = subset(s_obj, cells = cells_subset)
+
+  message_str <- glue("filtered cells: {ncol(s_obj)}
+                      filtered genes: {nrow(s_obj)}")
+  return(s_obj)
+}
