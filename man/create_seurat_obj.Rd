@@ -4,13 +4,11 @@
 \alias{create_seurat_obj}
 \title{Create a new Seurat object from a matrix.}
 \usage{
-create_seurat_obj(counts_matrix, out_dir = ".", assay = "RNA",
-  color_scheme = NULL, log_file = NULL)
+create_seurat_obj(counts_matrix, assay = "RNA", color_scheme = NULL,
+  log_file = NULL)
 }
 \arguments{
 \item{counts_matrix}{A matrix of raw counts.}
-
-\item{out_dir}{Directory where all the output files will be saved.}
 
 \item{assay}{assay.}
 

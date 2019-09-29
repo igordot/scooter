@@ -2,7 +2,6 @@
 #'
 #' @param counts_matrix A matrix of raw counts.
 #' @param assay assay.
-#' @param out_dir Directory where all the output files will be saved.
 #' @param color_scheme A character vector of colors for plots (per sample/library).
 #' @param log_file log file.
 #'
@@ -12,15 +11,10 @@
 #' @importFrom glue glue
 #' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
-create_seurat_obj <- function(counts_matrix, out_dir = ".", assay = "RNA",
+create_seurat_obj <- function(counts_matrix, assay = "RNA",
                               color_scheme = NULL, log_file = NULL) {
   ## ATTENTION IGOR: I took out the filtering for min genes because I want this
   ## Function to be used for HTO and ADTs which have very few "genes"
-
-  # create output directories
-  if (!dir.exists(out_dir)) dir.create(out_dir)
-  qc_dir = glue("{out_dir}/qc")
-  if (!dir.exists(qc_dir)) dir.create(qc_dir)
 
   # color scheme
   if (is.null(color_scheme)) color_scheme <- get_color_scheme(type = "samples")
@@ -44,8 +38,6 @@ create_seurat_obj <- function(counts_matrix, out_dir = ".", assay = "RNA",
     as.data.frame() %>%
     rownames_to_column("gene") %>%
     arrange(.data$gene)
-
-  write_csv(raw_data, path = glue("counts.{assay}.raw.csv.gz"))
 
   s_obj <- CreateSeuratObject(
     counts = counts_matrix,
@@ -260,6 +252,8 @@ read_remove.unmapped <- function(HTO_file) {
   hto_matrix <- hto_matrix[-which(rownames(hto_matrix) == "unmapped"),]
   return(hto_matrix)
 }
+
+
 
 #' Filter out cells based on minimum and maximum number of genes and max mito percentage.
 #'
