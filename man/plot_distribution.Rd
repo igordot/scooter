@@ -4,8 +4,7 @@
 \alias{plot_distribution}
 \title{Plot the distribution of specified features/variables.}
 \usage{
-plot_distribution(so, features, grouping, filename, color_scheme = NULL,
-  width = NA, height = NA)
+plot_distribution(so, features, grouping, color_scheme = NULL)
 }
 \arguments{
 \item{so}{Seurat object.}

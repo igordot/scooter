@@ -4,8 +4,7 @@
 \alias{merge_metadata}
 \title{Function to merge two metadata tables together.}
 \usage{
-merge_metadata(metadata1, metadata2, log_file = NULL, write = FALSE,
-  ...)
+merge_metadata(metadata1, metadata2, log_file = NULL)
 }
 \arguments{
 \item{metadata1}{A Seurat object or a tibble containing metadata with
@@ -15,14 +14,6 @@ either a column called "cell" with cell IDs or rownames with cell IDs.}
 either a column called "cell" with cell IDs or rownames with cell IDs.}
 
 \item{log_file}{A log filename.}
-
-\item{write}{Boolean. To write out the metadata or not.}
-
-\item{proj_name}{Name of the project that will be the prefix of the file name.}
-
-\item{label}{An optional label for the file.}
-
-\item{out_dir}{Directory in which to write metadata.}
 }
 \value{
 A metadata file merged on cell identifiers.

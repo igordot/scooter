@@ -9,7 +9,7 @@
 #'
 #' @import ggplot2
 #' @export
-plot_distribution <- function(so, features, grouping, filename, color_scheme = NULL, width = NA, height = NA) {
+plot_distribution <- function(so, features, grouping,color_scheme = NULL) {
 
   # color scheme
   if (is.null(color_scheme)) color_scheme <- get_color_scheme()
@@ -30,6 +30,5 @@ plot_distribution <- function(so, features, grouping, filename, color_scheme = N
       strip.background = element_blank()
     ) +
     facet_wrap(. ~ var, scales = "free")
-  cowplot::save_plot(filename = filename, plot = plot_dist, base_width = width, base_height = height)
-
+  return(plot_dist)
 }

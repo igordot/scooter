@@ -12,11 +12,11 @@ create_seurat_obj(counts_matrix, out_dir = ".", assay = "RNA",
 
 \item{out_dir}{Directory where all the output files will be saved.}
 
+\item{assay}{assay.}
+
 \item{color_scheme}{A character vector of colors for plots (per sample/library).}
 
-\item{min_cells}{X.}
-
-\item{min_genes}{X.}
+\item{log_file}{log file.}
 }
 \value{
 Seurat object.

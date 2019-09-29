@@ -7,8 +7,7 @@ test_that("merge_metadata can merge a Seurat object and a dataframe", {
   metadata <- pbmc_obj@meta.data
   merged_metadata <- merge_metadata(metadata1 = pbmc_obj,
                                     metadata2 = metadata,
-                                    log_file = NULL,
-                                    write = FALSE)
+                                    log_file = NULL)
   expect_equal(ncol(merged_metadata), 9)
 })
 
@@ -19,8 +18,7 @@ test_that("merge_metadata can merge two dataframes", {
   metadata <- pbmc_obj@meta.data
   merged_metadata <- merge_metadata(metadata1 = metadata,
                                     metadata2 = metadata,
-                                    log_file = NULL,
-                                    write = FALSE)
+                                    log_file = NULL)
   expect_equal(ncol(merged_metadata), 9)
 })
 
@@ -31,8 +29,7 @@ test_that("merge_metadata can merge a dataframe and a tibble", {
   metadata <- pbmc_obj@meta.data
   merged_metadata <- merge_metadata(metadata1 = metadata,
                                     metadata2 = as_tibble(metadata),
-                                    log_file = NULL,
-                                    write = FALSE)
+                                    log_file = NULL)
   expect_equal(ncol(merged_metadata), 9)
 })
 

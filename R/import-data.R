@@ -1,10 +1,10 @@
 #' Create a new Seurat object from a matrix.
 #'
 #' @param counts_matrix A matrix of raw counts.
-#' @param min_cells X.
-#' @param min_genes X.
+#' @param assay assay.
 #' @param out_dir Directory where all the output files will be saved.
 #' @param color_scheme A character vector of colors for plots (per sample/library).
+#' @param log_file log file.
 #'
 #' @return Seurat object.
 #'
@@ -250,12 +250,13 @@ load_sample_counts_matrix = function(sample_names, data_path, log_file = NULL) {
 #' @param min_genes Minimum number of genes per cell.
 #' @param max_genes Maximim number of genes per cell.
 #' @param max_mt Maximum percentage of mitochondrial reads per cell.
+#' @param log_file log file.
 #'
 #' @return cells to keep
 #'
 #' @import dplyr
 #' @export
-filter_data <- function(metadata, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
+filter_data <- function(metadata_tbl, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
   UseMethod("filter_data")
 }
 
@@ -271,9 +272,8 @@ filter_data.default <- function(metadata_tbl, log_file = NULL, min_genes, max_ge
   return(cells_subset)
 }
 
-#' @return A filtered Seurat object
 #' @export
-filter_data.Seurat <- function(metadata, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
+filter_data.Seurat <- function(metadata_tbl, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
   # filter data by number of genes and mitochondrial percentage
   #
   # Args:
@@ -287,7 +287,7 @@ filter_data.Seurat <- function(metadata, log_file = NULL, min_genes = NULL, max_
   # Results:
   #   Filtered seurat object
 
-  s_obj = metadata
+  s_obj = metadata_tbl
 
   message_str <- glue("\n\n ========== filter data matrix ========== \n\n
                       unfiltered min genes: {min(s_obj$nFeature_RNA)}

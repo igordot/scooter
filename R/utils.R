@@ -66,10 +66,6 @@ save_seurat_counts_matrix <- function(seurat_obj, proj_name = "", label = "", ou
 #' @param metadata2 A tibble containing metadata with
 #' either a column called "cell" with cell IDs or rownames with cell IDs.
 #' @param log_file A log filename.
-#' @param proj_name Name of the project that will be the prefix of the file name.
-#' @param label An optional label for the file.
-#' @param write Boolean. To write out the metadata or not.
-#' @param out_dir Directory in which to write metadata.
 #'
 #' @return A metadata file merged on cell identifiers.
 #'
@@ -77,15 +73,12 @@ save_seurat_counts_matrix <- function(seurat_obj, proj_name = "", label = "", ou
 #' @importFrom glue glue
 #' @importFrom stringr str_detect
 #' @export
-merge_metadata <- function(metadata1, metadata2, log_file = NULL,
-                           write = FALSE, ...) {
-  ellipsis::check_dots_used()
+merge_metadata <- function(metadata1, metadata2, log_file = NULL) {
   UseMethod("merge_metadata")
 }
 
 #' @export
-merge_metadata.default <- function(metadata1, metadata2, log_file = NULL,
-                                   write = FALSE) {
+merge_metadata.default <- function(metadata1, metadata2, log_file = NULL) {
 
   message_str <- "\n\n ========== saving metadata ========== \n\n"
   write_message(message_str, log_file)
@@ -118,21 +111,49 @@ merge_metadata.default <- function(metadata1, metadata2, log_file = NULL,
     arrange(cell) %>%
     as.data.frame()
 
-  if(write) {
-    write_excel_csv(cells_metadata, path = glue("{out_dir}.metadata.csv"))
-  }
 
   return(cells_metadata)
 }
 
 #' @export
-merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL,
-                                   write = FALSE) {
+merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 
   message_str <- "\n\n ========== saving metadata ========== \n\n"
   write_message(message_str, log_file)
 
   metadata1 = metadata1@meta.data
-  merge_metadata(metadata1, metadata2, log_file = log_file, write = write)
+  merge_metadata(metadata1, metadata2, log_file = log_file)
 }
 
+seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = NULL, metadata = TRUE) {
+
+  s_obj <- seurat_obj
+
+  if(metadata == TRUE) {
+    s_obj_metadata <- s_obj@meta.data
+  }
+
+  if(!is.null(reduction)) {
+   # get index of reductions in the list
+   idx_reduction <- which(names(s_obj@reductions) %in% reduction)
+   reductions_to_save <- s_obj@reductions[idx_reduction]
+   # set rownames to columns for easier joining
+   reductions_to_save <- lapply(reductions_to_save, function(x) rownames_to_column(.data = x, "cell"))
+   # join lists by the new column
+   s_obj_reduction <- reduce(reductions_to_save,.f = left_join, by = "cell")
+  }
+
+  if(!is.null(assay)) {
+    if(!is.null(slot)) {
+      s_obj_assay <- s_obj@assays$assay$slot
+    } else {
+      s_obj_assay <- s_obj@assays$assay
+    }
+  }
+
+  if(!is.null(slot)) {
+    if(!is.null(assay)) {
+      stop("No assay specified for slot")
+    }
+  }
+}

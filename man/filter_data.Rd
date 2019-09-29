@@ -4,17 +4,19 @@
 \alias{filter_data}
 \title{Filter out cells based on minimum and maximum number of genes and max mito percentage.}
 \usage{
-filter_data(metadata, log_file = NULL, min_genes = NULL,
+filter_data(metadata_tbl, log_file = NULL, min_genes = NULL,
   max_genes = NULL, max_mt = 10)
 }
 \arguments{
+\item{metadata_tbl}{A tibble with metadata.}
+
+\item{log_file}{log file.}
+
 \item{min_genes}{Minimum number of genes per cell.}
 
 \item{max_genes}{Maximim number of genes per cell.}
 
 \item{max_mt}{Maximum percentage of mitochondrial reads per cell.}
-
-\item{metadata_tbl}{A tibble with metadata.}
 }
 \value{
 cells to keep

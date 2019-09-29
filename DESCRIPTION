@@ -5,7 +5,7 @@ Authors@R: c(
     person("Igor", "Dolgalev", email = "igor.dolgalev@nyumc.org", role = c("cre", "aut")), 
     person("Anna", "Yeaton", email = "ahyeaton@gmail.com", role = "aut"))
 Description: What the package does (one paragraph).
-License: MIT
+License: MIT + file LICENCE
 Encoding: UTF-8
 LazyData: true
 Suggests: 
