@@ -135,10 +135,10 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 #' @return A metadata file merged on cell identifiers.
 #'
 #' @import dplyr
-#' @importFrom purr reduce
+#' @importFrom purrr reduce
 #' @export
 seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = NULL, metadata = TRUE) {
-
+#TODO: finish this function
   s_obj <- seurat_obj
 
   if(metadata == TRUE) {

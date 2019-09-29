@@ -4,10 +4,10 @@
 \alias{plot_distribution}
 \title{Plot the distribution of specified features/variables.}
 \usage{
-plot_distribution(so, features, grouping, color_scheme = NULL)
+plot_distribution(data, features, grouping, color_scheme = NULL)
 }
 \arguments{
-\item{so}{Seurat object.}
+\item{data}{Seurat object or metadata.}
 
 \item{features}{Vector of features to plot (such as "nGene", "nUMI", "percent.mito").}
 

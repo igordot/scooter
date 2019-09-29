@@ -20,6 +20,7 @@ Imports:
     tidyr,
     stringr,
     glue,
+    purrr,
     ggplot2 (>= 3.0.0),
     cowplot,
     RColorBrewer,

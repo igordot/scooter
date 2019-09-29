@@ -1,6 +1,6 @@
 #' Plot the distribution of specified features/variables.
 #'
-#' @param so Seurat object.
+#' @param data Seurat object or metadata.
 #' @param features Vector of features to plot (such as "nGene", "nUMI", "percent.mito").
 #' @param grouping X.
 #' @param color_scheme (optional) Vector of colors.
@@ -9,14 +9,17 @@
 #'
 #' @import ggplot2
 #' @export
-plot_distribution <- function(so, features, grouping,color_scheme = NULL) {
+plot_distribution <- function(data, features, grouping, color_scheme = NULL) {
+  UseMethod("plot_distribution")
+}
 
-  # color scheme
+#' @export
+plot_distribution.default <- function(data, features, grouping, color_scheme = NULL) {
   if (is.null(color_scheme)) color_scheme <- get_color_scheme()
 
-  # compile the data table
-  dist_tbl <- Seurat::FetchData(object = so, vars = c(features, grouping))
-  dist_tbl <- dist_tbl %>% tidyr::gather(key = "var", value = "val", -grouping)
+  dist_tbl <- data %>%
+    select(c(features, grouping)) %>%
+    tidyr::gather(key = "var", value = "val", -grouping)
 
   plot_dist <-
     ggplot(dist_tbl, aes(x = !!sym(grouping), y = val)) +
@@ -32,3 +35,12 @@ plot_distribution <- function(so, features, grouping,color_scheme = NULL) {
     facet_wrap(. ~ var, scales = "free")
   return(plot_dist)
 }
+
+#' @export
+plot_distribution.Seurat <- function(data, features, grouping, color_scheme = NULL) {
+  # compile the data table
+  dist_tbl <- Seurat::FetchData(object = so, vars = c(features, grouping))
+  plot_distribution(dist_tbl, features, grouping, color_scheme)
+}
+
+
