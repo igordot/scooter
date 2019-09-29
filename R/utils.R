@@ -108,7 +108,7 @@ merge_metadata.default <- function(metadata1, metadata2, log_file = NULL) {
   # compile all cell metadata into a single table
   cells_metadata = metadata1 %>%
     full_join(metadata2, by = "cell") %>%
-    arrange(cell) %>%
+    arrange(.data$cell) %>%
     as.data.frame()
 
 
@@ -124,7 +124,19 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
   metadata1 = metadata1@meta.data
   merge_metadata(metadata1, metadata2, log_file = log_file)
 }
-
+#' Function to extract data from Seurat object.
+#'
+#' @param seurat_obj A Seurat object.
+#' @param assay Assay such as RNA.
+#' @param slot Slot such as counts.
+#' @param reduction Character vector of reduction types.
+#' @param metadata Boolean. To grab metadata or not
+#'
+#' @return A metadata file merged on cell identifiers.
+#'
+#' @import dplyr
+#' @importFrom purr reduce
+#' @export
 seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = NULL, metadata = TRUE) {
 
   s_obj <- seurat_obj
@@ -138,9 +150,13 @@ seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = 
    idx_reduction <- which(names(s_obj@reductions) %in% reduction)
    reductions_to_save <- s_obj@reductions[idx_reduction]
    # set rownames to columns for easier joining
-   reductions_to_save <- lapply(reductions_to_save, function(x) rownames_to_column(.data = x, "cell"))
+   reductions_to_save <- lapply(reductions_to_save,
+                                function(x) rownames_to_column(.data = x,
+                                                               "cell"))
    # join lists by the new column
-   s_obj_reduction <- reduce(reductions_to_save,.f = left_join, by = "cell")
+   s_obj_reduction <- reduce(reductions_to_save,
+                             .f = left_join,
+                             by = "cell")
   }
 
   if(!is.null(assay)) {
@@ -156,4 +172,5 @@ seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = 
       stop("No assay specified for slot")
     }
   }
+
 }

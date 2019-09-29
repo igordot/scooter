@@ -43,7 +43,7 @@ create_seurat_obj <- function(counts_matrix, out_dir = ".", assay = "RNA",
     as.matrix() %>%
     as.data.frame() %>%
     rownames_to_column("gene") %>%
-    arrange(gene)
+    arrange(.data$gene)
 
   write_csv(raw_data, path = glue("counts.{assay}.raw.csv.gz"))
 
@@ -139,6 +139,7 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL){
 #' @import dplyr
 #' @importFrom glue glue
 #' @importFrom Seurat Read10X
+#' @importFrom stringr str_subset str_c
 #' @export
 load_sample_counts_matrix = function(sample_names, data_path, log_file = NULL) {
   # TODO: this function should also read ADT and HTO matrices
@@ -255,6 +256,7 @@ load_sample_counts_matrix = function(sample_names, data_path, log_file = NULL) {
 #' @return cells to keep
 #'
 #' @import dplyr
+#' @importFrom stats quantile
 #' @export
 filter_data <- function(metadata_tbl, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
   UseMethod("filter_data")
@@ -266,8 +268,8 @@ filter_data.default <- function(metadata_tbl, log_file = NULL, min_genes, max_ge
     metadata_tbl %>%
     as.data.frame() %>%
     rownames_to_column("cell") %>%
-    filter(nFeature_RNA > min_genes & nFeature_RNA < max_genes & percent.mito < max_mt) %>%
-    pull(cell)
+    filter(.data$nFeature_RNA > min_genes & .data$nFeature_RNA < max_genes & .data$percent.mito < max_mt) %>%
+    pull(.data$cell)
 
   return(cells_subset)
 }

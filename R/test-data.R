@@ -7,6 +7,7 @@
 #' @examples
 #' pbmc_mat <- get_test_counts_matrix()
 #'
+#' @importFrom utils read.table
 #' @export
 get_test_counts_matrix <- function() {
   pbmc_raw <- read.table(
