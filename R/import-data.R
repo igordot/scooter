@@ -12,7 +12,10 @@
 #' @importFrom glue glue
 #' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
-create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, out_dir = ".", color_scheme = NULL, log_file = NULL) {
+create_seurat_obj <- function(counts_matrix, out_dir = ".", assay = "RNA",
+                              color_scheme = NULL, log_file = NULL) {
+  ## ATTENTION IGOR: I took out the filtering for min genes because I want this
+  ## Function to be used for HTO and ADTs which have very few "genes"
 
   # create output directories
   if (!dir.exists(out_dir)) dir.create(out_dir)
@@ -23,8 +26,9 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
   if (is.null(color_scheme)) color_scheme <- get_color_scheme(type = "samples")
 
   # check that the size of the input matrix is reasonable
-  if (ncol(counts_matrix) < 10) stop(glue("matrix contains too few cells: {ncol(counts_matrix)}"))
-  if (nrow(counts_matrix) < 100) stop(glue("matrix contains too few genes: {nrow(counts_matrix)}"))
+  if (ncol(counts_matrix) < 10) {
+    stop(glue("matrix contains too few cells: {ncol(counts_matrix)}"))
+  }
 
   # remove genes with very few counts
   counts_matrix <- counts_matrix[Matrix::rowSums(counts_matrix) > 0, ]
@@ -35,34 +39,93 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
   write_message(message_str, log_file)
 
   # save counts matrix as a csv file (to be consistent with the rest of the tables)
-  raw_data <- counts_matrix %>% as.matrix() %>% as.data.frame() %>% rownames_to_column("gene") %>% arrange(gene)
-  write_csv(raw_data, path = "counts.raw.csv.gz")
+  raw_data <- counts_matrix %>%
+    as.matrix() %>%
+    as.data.frame() %>%
+    rownames_to_column("gene") %>%
+    arrange(gene)
+
+  write_csv(raw_data, path = glue("counts.{assay}.raw.csv.gz"))
 
   s_obj <- CreateSeuratObject(
     counts = counts_matrix,
-    min.cells = min_cells,
-    min.features = min_genes,
     project = "proj",
+    assay = assay,
     names.field = 1,
     names.delim = ":"
   )
 
+  if(assay == "RNA"){
+    s_obj <- calculate_mito_pct(s_obj)
+  }
+
+  return(s_obj)
+}
+
+#' Calculate mitochondrial percentage from Seurat object.
+#'
+#' @param seurat_obj A Seurat object.
+#'
+#' @return Seurat object.
+#'
+#' @import Matrix
+#' @importFrom Seurat AddMetaData
+#' @export
+calculate_mito_pct <- function(seurat_obj){
   # nGene and nUMI are automatically calculated for every object by Seurat
   # calculate the percentage of mitochondrial genes here and store it in percent.mito using the AddMetaData
-  mt_genes <- grep("^MT-", rownames(s_obj@assays$RNA@counts), ignore.case = TRUE, value = TRUE)
+  s_obj <- seurat_obj
+
+  mt_genes <- grep("^MT-", rownames(s_obj@assays$RNA@counts),
+                   ignore.case = TRUE, value = TRUE)
+
   percent_mt <- Matrix::colSums(s_obj@assays$RNA@counts[mt_genes, ]) / Matrix::colSums(s_obj@assays$RNA@counts)
   percent_mt <- round(percent_mt * 100, digits = 3)
 
   # add columns to object@meta.data, and is a great place to stash QC stats
   s_obj <- AddMetaData(s_obj, metadata = percent_mt, col.name = "percent.mito")
 
-  plot_distribution(
-    so = s_obj, features = c("nGene", "nUMI", "percent.mito"), grouping = "orig.ident",
-    color_scheme = color_scheme,
-    filename = glue("{qc_dir}/qc.distribution.unfiltered.png"), width = 10, height = 5
-  )
+ return(s_obj)
+}
 
-  return(s_obj)
+#' Add assay to Seurat object. If Seurat object doesn't exist, create one.
+#'
+#' @param seurat_obj A Seurat object.
+#' @param assay Assay slot.
+#' @param counts_matrix counts matrix.
+#' @param log_file log file.
+#'
+#' @return Seurat object.
+#'
+#' @importFrom Seurat CreateAssayObject
+#' @export
+add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL){
+  #If s_obj exists, create object
+  if(exists(seurat_obj)){
+    s_obj <- create_seurat_obj(counts_matrix = counts_matrix,
+                               assay = assay, log_file = log_file)
+  } else if(exists(seurat_obj)){
+
+    s_obj <- seurat_obj
+
+    cells_to_use <- intersect(colnames(seurat_obj), colnames(counts_matrix))
+
+    if(length(s_obj) != length(cells_to_use)){
+      message_str <- "some cells in scrna matrix not in counts matrix"
+      write_message(message_str, log_file)
+    }
+    if(ncol(counts_matrix) != length(cells_to_use)){
+      message_str <- "some cells in counts matrix not in scrna matrix"
+      write_message(message_str, log_file)
+    }
+
+    # Subset  counts by joint cell barcodes
+    counts_matrix <- as.matrix(counts_matrix[, cells_to_use])
+    s_obj <- subset(s_obj, cells = cells_to_use)
+
+    # add ADT slot
+    s_obj[[assay]] <- CreateAssayObject(counts = counts_matrix)
+  }
 }
 
 #' Reads in count data from 10x from one path or multiple paths.
@@ -78,6 +141,7 @@ create_seurat_obj <- function(counts_matrix, min_cells = 10, min_genes = 100, ou
 #' @importFrom Seurat Read10X
 #' @export
 load_sample_counts_matrix = function(sample_names, data_path, log_file = NULL) {
+  # TODO: this function should also read ADT and HTO matrices
   # Reads in count data from 10x from one path or multiple paths
   # FROM IGOR DOLGALEV
   # Args:

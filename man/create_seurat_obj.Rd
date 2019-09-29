@@ -4,19 +4,19 @@
 \alias{create_seurat_obj}
 \title{Create a new Seurat object from a matrix.}
 \usage{
-create_seurat_obj(counts_matrix, min_cells = 10, min_genes = 100,
-  out_dir = ".", color_scheme = NULL, log_file = NULL)
+create_seurat_obj(counts_matrix, out_dir = ".", assay = "RNA",
+  color_scheme = NULL, log_file = NULL)
 }
 \arguments{
 \item{counts_matrix}{A matrix of raw counts.}
 
-\item{min_cells}{X.}
-
-\item{min_genes}{X.}
-
 \item{out_dir}{Directory where all the output files will be saved.}
 
 \item{color_scheme}{A character vector of colors for plots (per sample/library).}
+
+\item{min_cells}{X.}
+
+\item{min_genes}{X.}
 }
 \value{
 Seurat object.
