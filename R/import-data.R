@@ -245,6 +245,22 @@ load_sample_counts_matrix = function(sample_names, data_path, log_file = NULL) {
 
 }
 
+#' Reads in HTO data.
+#'
+#' @param HTO_file Path to HTO file.
+#'
+#' @return hto matrix.
+#'
+#' @importFrom utils read.table
+#' @export
+read_remove.unmapped <- function(HTO_file) {
+  # TODO: remove this function and make a general read counts matrix function
+  # remove unmapped row
+  hto_matrix <- read.table(HTO_file)
+  hto_matrix <- hto_matrix[-which(rownames(hto_matrix) == "unmapped"),]
+  return(hto_matrix)
+}
+
 #' Filter out cells based on minimum and maximum number of genes and max mito percentage.
 #'
 #' @param metadata_tbl A tibble with metadata.
