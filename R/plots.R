@@ -39,7 +39,7 @@ plot_distribution.default <- function(data, features, grouping, color_scheme = N
 #' @export
 plot_distribution.Seurat <- function(data, features, grouping, color_scheme = NULL) {
   # compile the data table
-  dist_tbl <- Seurat::FetchData(object = so, vars = c(features, grouping))
+  dist_tbl <- Seurat::FetchData(object = data, vars = c(features, grouping))
   plot_distribution(dist_tbl, features, grouping, color_scheme)
 }
 
