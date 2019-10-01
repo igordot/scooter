@@ -127,20 +127,35 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL){
 #'
 #' @importFrom Matrix readMM
 #' @export
-import_matrix <- function(data_path){
+import_matrix <- function(data_path, gene.column = 2){
 
-  full.data <- list()
-
+  # check if the directory exists
   if (!dir.exists(paths = data_path)) {
     stop(glue("dir {data_path} does not exist"))
   }
 
+  # read in features.tsv.gz
   feature.names <- read.delim(
     file = file.path(data_path, 'features.tsv.gz'),
     header = FALSE,
     stringsAsFactors = FALSE)
-  data <- readMM(file = file.path(data_path, 'matrix.mtx'))
-  cell.names <- readLines(file.path(data_path, 'barcodes.tsv'))
+
+  # read in sparse matrix
+  data <- readMM(file = file.path(data_path, 'matrix.mtx.gz'))
+
+  rownames(data) <- make.unique(names = feature.names[, gene.column])
+
+  # read in cell names
+  cell.names <- readLines(file.path(data_path, 'barcodes.tsv.gz'))
+
+  # if the cell names all have -1 at the end, remove the -1
+  if (all(str_detect(string = cell.names, pattern = "\\-1$"))) {
+    cell.names <- as.vector(as.character(sapply(
+      X = cell.names,
+      function(x) str_sub(x, end = (nchar(x) -2))
+    )))
+  }
+  colnames(data) <- cell.names
 
   if (ncol(feature.names) > 2) {
 
@@ -148,7 +163,8 @@ import_matrix <- function(data_path){
     data_levels <- levels(data_types)
 
     if (length(data_levels) > 1 && length(full.data) == 0) {
-      message("10X data contains more than one type and is being returned as a list containing matrices of each type.")
+      message("10X data contains more than one type and is being
+              returned as a list containing matrices of each type.")
     }
 
     data <- lapply(
@@ -162,6 +178,7 @@ import_matrix <- function(data_path){
   } else{
     data <- list(data)
   }
+  return(data)
 }
 
 
