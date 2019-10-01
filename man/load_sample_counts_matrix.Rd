@@ -4,14 +4,15 @@
 \alias{load_sample_counts_matrix}
 \title{Reads in count data from 10x from one path or multiple paths.}
 \usage{
-load_sample_counts_matrix(sample_names, data_path, log_file = NULL)
+load_sample_counts_matrix(sample_names, data_path_10x, HTO_file, ADT_file,
+  log_file = NULL)
 }
 \arguments{
 \item{sample_names}{A character vector of sample names.}
 
-\item{data_path}{A character vector of paths to each sample /<data_path>/outs.}
-
 \item{log_file}{A log filename.}
+
+\item{data_path}{A character vector of paths to each sample /<data_path>/outs.}
 }
 \value{
 Counts matrix from 10x, merged from several samples or from one.

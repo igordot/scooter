@@ -4,7 +4,7 @@
 \alias{read_remove.unmapped}
 \title{Reads in HTO data.}
 \usage{
-read_remove.unmapped(HTO_file)
+read_remove.unmapped(read_file)
 }
 \arguments{
 \item{HTO_file}{Path to HTO file.}

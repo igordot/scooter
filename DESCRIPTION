@@ -27,5 +27,8 @@ Imports:
     ggsci,
     Matrix,
     Seurat (>= 3.1.0),
-    SingleCellExperiment
+    SingleCellExperiment,
+    irlba,
+    reticulate,
+    uwot
 RoxygenNote: 6.1.1

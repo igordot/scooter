@@ -16,7 +16,7 @@ plot_qc <- function(seurat_obj, proj_name = "", label = "",features = "nFeature_
                     grouping = grouping,
                     color_scheme = NULL)
 
-  ggsave(file = glue("{qc_dir}/{proj_name}{label}.qc.png"))
+  ggsave(filename = glue("{qc_dir}/{proj_name}{label}.qc.png"))
 }
 
 plot_HTO <- function(seurat_obj, proj_name = "", label = "", out_dir = ".") {
@@ -136,5 +136,7 @@ plot_HTO <- function(seurat_obj, proj_name = "", label = "", out_dir = ".") {
            width =7 ,
            units = "in")
 }
+
+
 
 
