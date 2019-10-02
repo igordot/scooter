@@ -4,12 +4,12 @@
 \alias{sctransform_data}
 \title{SCT normalize data.}
 \usage{
-sctransform_data(seurat_obj, log_file = NULL)
+sctransform_data(umi, cell.attr, variable.features.n, log_file = NULL)
 }
 \arguments{
-\item{seurat_obj}{A seurat object.}
-
 \item{log_file}{log file.}
+
+\item{seurat_obj}{A seurat object.}
 }
 \value{
 normalized data

@@ -1,8 +1,187 @@
+#' Read in 10x data.
+#'
+#' @param data_path Path to directory that holds the 10x output files.
+#' @param gene.column The column with the gene names.
+#'
+#' @return list of matrices.
+#'
+#' @importFrom Matrix readMM
+#' @export
+import_matrix <- function(data_path, gene.column = 2){
+  # Heavily sourced from Seurat
+
+  # check if the directory exists
+  if (!dir.exists(paths = data_path)) {
+    stop(glue("dir {data_path} does not exist"))
+  }
+
+  # read in features.tsv.gz
+  feature.names <- read.delim(
+    file = file.path(data_path, 'features.tsv.gz'),
+    header = FALSE,
+    stringsAsFactors = FALSE)
+
+  # read in sparse matrix
+  data <- readMM(file = file.path(data_path, 'matrix.mtx.gz'))
+
+  # set the rownames to unique gene names
+  rownames(data) <- make.unique(feature.names[, gene.column])
+
+  # read in cell barcodes
+  cell.names <- readLines(file.path(data_path, 'barcodes.tsv.gz'))
+
+  # if the cell names all have -1 at the end, remove the -1
+  if (all(str_detect(string = cell.names, pattern = "\\-1$"))) {
+    cell.names <- as.vector(as.character(sapply(
+      X = cell.names,
+      function(x) str_sub(x, end = (nchar(x) -2))
+    )))
+  }
+
+  # set the colnames of the gene expression data to the barcodes
+  colnames(data) <- cell.names
+
+  # if there is a third column, it indicates that there is more than 1 datatype
+  if (ncol(feature.names) > 2) {
+
+    # get the different datatypes
+    data_types <- factor(feature.names$V3)
+    data_levels <- levels(data_types)
+
+    if (length(data_levels) > 1) {
+      message("10X data contains more than one type and is being
+              returned as a list containing matrices of each type.")
+    }
+
+    # split the data into a list with a matrix for each datatype
+    data <- lapply(
+      X = data_levels,
+      FUN = function(l) {
+        return(data[data_types == l, ])
+      })
+
+    # name the elements in the list by datatype
+    names(data) <- data_levels
+
+  } else {
+
+    data <- list(`Gene Expression` = data)
+
+  }
+
+  return(data)
+}
+
+#' Reads in count data from 10x, or from a delimited file.
+#'
+#' @param sample_names A character vector of sample names.
+#' @param data_path_10x A path to the data /<data_path>/outs.
+#' @param AC_text_file A path to the antibody capture file.
+#' @param delim A delimiter for the AC_test_file.
+#' @param log_file A log filename.
+#'
+#' @return A named list of matrices.
+#'
+#' @import dplyr
+#' @importFrom glue glue
+#' @importFrom Seurat Read10X
+#' @importFrom stringr str_subset str_c
+#' @export
+load_sample_counts_matrix = function(sample_names, data_path_10x = NULL, AC_text_file = NULL, delim = NULL, log_file = NULL) {
+  # Reads in count data from 10x from one path or multiple paths
+  # FROM IGOR DOLGALEV
+  # Args:
+  #   sample_names: Names to set each sample
+  #   data_path: Paths to each sample /data_path/outs
+  #   log_file: Name of log_file
+  #
+  # Returns:
+  #   Counts matrix from 10x, merged from several samples or from one
+
+  # Only does 10x or AC
+  if(!is.null(data_path_10x) & !is.null(AC_text_file)) {
+    stop("One file at a time please.")
+  }
+
+  if(!is.null(data_path_10x) & !is.null(delim)) {
+    warning("delim will not be taken into account for reading 10x")
+  }
+
+  counts = list()
+
+  if(!is.null(data_path_10x)) {
+
+    message_str <- "\n\n ========== import cell ranger counts matrix ========== \n\n"
+    # write message will output a message, and write to a log file if a log file is
+    # supplied
+    write_message(message_str, log_file)
+
+    message_str <- glue("loading counts matrix for sample: {sample_names}")
+    write_message(message_str, log_file)
+
+    # check if sample dir is valid
+    if (!dir.exists(data_path_10x)) {
+      stop(glue("dir {data_path_10x} does not exist"))
+    }
+
+    # check if there is an outs directory
+    data_dir = glue("{data_path_10x}/outs")
+
+    if (!dir.exists(data_dir)) {
+      stop(glue("dir {data_path_10x} does not contain outs directory"))
+    }
+
+    # check if the outs directory has the necesary elements
+    data_dir = list.files(path = data_dir,
+                          pattern = "matrix.mtx",
+                          full.names = TRUE,
+                          recursive = TRUE)
+
+    data_dir = str_subset(data_dir, "filtered_.*_bc_matrix")[1]
+    data_dir = dirname(data_dir)
+
+    if (!dir.exists(data_dir)) {
+      stop(glue("dir {data_path_10x} does not contain matrix.mtx"))
+    }
+
+    message_str <- glue("loading counts matrix dir: {data_dir}")
+    write_message(message_str, log_file)
+
+    # read in the 10x counts
+    counts_matrix = import_matrix(data_dir)
+
+  } else if(!is.null(AC_text_file)) {
+
+    # read in AC data
+    AC <- read.table(AC_text_file, sep = delim,
+                     header = TRUE)
+
+    # remove any row that is called unmapped
+    unmpp <- str_detect(toupper(rownames(AC)), "UNMAPPED")
+    if(sum(unmpp) > 0) {
+      AC <- AC[!unmpp,]
+    }
+
+    counts_matrix <- list(`Antibody Capture` = AC)
+
+  }
+
+  # rename the column names by adding a sample name prefix to every barcode
+  counts_out <- list()
+  for(i in 1:length(counts_matrix)) {
+    current_mat <- counts_matrix[[i]]
+    colnames(current_mat) <- str_c(sample_names, ":", colnames(current_mat))
+    counts_out[[i]] <- current_mat
+  }
+
+  return(current_mat)
+}
+
+
 #' Create a new Seurat object from a matrix.
 #'
 #' @param counts_matrix A matrix of raw counts.
 #' @param assay assay.
-#' @param color_scheme A character vector of colors for plots (per sample/library).
 #' @param log_file log file.
 #'
 #' @return Seurat object.
@@ -12,9 +191,7 @@
 #' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
 create_seurat_obj <- function(counts_matrix, assay = "RNA",
-                              color_scheme = NULL, log_file = NULL) {
-  # color scheme
-  if (is.null(color_scheme)) color_scheme <- get_color_scheme(type = "samples")
+                               log_file = NULL) {
 
   # check that the size of the input matrix is reasonable
   if (ncol(counts_matrix) < 10) {
@@ -29,13 +206,7 @@ create_seurat_obj <- function(counts_matrix, assay = "RNA",
                      input genes: {nrow(counts_matrix)}")
   write_message(message_str, log_file)
 
-  # save counts matrix as a csv file (to be consistent with the rest of the tables)
-  raw_data <- counts_matrix %>%
-    as.matrix() %>%
-    as.data.frame() %>%
-    rownames_to_column("gene") %>%
-    arrange(.data$gene)
-
+  # Create seurat object
   s_obj <- CreateSeuratObject(
     counts = counts_matrix,
     project = "proj",
@@ -44,6 +215,7 @@ create_seurat_obj <- function(counts_matrix, assay = "RNA",
     names.delim = ":"
   )
 
+  # Calculate mito pct
   if(assay == "RNA"){
     s_obj <- calculate_mito_pct(s_obj)
   }
@@ -61,13 +233,16 @@ create_seurat_obj <- function(counts_matrix, assay = "RNA",
 #' @importFrom Seurat AddMetaData
 #' @export
 calculate_mito_pct <- function(seurat_obj){
+
   # nGene and nUMI are automatically calculated for every object by Seurat
   # calculate the percentage of mitochondrial genes here and store it in percent.mito using the AddMetaData
   s_obj <- seurat_obj
 
+  # get all mitochondrial genes
   mt_genes <- grep("^MT-", rownames(s_obj@assays$RNA@counts),
                    ignore.case = TRUE, value = TRUE)
 
+  # calculate the percent mitochondrial reads
   percent_mt <- Matrix::colSums(s_obj@assays$RNA@counts[mt_genes, ]) / Matrix::colSums(s_obj@assays$RNA@counts)
   percent_mt <- round(percent_mt * 100, digits = 3)
 
@@ -119,195 +294,6 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL){
   }
 }
 
-#' Read 10x data.
-#'
-#' @param data_path path to 10x.
-#'
-#' @return list of matrices.
-#'
-#' @importFrom Matrix readMM
-#' @export
-import_matrix <- function(data_path, gene.column = 2){
-
-  # check if the directory exists
-  if (!dir.exists(paths = data_path)) {
-    stop(glue("dir {data_path} does not exist"))
-  }
-
-  # read in features.tsv.gz
-  feature.names <- read.delim(
-    file = file.path(data_path, 'features.tsv.gz'),
-    header = FALSE,
-    stringsAsFactors = FALSE)
-
-  # read in sparse matrix
-  data <- readMM(file = file.path(data_path, 'matrix.mtx.gz'))
-
-  rownames(data) <- make.unique(names = feature.names[, gene.column])
-
-  # read in cell names
-  cell.names <- readLines(file.path(data_path, 'barcodes.tsv.gz'))
-
-  # if the cell names all have -1 at the end, remove the -1
-  if (all(str_detect(string = cell.names, pattern = "\\-1$"))) {
-    cell.names <- as.vector(as.character(sapply(
-      X = cell.names,
-      function(x) str_sub(x, end = (nchar(x) -2))
-    )))
-  }
-  colnames(data) <- cell.names
-
-  if (ncol(feature.names) > 2) {
-
-    data_types <- factor(feature.names$V3)
-    data_levels <- levels(data_types)
-
-    if (length(data_levels) > 1 && length(full.data) == 0) {
-      message("10X data contains more than one type and is being
-              returned as a list containing matrices of each type.")
-    }
-
-    data <- lapply(
-      X = data_levels,
-      FUN = function(l) {
-        return(data[data_types == l, ])
-      })
-
-    names(data) <- data_levels
-
-  } else{
-    data <- list(data)
-  }
-  return(data)
-}
-
-
-#' Reads in count data from 10x from one path or multiple paths.
-#'
-#' @param sample_names A character vector of sample names.
-#' @param data_path A character vector of paths to each sample /<data_path>/outs.
-#' @param log_file A log filename.
-#'
-#' @return Counts matrix from 10x, merged from several samples or from one.
-#'
-#' @import dplyr
-#' @importFrom glue glue
-#' @importFrom Seurat Read10X
-#' @importFrom stringr str_subset str_c
-#' @export
-load_sample_counts_matrix = function(sample_names, data_path_10x, HTO_file, ADT_file, log_file = NULL) {
-  # Reads in count data from 10x from one path or multiple paths
-  # FROM IGOR DOLGALEV
-  # Args:
-  #   sample_names: Names to set each sample
-  #   data_path: Paths to each sample /data_path/outs
-  #   log_file: Name of log_file
-  #
-  # Returns:
-  #   Counts matrix from 10x, merged from several samples or from one
-
-  message_str <- "\n\n ========== import cell ranger counts matrix ========== \n\n"
-  # write message will output a message, and write to a log file if a log file is
-  # supplied
-  write_message(message_str, log_file)
-
-  counts_matrix_total = NULL
-  for (i in 1:length(data_path)) {
-
-    sample_name = sample_names[i]
-
-    message_str <- glue("loading counts matrix for sample: {sample_name}")
-    write_message(message_str, log_file)
-
-    # check if sample dir is valid
-    if (!dir.exists(data_path)) stop(glue("dir {data_path} does not exist"))
-
-    data_dir = glue("{data_path}/outs")
-
-    if (!dir.exists(data_dir)) {
-      stop(glue("dir {data_path} does not contain outs directory"))
-    }
-
-    data_dir = list.files(path = data_dir,
-                          pattern = "matrix.mtx",
-                          full.names = TRUE,
-                          recursive = TRUE)
-
-    data_dir = str_subset(data_dir, "filtered_.*_bc_matri")[1]
-    data_dir = dirname(data_dir)
-
-    if (!dir.exists(data_dir)) stop(glue("dir {data_path} does not contain matrix.mtx"))
-
-    message_str <- glue("loading counts matrix dir: {data_dir}")
-    write_message(message_str, log_file)
-
-    counts_matrix = import_matrix(data_dir)
-
-    message_str <- glue("library {sample_name} cells: {ncol(counts_matrix)}
-                        library {sample_name} genes: {nrow(counts_matrix)}")
-    write_message(message_str, log_file)
-
-    # clean up counts matrix to make it more readable
-    counts_matrix = counts_matrix[sort(rownames(counts_matrix)), ]
-    colnames(counts_matrix) = str_c(sample_name, ":", colnames(counts_matrix))
-
-    # combine current matrix with previous
-    if (i == 1) {
-
-      # skip if there is no previous matrix
-      counts_matrix_total = counts_matrix
-
-    } else {
-
-      # check if genes are the same for current and previous matrices
-      if (!identical(rownames(counts_matrix_total), rownames(counts_matrix))) {
-
-        # generate a warning, since this is probably a mistake
-        warning("counts matrix genes are not the same for different libraries")
-        write("counts matrix genes are not the same for different libraries",
-              file = log_file,
-              append = TRUE)
-        Sys.sleep(1)
-
-        # get common genes
-        common_genes = intersect(rownames(counts_matrix_total), rownames(counts_matrix))
-        common_genes = sort(common_genes)
-
-        message_str <- glue("num genes for previous libraries: {length(rownames(counts_matrix_total))} num genes for current library: {length(rownames(counts_matrix))} num genes in common: {length(common_genes)}")
-        write_message(message_str, log_file)
-
-        # exit if the number of overlapping genes is too few
-        if (length(common_genes) < (length(rownames(counts_matrix)) * 0.9)) stop("libraries have too few genes in common")
-
-        # subset current and previous matrix to overlapping genes
-        counts_matrix_total = counts_matrix_total[common_genes, ]
-        counts_matrix = counts_matrix[common_genes, ]
-      }
-
-      # combine current matrix with previous
-      counts_matrix_total = cbind(counts_matrix_total, counts_matrix)
-      Sys.sleep(1)
-
-    }
-
-  }
-  return(counts_matrix_total)
-}
-
-#' Reads in HTO data.
-#'
-#' @param HTO_file Path to HTO file.
-#'
-#' @return hto matrix.
-#'
-#' @importFrom utils read.table
-#' @export
-read_remove.unmapped <- function(read_file) {
-  # remove unmapped row
-  hto_matrix <- read.table(read_file)
-  hto_matrix <- hto_matrix[-which(rownames(hto_matrix) == "unmapped"),]
-  return(hto_matrix)
-}
 
 #' Filter out cells based on minimum and maximum number of genes and max mito percentage.
 #'
@@ -402,8 +388,55 @@ filter_data.Seurat <- function(metadata_tbl, log_file = NULL, min_genes = NULL, 
   return(s_obj)
 }
 
-normalize_data <- function() {
 
+normalize_data <- function(data, normalize_method, metadata, assay, slot, log_file = NULL) {
+  UseMethod("normalize_data")
+}
+
+normalize_data.default <- function(data, normalize_method, metadata, assay, slot, log_file = NULL) {
+  if (normalize_method == "log_norm") {
+    normed <- log_normalize_data(data = data, log_file = log_file)
+  } else if ( normalize_method == "sct") {
+    normed <- sctransform_data(umi = data, cell.attr = metadata, variable.features.n = 2000, log_file = log_file)
+  }
+  return(normed)
+}
+
+normalize_data.Seurat <- function(data, normalize_method, metadata, assay, slot, log_file = NULL) {
+
+  if (normalize_method == "sct") {
+
+    assay.obj <- GetAssay(object = data, assay = assay)
+    umi <- GetAssayData(object = assay.obj, slot = 'counts')
+    cell.attr <- slot(object = data, name = 'meta.data')
+
+    normed_data <- normalize_data(data = umi, normalize_method = normalize_method,
+                                  metadata = cell.attr,
+                                  log_file = log_file,
+                                  slot = slot,
+                                  assay = assay)
+
+    assay.out <- CreateAssayObject(counts = normed_data[["vst.out"]]$umi_corrected)
+
+
+    VariableFeatures(object = assay.out) <- normed_data[["top.features"]]
+
+    assay.out <- SetAssayData(
+      object = assay.out,
+      slot = 'data',
+      new.data = log1p(GetAssayData(object = assay.out, slot = 'counts')))
+
+    assay.out <- SetAssayData(
+      object = assay.out,
+      slot = 'scale.data',
+      new.data = normed_data[["scale.data"]]
+    )
+
+  } else {
+   data <- GetAssay(data)
+   normed_data <- normalize_data(data, normalize_method)
+   object[[assay]] <- normed_data
+  }
 }
 
 #' Log normalize data.
@@ -416,31 +449,23 @@ normalize_data <- function() {
 #'
 #' @importFrom Seurat NormalizeData
 #' @export
-log_normalize_data <- function(seurat_obj, assay = "RNA", log_file = NULL) {
+log_normalize_data <- function(data, log_file = NULL) {
   # log normalize data
 
   message_str <- "\n\n ========== log normalize ========== \n\n"
   write_message(message_str, log_file)
 
-  s_obj <- seurat_obj
   # after removing unwanted cells from the dataset, normalize the data
   # LogNormalize:
   # - normalizes the gene expression measurements for each cell by the total expression
   # - multiplies this by a scale factor (10,000 by default)
   # - log-transforms the result
-  s_obj = NormalizeData(s_obj,
+  data = NormalizeData(data,
                         normalization.method = "LogNormalize",
-                        assay = "RNA",
                         scale.factor = 10000,
                         verbose = FALSE)
-  # log to file
-  message_str <- glue("filtered cells: {ncol(s_obj)}
-                      filtered genes: {nrow(s_obj)}
-                      filtered mean num genes: {round(mean(s_obj$num_genes), 3)}
-                      filtered median num genes: {median(s_obj$num_genes)}")
-  write_message(message_str, log_file)
 
-  return(s_obj)
+  return(data)
 }
 
 #' SCT normalize data.
@@ -453,39 +478,53 @@ log_normalize_data <- function(seurat_obj, assay = "RNA", log_file = NULL) {
 #' @import dplyr
 #' @importFrom Seurat PercentageFeatureSet SCTransform
 #' @export
-sctransform_data <- function(seurat_obj, log_file = NULL){
+sctransform_data <- function(umi, cell.attr, variable.features.n, log_file = NULL){
   # sc transform data
-
-  s_obj <-seurat_obj
 
   message("\n\n ========== sc transform ========== \n\n")
 
-  s_obj <- PercentageFeatureSet(s_obj,
-                                pattern = "^MT-",
-                                col.name = "percent.feature.set.mt")
-  # run sctransform
-  s_obj <- SCTransform(s_obj,
-                       vars.to.regress = c("percent.feature.set.mt", "num_UMIs"),
-                       verbose = FALSE)
+  clip.range <- c(-sqrt(ncol(umi)),sqrt(ncol(umi)))
 
-  # save counts matrix as a basic gzipped text file
-  # object@data stores normalized and log-transformed single cell expression
-  # used for visualizations, such as violin and feature plots, most diff exp tests, finding high-variance genes
-  counts_norm = GetAssayData(s_obj) %>%
-    as.matrix() %>%
-    round(3)
-  counts_norm = counts_norm %>%
-    as.data.frame() %>%
-    rownames_to_column("gene") %>%
-    arrange(gene)
+  vst.out <- sctransform::vst(umi, cell_attr = cell.attr,
+                 latent_var = "log_umi",
+                 show_progress = TRUE,
+                 return_cell_attr = TRUE,
+                 return_gene_attr = TRUE,
+                 return_corrected_umi = TRUE,
+                 residual_type = "pearson",
+                 res_clip_range = clip.range)
 
-  # log to file
-  message_str <- glue("filtered cells: {ncol(s_obj)}
-                      filtered genes: {nrow(s_obj)}
-                      filtered mean num genes: {round(mean(s_obj$num_genes), 3)}
-                      filtered median num genes: {median(s_obj$num_genes)}")
-  write_message(message_str, log_file)
+  feature.variance <- setNames(object = vst.out$gene_attr$residual_variance,
+                               nm = rownames(vst.out$gene_attr))
 
-  return(s_obj)
+  feature.variance <- sort(feature.variance,
+                           decreasing = TRUE)
+
+  top.features <- names(feature.variance)[1:min(variable.features.n,
+                                                    length(feature.variance))]
+
+  scale.data <- vst.out$y
+
+  scale.data[scale.data < clip.range[1]] <- clip.range[1]
+  scale.data[scale.data > clip.range[2]] <- clip.range[2]
+
+  scale.data <- ScaleData(
+    scale.data,
+    features = NULL,
+    vars.to.regress = c("percent.mito", "nCount_RNA"),
+    latent.data = cell.attr[, c("percent.mito", "nCount_RNA"), drop = FALSE],
+    model.use = 'linear',
+    use.umi = FALSE,
+    do.scale = FALSE,
+    do.center = TRUE,
+    scale.max = Inf,
+    block.size = 750,
+    min.cells.to.block = 3000,
+    verbose = TRUE
+  )
+
+  return(list(vst.out = vst.out,
+              scale.data = scale.data,
+              top.features = top.features))
 
 }

@@ -4,7 +4,7 @@
 \alias{import_matrix}
 \title{Read 10x data.}
 \usage{
-import_matrix(data_path)
+import_matrix(data_path, gene.column = 2)
 }
 \arguments{
 \item{data_path}{path to 10x.}

@@ -4,14 +4,14 @@
 \alias{log_normalize_data}
 \title{Log normalize data.}
 \usage{
-log_normalize_data(seurat_obj, assay = "RNA", log_file = NULL)
+log_normalize_data(data, log_file = NULL)
 }
 \arguments{
+\item{log_file}{log file.}
+
 \item{seurat_obj}{A seurat object.}
 
 \item{assay}{assay.}
-
-\item{log_file}{log file.}
 }
 \value{
 normalized data
