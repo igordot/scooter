@@ -292,6 +292,7 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL){
     # add ADT slot
     s_obj[[assay]] <- CreateAssayObject(counts = counts_matrix)
   }
+  return(s_obj)
 }
 
 
