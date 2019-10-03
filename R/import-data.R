@@ -174,7 +174,7 @@ load_sample_counts_matrix = function(sample_names, data_path_10x = NULL, AC_text
     counts_out[[i]] <- current_mat
   }
 
-  return(current_mat)
+  return(counts_out)
 }
 
 
