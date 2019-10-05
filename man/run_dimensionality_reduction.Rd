@@ -4,24 +4,24 @@
 \alias{run_dimensionality_reduction}
 \title{Run dimensionality reduction, pca, tse, and umap}
 \usage{
-run_dimensionality_reduction(data, num_pcs, num_dim, num_neighbors,
-  log_file = NULL, prefix = NULL)
+run_dimensionality_reduction(data, assay = "RNA", var_features = TRUE,
+  num_pcs, num_dim, num_neighbors, log_file = NULL, prefix = NULL)
 }
 \arguments{
-\item{data}{A tibble with metadata.}
+\item{data}{Data.}
 
-\item{num_pcs}{Minimum number of genes per cell.}
+\item{num_pcs}{Number of PCs to calculate.}
 
-\item{num_dim}{Maximim number of genes per cell.}
+\item{num_dim}{Number of PCs to use for tsne and umap.}
 
-\item{num_neighbors}{Maximum percentage of mitochondrial reads per cell.}
+\item{num_neighbors}{Number of neighbors to use for umap.}
 
 \item{log_file}{log file.}
 
-\item{prefix}{suffix.}
+\item{prefix}{prefix for dimensionality reduction labels.}
 }
 \value{
-list of dimensionality reduced/
+list of dimensionality reductions.
 }
 \description{
 Run dimensionality reduction, pca, tse, and umap

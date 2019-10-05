@@ -7,16 +7,16 @@
 run_tsne(data, seed.use = 1, dim.embed = 2, prefix = "tSNE_")
 }
 \arguments{
-\item{data}{A tibble with metadata.}
+\item{data}{Data to run tsne on.}
 
-\item{seed.use}{.}
+\item{seed.use}{seed to use.}
 
-\item{dim.embed}{.}
+\item{dim.embed}{Number of tsne embeddings to return.}
 
 \item{prefix}{suffix.}
 }
 \value{
-pca.
+tsne.
 }
 \description{
 Run TSNE

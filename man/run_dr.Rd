@@ -7,9 +7,9 @@
 run_dr(data, dr_method, ...)
 }
 \arguments{
-\item{data}{A tibble with metadata.}
+\item{data}{Data to use for dimensionality reduction.}
 
-\item{dr_method}{.}
+\item{dr_method}{Dimensionality reduction method.}
 
 \item{assay}{.}
 
@@ -18,10 +18,15 @@ run_dr(data, dr_method, ...)
 \item{graph}{.}
 
 \item{num_dim}{.}
+
+\item{var_features}{.}
 }
 \value{
 list of dimensionality reduced/
 }
 \description{
 Run dimensionality reduction, pca, tse, and umap
+}
+\seealso{
+run_pca(), run_tsne(), run_umap()
 }

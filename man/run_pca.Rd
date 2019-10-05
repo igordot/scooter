@@ -4,17 +4,17 @@
 \alias{run_pca}
 \title{Run PCA}
 \usage{
-run_pca(data, num_dim, prefix = "PC_")
+run_pca(data, num_pcs, prefix = "PC_")
 }
 \arguments{
 \item{data}{A tibble with metadata.}
 
-\item{num_dim}{Maximim number of genes per cell.}
-
 \item{prefix}{suffix.}
+
+\item{num_dim}{Maximim number of genes per cell.}
 }
 \value{
-pca.
+named list of feature loadings, cell embeddings, sdev, output from pca
 }
 \description{
 Run PCA

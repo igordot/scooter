@@ -7,7 +7,7 @@
 run_umap(data, num_neighbors, prefix = "UMAP_")
 }
 \arguments{
-\item{data}{A tibble with metadata.}
+\item{data}{Data to run UMAP on.}
 
 \item{num_neighbors}{num neighbors.}
 
