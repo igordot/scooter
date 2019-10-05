@@ -2,14 +2,14 @@
 % Please edit documentation in R/import-data.R
 \name{add_seurat_assay}
 \alias{add_seurat_assay}
-\title{Add assay to Seurat object. If Seurat object doesn't exist, create one.}
+\title{Adds assay to Seurat object.}
 \usage{
 add_seurat_assay(seurat_obj, assay, counts_matrix, log_file = NULL)
 }
 \arguments{
-\item{seurat_obj}{A Seurat object.}
+\item{seurat_obj}{Existing seurat object.}
 
-\item{assay}{Assay slot.}
+\item{assay}{Seurat assay to add the matrix to.}
 
 \item{counts_matrix}{counts matrix.}
 
@@ -19,5 +19,5 @@ add_seurat_assay(seurat_obj, assay, counts_matrix, log_file = NULL)
 Seurat object.
 }
 \description{
-Add assay to Seurat object. If Seurat object doesn't exist, create one.
+Adds assay to Seurat object.
 }

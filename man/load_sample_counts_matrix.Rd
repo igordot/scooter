@@ -2,21 +2,25 @@
 % Please edit documentation in R/import-data.R
 \name{load_sample_counts_matrix}
 \alias{load_sample_counts_matrix}
-\title{Reads in count data from 10x from one path or multiple paths.}
+\title{Reads in data from 10x, or from a delimited file.}
 \usage{
-load_sample_counts_matrix(sample_names, data_path_10x = NULL,
-  AC_text_file = NULL, delim = NULL, log_file = NULL)
+load_sample_counts_matrix(sample_name, data_path_10x = NULL,
+  AC_file = NULL, delim = NULL, log_file = NULL)
 }
 \arguments{
-\item{sample_names}{A character vector of sample names.}
+\item{sample_name}{A character for the sample name to be a prefix for every cell.}
+
+\item{data_path_10x}{A path to the 10x data /<data_path>/outs.}
+
+\item{AC_file}{A path to the antibody capture file.}
+
+\item{delim}{A delimiter for the AC_file.}
 
 \item{log_file}{A log filename.}
-
-\item{data_path}{A character vector of paths to each sample /<data_path>/outs.}
 }
 \value{
-Counts matrix from 10x, merged from several samples or from one.
+Named list of matrices. One matrix for each data type.
 }
 \description{
-Reads in count data from 10x from one path or multiple paths.
+Reads in data from 10x, or from a delimited file.
 }

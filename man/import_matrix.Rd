@@ -2,16 +2,20 @@
 % Please edit documentation in R/import-data.R
 \name{import_matrix}
 \alias{import_matrix}
-\title{Read 10x data.}
+\title{Read in 10x Matrix Market format data.}
 \usage{
 import_matrix(data_path, gene.column = 2)
 }
 \arguments{
-\item{data_path}{path to 10x.}
+\item{data_path}{Path to directory that holds the files output from 10x.}
+
+\item{gene.column}{The column with the gene names.}
 }
 \value{
-list of matrices.
+Named list of matrices. One matrix for each data type as specified in
+the third column of the features.tsv file. As of Oct 3rd 2019, the two options
+are `Gene Expression` and `Antibody Capture`
 }
 \description{
-Read 10x data.
+Read in 10x Matrix Market format data.
 }

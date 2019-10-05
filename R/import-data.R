@@ -1,9 +1,11 @@
-#' Read in 10x data.
+#' Read in 10x Matrix Market format data.
 #'
-#' @param data_path Path to directory that holds the 10x output files.
+#' @param data_path Path to directory that holds the files output from 10x.
 #' @param gene.column The column with the gene names.
 #'
-#' @return list of matrices.
+#' @return Named list of matrices. One matrix for each data type as specified in
+#' the third column of the features.tsv file. As of Oct 3rd 2019, the two options
+#' are `Gene Expression` and `Antibody Capture`
 #'
 #' @importFrom Matrix readMM
 #' @export
@@ -21,7 +23,7 @@ import_matrix <- function(data_path, gene.column = 2){
     header = FALSE,
     stringsAsFactors = FALSE)
 
-  # read in sparse matrix
+  # read in sparse gene expression matrix
   data <- readMM(file = file.path(data_path, 'matrix.mtx.gz'))
 
   # set the rownames to unique gene names
@@ -38,10 +40,10 @@ import_matrix <- function(data_path, gene.column = 2){
     )))
   }
 
-  # set the colnames of the gene expression data to the barcodes
+  # set the barcodes as colnames of the gene expression data
   colnames(data) <- cell.names
 
-  # if there is a third column, it indicates that there is more than 1 datatype
+  # a third column indicates that there is more than 1 datatype
   if (ncol(feature.names) > 2) {
 
     # get the different datatypes
@@ -72,34 +74,25 @@ import_matrix <- function(data_path, gene.column = 2){
   return(data)
 }
 
-#' Reads in count data from 10x, or from a delimited file.
+#' Reads in data from 10x, or from a delimited file.
 #'
-#' @param sample_names A character vector of sample names.
-#' @param data_path_10x A path to the data /<data_path>/outs.
-#' @param AC_text_file A path to the antibody capture file.
-#' @param delim A delimiter for the AC_test_file.
+#' @param sample_name A character for the sample name to be a prefix for every cell.
+#' @param data_path_10x A path to the 10x data /<data_path>/outs.
+#' @param AC_file A path to the antibody capture file.
+#' @param delim A delimiter for the AC_file.
 #' @param log_file A log filename.
 #'
-#' @return A named list of matrices.
+#' @return Named list of matrices. One matrix for each data type.
 #'
 #' @import dplyr
 #' @importFrom glue glue
 #' @importFrom Seurat Read10X
 #' @importFrom stringr str_subset str_c
 #' @export
-load_sample_counts_matrix = function(sample_names, data_path_10x = NULL, AC_text_file = NULL, delim = NULL, log_file = NULL) {
-  # Reads in count data from 10x from one path or multiple paths
-  # FROM IGOR DOLGALEV
-  # Args:
-  #   sample_names: Names to set each sample
-  #   data_path: Paths to each sample /data_path/outs
-  #   log_file: Name of log_file
-  #
-  # Returns:
-  #   Counts matrix from 10x, merged from several samples or from one
+load_sample_counts_matrix = function(sample_name, data_path_10x = NULL, AC_file = NULL, delim = NULL, log_file = NULL) {
 
   # Only does 10x or AC
-  if(!is.null(data_path_10x) & !is.null(AC_text_file)) {
+  if(!is.null(data_path_10x) & !is.null(AC_file)) {
     stop("One file at a time please.")
   }
 
@@ -116,7 +109,7 @@ load_sample_counts_matrix = function(sample_names, data_path_10x = NULL, AC_text
     # supplied
     write_message(message_str, log_file)
 
-    message_str <- glue("loading counts matrix for sample: {sample_names}")
+    message_str <- glue("loading counts matrix for sample: {sample_name}")
     write_message(message_str, log_file)
 
     # check if sample dir is valid
@@ -150,10 +143,10 @@ load_sample_counts_matrix = function(sample_names, data_path_10x = NULL, AC_text
     # read in the 10x counts
     counts_matrix = import_matrix(data_dir)
 
-  } else if(!is.null(AC_text_file)) {
+  } else if(!is.null(AC_file)) {
 
     # read in AC data
-    AC <- read.table(AC_text_file, sep = delim,
+    AC <- read.table(AC_file, sep = delim,
                      header = TRUE)
 
     # remove any row that is called unmapped
@@ -170,9 +163,10 @@ load_sample_counts_matrix = function(sample_names, data_path_10x = NULL, AC_text
   counts_out <- list()
   for(i in 1:length(counts_matrix)) {
     current_mat <- counts_matrix[[i]]
-    colnames(current_mat) <- str_c(sample_names, ":", colnames(current_mat))
+    colnames(current_mat) <- str_c(sample_name, ":", colnames(current_mat))
     counts_out[[i]] <- current_mat
   }
+  names(counts_out) <- names(counts_matrix)
 
   return(counts_out)
 }
@@ -181,7 +175,7 @@ load_sample_counts_matrix = function(sample_names, data_path_10x = NULL, AC_text
 #' Create a new Seurat object from a matrix.
 #'
 #' @param counts_matrix A matrix of raw counts.
-#' @param assay assay.
+#' @param assay Seurat assay to add the data to.
 #' @param log_file log file.
 #'
 #' @return Seurat object.
@@ -252,10 +246,10 @@ calculate_mito_pct <- function(seurat_obj){
  return(s_obj)
 }
 
-#' Add assay to Seurat object. If Seurat object doesn't exist, create one.
+#' Adds assay to Seurat object.
 #'
-#' @param seurat_obj A Seurat object.
-#' @param assay Assay slot.
+#' @param seurat_obj Existing seurat object.
+#' @param assay Seurat assay to add the matrix to.
 #' @param counts_matrix counts matrix.
 #' @param log_file log file.
 #'
@@ -265,21 +259,24 @@ calculate_mito_pct <- function(seurat_obj){
 #' @export
 add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL){
 
-  #If s_obj is not a seurat object, create one
-  if(!is(seurat_obj, "Seurat")){
+  if(is(seurat_obj, "Seurat")){
 
-    s_obj <- create_seurat_obj(counts_matrix = counts_matrix,
-                               assay = assay, log_file = log_file)
+    if(assay %in% names(seurat_obj)) {
 
-  } else if(is(seurat_obj, "Seurat")){
+      warning(glue("{assay} already exists in this Seurat object. Overwriting {assay}"))
+
+    }
 
     s_obj <- seurat_obj
+
+    # use cells that are found in both antibody capture and RNA
     cells_to_use <- intersect(colnames(s_obj), colnames(counts_matrix))
 
     if(length(s_obj) != length(cells_to_use)){
       message_str <- "some cells in scrna matrix not in counts matrix"
       write_message(message_str, log_file)
     }
+
     if(ncol(counts_matrix) != length(cells_to_use)){
       message_str <- "some cells in counts matrix not in scrna matrix"
       write_message(message_str, log_file)
@@ -289,34 +286,41 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL){
     counts_matrix <- as.matrix(counts_matrix[, cells_to_use])
     s_obj <- subset(s_obj, cells = cells_to_use)
 
-    # add ADT slot
+    # add assay
     s_obj[[assay]] <- CreateAssayObject(counts = counts_matrix)
+
+  } else if(!is(seurat_obj, "Seurat")){
+
+    stop(glue("{seurat_obj} is not a Seurat object. Cannot add Assay"))
+
   }
+
   return(s_obj)
 }
 
-
-#' Filter out cells based on minimum and maximum number of genes and max mito percentage.
+#' Filter out cells based on minimum and maximum number of genes and maximum percentage
+#' mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.
 #'
-#' @param metadata_tbl A tibble with metadata.
+#' @param data A tibble with metadata.
 #' @param min_genes Minimum number of genes per cell.
 #' @param max_genes Maximim number of genes per cell.
 #' @param max_mt Maximum percentage of mitochondrial reads per cell.
 #' @param log_file log file.
 #'
-#' @return cells to keep
+#' @return Filtered data
 #'
 #' @import dplyr
 #' @importFrom stats quantile
 #' @export
-filter_data <- function(metadata_tbl, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
+filter_data <- function(data, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
   UseMethod("filter_data")
 }
-
-filter_data.default <- function(metadata_tbl, log_file = NULL, min_genes, max_genes, max_mt) {
+#' @return cells to keep
+#' @export
+filter_data.default <- function(data, log_file = NULL, min_genes, max_genes, max_mt) {
 
   cells_subset =
-    metadata_tbl %>%
+    data %>%
     as.data.frame() %>%
     rownames_to_column("cell") %>%
     filter(.data$nFeature_RNA > min_genes,
@@ -328,22 +332,9 @@ filter_data.default <- function(metadata_tbl, log_file = NULL, min_genes, max_ge
 }
 
 #' @export
-filter_data.Seurat <- function(metadata_tbl, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
-  # filter data by number of genes and mitochondrial percentage
-  #
-  # Args:
-  #   seurat_obj: Seurat object
-  #   out_dir: Output directory
-  #   proj_name: Name or project and name of output files
-  #   min_genes: Minimum number of genes
-  #   max_genes: Maximum number of genes
-  #   max_mt: Maximum mito pct
-  #
-  # Results:
-  #   Filtered seurat object
+filter_data.Seurat <- function(data, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
 
-  s_obj = metadata_tbl
-
+  s_obj = data
   message_str <- glue("\n\n ========== filter data matrix ========== \n\n
                       unfiltered min genes: {min(s_obj$nFeature_RNA)}
                       unfiltered max genes: {max(s_obj$nFeature_RNA)}
@@ -381,11 +372,13 @@ filter_data.Seurat <- function(metadata_tbl, log_file = NULL, min_genes = NULL, 
                               min_genes,
                               max_genes,
                               max_mt)
-
+ # subset based on the cells that passed the filtering
   s_obj = subset(s_obj, cells = cells_subset)
 
   message_str <- glue("filtered cells: {ncol(s_obj)}
                       filtered genes: {nrow(s_obj)}")
+  write_message(message_str, log_file)
+
   return(s_obj)
 }
 

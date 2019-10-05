@@ -4,15 +4,12 @@
 \alias{create_seurat_obj}
 \title{Create a new Seurat object from a matrix.}
 \usage{
-create_seurat_obj(counts_matrix, assay = "RNA", color_scheme = NULL,
-  log_file = NULL)
+create_seurat_obj(counts_matrix, assay = "RNA", log_file = NULL)
 }
 \arguments{
 \item{counts_matrix}{A matrix of raw counts.}
 
-\item{assay}{assay.}
-
-\item{color_scheme}{A character vector of colors for plots (per sample/library).}
+\item{assay}{Seurat assay to add the data to.}
 
 \item{log_file}{log file.}
 }

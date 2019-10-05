@@ -2,13 +2,14 @@
 % Please edit documentation in R/import-data.R
 \name{filter_data}
 \alias{filter_data}
-\title{Filter out cells based on minimum and maximum number of genes and max mito percentage.}
+\title{Filter out cells based on minimum and maximum number of genes and maximum percentage
+mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.}
 \usage{
-filter_data(metadata_tbl, log_file = NULL, min_genes = NULL,
+filter_data(data, log_file = NULL, min_genes = NULL,
   max_genes = NULL, max_mt = 10)
 }
 \arguments{
-\item{metadata_tbl}{A tibble with metadata.}
+\item{data}{A tibble with metadata.}
 
 \item{log_file}{log file.}
 
@@ -19,8 +20,9 @@ filter_data(metadata_tbl, log_file = NULL, min_genes = NULL,
 \item{max_mt}{Maximum percentage of mitochondrial reads per cell.}
 }
 \value{
-cells to keep
+Filtered data
 }
 \description{
-Filter out cells based on minimum and maximum number of genes and max mito percentage.
+Filter out cells based on minimum and maximum number of genes and maximum percentage
+mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.
 }
