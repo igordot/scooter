@@ -1,5 +1,3 @@
-context("test create seurat obj")
-
 test_that("import_matrix can read in 10x data", {
   counts <- import_matrix(data_path = system.file("extdata",
                                                   "outs/filtered_feature_bc_matrix",
@@ -99,5 +97,47 @@ test_that("Seurat object can be filtered", {
                        max_genes = NULL,
                        max_mt = 10)
   expect_lt(ncol(s_obj_filt), ncol(s_obj))
+})
+
+test_that("Seurat object can be log normalized", {
+  counts <- load_sample_counts_matrix(sample_name = "test",
+                                      data_path_10x = system.file("extdata", "",
+                                                                  package = "scooter"))
+  s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
+                             assay = "RNA", log_file = NULL)
+  s_obj <- add_seurat_assay(seurat_obj = s_obj,
+                            assay = "ADT",
+                            counts_matrix = counts$`Antibody Capture`,
+                            log_file = NULL)
+  s_obj_filt <- filter_data(data = s_obj,
+                            log_file = NULL,
+                            min_genes = NULL,
+                            max_genes = NULL,
+                            max_mt = 10)
+  s_obj_norm <- normalize_data(data = s_obj_filt,
+                               normalize_method = "log_norm",
+                               assay = "RNA")
+  expect_gt(ncol(s_obj_norm@assays$RNA@scale.data), 180)
+})
+
+test_that("Seurat object can be SC transform", {
+  counts <- load_sample_counts_matrix(sample_name = "test",
+                                      data_path_10x = system.file("extdata", "",
+                                                                  package = "scooter"))
+  s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
+                             assay = "RNA", log_file = NULL)
+  s_obj <- add_seurat_assay(seurat_obj = s_obj,
+                            assay = "ADT",
+                            counts_matrix = counts$`Antibody Capture`,
+                            log_file = NULL)
+  s_obj_filt <- filter_data(data = s_obj,
+                            log_file = NULL,
+                            min_genes = NULL,
+                            max_genes = NULL,
+                            max_mt = 10)
+  s_obj_norm <- normalize_data(data = s_obj_filt,
+                               normalize_method = "sct",
+                               assay = "RNA")
+  expect_gt(ncol(s_obj_norm@assays$SCT@scale.data), 180)
 })
 

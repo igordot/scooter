@@ -30,5 +30,6 @@ Imports:
     SingleCellExperiment,
     irlba,
     reticulate,
-    uwot
+    uwot,
+    sctransform
 RoxygenNote: 6.1.1

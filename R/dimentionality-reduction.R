@@ -1,5 +1,3 @@
-
-
 #' Run dimensionality reduction, pca, tse, and umap
 #'
 #' @param data A tibble with metadata.
@@ -45,8 +43,8 @@ run_dimensionality_reduction<- function(data, num_pcs, num_dim, num_neighbors, l
 
 #' Run dimensionality reduction, pca, tse, and umap
 #'
-#' @param data A tibble with metadata.
-#' @param dr_method .
+#' @param data Data to use for dimensionality reduction.
+#' @param dr_method Dimensionality reduction method.
 #' @param assay .
 #' @param features .
 #' @param graph .
