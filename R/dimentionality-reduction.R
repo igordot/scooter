@@ -46,6 +46,35 @@ run_dimensionality_reduction <- function(data, assay = "RNA", var_features = TRU
               umap_out = umap_out))
 }
 
+add_dim_red_seurat <- function(seurat_obj, dim_red_list, prefix = NULL){
+
+  pca.dim.reduc <- new(Class = "DimReduc",
+                       cell.embeddings =  as.matrix(dim_red_list$cell.embeddings),
+                       feature.loadings = as.matrix(dim_red_list$feature.loadings),
+                       assay.used = "RNA",
+                       stdev = dim_red_list$sdev,
+                       key = paste0("PC", prefix))
+
+  tsne.dim.reduc <- new(Class = "DimReduc",
+                        cell.embeddings =  as.matrix(dim_red_list$tsne_out),
+                        assay.used = "RNA",
+                        key = paste0("tSNE", prefix))
+
+  umap.dim.reduc <- new(Class = "DimReduc",
+                        cell.embeddings =  as.matrix(dim_red_list$umap_out),
+                        assay.used = "RNA",
+                        key = paste0("UMAP", prefix))
+
+
+  prefix <- ifelse(is.null(prefix), "", prefix)
+
+  seurat_obj[[paste("pca", prefix, sep = "")]] <- pca.dim.reduc
+  seurat_obj[[paste("tsne", prefix, sep = "")]] <- tsne.dim.reduc
+  seurat_obj[[paste("umap", prefix, sep = "")]] <- umap.dim.reduc
+
+  return(seurat_obj)
+}
+
 #' Run dimensionality reduction, pca, tse, and umap
 #'
 #' @param data Data to use for dimensionality reduction.
