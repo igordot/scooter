@@ -124,6 +124,7 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
   metadata1 = metadata1@meta.data
   merge_metadata(metadata1, metadata2, log_file = log_file)
 }
+
 #' Function to extract data from Seurat object.
 #'
 #' @param seurat_obj A Seurat object.
@@ -173,4 +174,28 @@ seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = 
     }
   }
 
+}
+
+#' Function to create a color vector.
+#'
+#' @param seurat_obj A Seurat object.
+#' @param group Assay such as RNA.
+#'
+#' @return A vector of colors.
+#'
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom ggsci pal_igv
+#' @export
+create_color_vect <- function(seurat_obj, group = "orig.ident") {
+  # create a vector of colors for the Idents of the s_obj
+  sample_names <- switch(class(seurat_obj),
+                         Seurat = seurat_obj[[group]] %>% unique() %>% arrange(get(group)),
+                         data.frame = unique(seurat_obj))
+
+  colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+  # create a named color scheme to ensure names and colors are in the proper order
+  sample_names[] <- lapply(sample_names, as.character)
+  colors_samples_named = colors_samples[1:nrow(sample_names)]
+  names(colors_samples_named) = sample_names[,1]
+  return(colors_samples_named)
 }
