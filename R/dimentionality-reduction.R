@@ -1,6 +1,8 @@
 #' Run dimensionality reduction, pca, tse, and umap
 #'
 #' @param data Data.
+#' @param assay Assay in Seurat object.
+#' @param var_features Boolean. To use variable features.
 #' @param num_pcs Number of PCs to calculate.
 #' @param num_dim Number of PCs to use for tsne and umap.
 #' @param num_neighbors Number of neighbors to use for umap.
@@ -117,7 +119,7 @@ run_dr.Seurat <- function(data, dr_method, assay = NULL, var_features = FALSE, f
 #' Run PCA
 #'
 #' @param data A tibble with metadata.
-#' @param num_dim Maximim number of genes per cell.
+#' @param num_pcs Maximim number of genes per cell.
 #' @param prefix suffix.
 #'
 #' @return named list of feature loadings, cell embeddings, sdev, output from pca

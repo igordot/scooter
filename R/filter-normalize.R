@@ -1,5 +1,4 @@
-#' Filter out cells based on minimum and maximum number of genes and maximum percentage
-#' mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.
+#' Filter out cells based on minimum and maximum number of genes and maximum percentage mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.
 #'
 #' @param data A tibble with metadata.
 #' @param min_genes Minimum number of genes per cell.
@@ -16,8 +15,6 @@ filter_data <- function(data, log_file = NULL, min_genes = NULL, max_genes = NUL
   UseMethod("filter_data")
 }
 
-#' @return cells to keep
-#' @export
 filter_data.default <- function(data, log_file = NULL, min_genes, max_genes, max_mt) {
 
   cells_subset =
@@ -32,7 +29,6 @@ filter_data.default <- function(data, log_file = NULL, min_genes, max_genes, max
   return(cells_subset)
 }
 
-#' @export
 filter_data.Seurat <- function(data, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
 
   s_obj = data

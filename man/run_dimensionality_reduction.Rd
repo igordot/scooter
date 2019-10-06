@@ -10,6 +10,10 @@ run_dimensionality_reduction(data, assay = "RNA", var_features = TRUE,
 \arguments{
 \item{data}{Data.}
 
+\item{assay}{Assay in Seurat object.}
+
+\item{var_features}{Boolean. To use variable features.}
+
 \item{num_pcs}{Number of PCs to calculate.}
 
 \item{num_dim}{Number of PCs to use for tsne and umap.}

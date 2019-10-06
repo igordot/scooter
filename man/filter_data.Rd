@@ -2,8 +2,7 @@
 % Please edit documentation in R/filter-normalize.R
 \name{filter_data}
 \alias{filter_data}
-\title{Filter out cells based on minimum and maximum number of genes and maximum percentage
-mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.}
+\title{Filter out cells based on minimum and maximum number of genes and maximum percentage mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.}
 \usage{
 filter_data(data, log_file = NULL, min_genes = NULL,
   max_genes = NULL, max_mt = 10)
@@ -23,6 +22,5 @@ filter_data(data, log_file = NULL, min_genes = NULL,
 Filtered data
 }
 \description{
-Filter out cells based on minimum and maximum number of genes and maximum percentage
-mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.
+Filter out cells based on minimum and maximum number of genes and maximum percentage mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.
 }
