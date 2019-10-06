@@ -43,7 +43,7 @@ plot_distribution.Seurat <- function(data, features, grouping, color_scheme = NU
   plot_distribution(dist_tbl, features, grouping, color_scheme)
 }
 
-plot_scatter<- function(metadata, out_path, proj_name, log_file, X, Y, color, write = FALSE, color_vect = NULL){
+plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = NULL, X, Y, color, write = FALSE, color_vect = NULL){
 
   if(is.null(color_vect)){
     colors_samples_named <- create_color_vect(as.data.frame(metadata[color]))
