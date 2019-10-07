@@ -4,12 +4,15 @@
 \alias{add_dim_red_seurat}
 \title{Add dimensionality reduction to seurat.}
 \usage{
-add_dim_red_seurat(seurat_obj, dim_red_list, prefix = NULL)
+add_dim_red_seurat(seurat_obj, dim_red_list, assay.used = "RNA",
+  prefix = "")
 }
 \arguments{
 \item{seurat_obj}{Data.}
 
 \item{dim_red_list}{Assay in Seurat object.}
+
+\item{assay.used}{.}
 
 \item{prefix}{Boolean. To use variable features.}
 }

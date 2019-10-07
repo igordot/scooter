@@ -15,7 +15,7 @@
 #' @import Seurat
 #' @export
 run_dimensionality_reduction <- function(data, assay = "RNA", var_features = TRUE, num_pcs, num_dim, num_neighbors, log_file = NULL, prefix = NULL){
-
+  ## NOT FIINSHED
   message_str <- "\n\n ========== dimensionality reduction ========== \n\n"
   write_message(message_str, log_file)
 
@@ -25,62 +25,100 @@ run_dimensionality_reduction <- function(data, assay = "RNA", var_features = TRU
                     var_features = var_features,
                     assay = assay,
                     num_pcs = num_pcs,
-                    prefix = paste0("PC", prefix))
+                    prefix = paste0("PC", prefix, "_"))
+  pca_list <- list()
+  pca_list[["pca_feature.loadings"]] <- pca_out$feature.loadings
+  pca_list[["pca_cell.embeddings"]] <- pca_out$cell.embeddings
+  pca_list[["pca_sdev"]]  = pca_out$sdev
 
-  feature.loadings <- pca_out$feature.loadings
-  cell.embeddings <- pca_out$cell.embeddings
-  sdev = pca_out$sdev
-  pca_obj = pca_out$pca_out
+  possibilities <- expand.grid(num_dim, num_neighbors)
+  for(j in 1:nrow(possibilities)) {
+    current_num_dim <- possibilities[j, 1]
+    current_num_neighbors <- possibilities[j, 2]
+    umap_list[[glue("umap_dim{current_num_dim}neighbors{current_num_neighbors}_cell.embeddings")]] <- run_dr(data = cell.embeddings[, 1:current_num_dim], dr_method = "umap", num_neighbors = current_num_neighbors, prefix = paste0("UMAP", prefix, "_"))
+  }
 
-  tsne_out <- run_dr(data = cell.embeddings[,1:num_dim], dr_method = "tsne",
-                      prefix = paste0("tSNE", prefix))
+  out <- c(pca_list, umap_list)
 
-  umap_out<- run_dr(data = cell.embeddings[, 1:num_dim], dr_method = "umap",
-                    num_neighbors = num_neighbors, prefix = paste0("UMAP", prefix))
-
-  return(list(feature.loadings = feature.loadings,
-              cell.embeddings = cell.embeddings,
-              sdev = sdev,
-              pca_obj = pca_obj,
-              tsne_out = tsne_out,
-              umap_out = umap_out))
+  return(out)
 }
 
 #' Add dimensionality reduction to seurat.
 #'
 #' @param seurat_obj Data.
 #' @param dim_red_list Assay in Seurat object.
+#' @param assay.used .
 #' @param prefix Boolean. To use variable features.
 #'
 #' @return Seurat obj.
 #'
 #' @import Seurat
 #' @export
-add_dim_red_seurat <- function(seurat_obj, dim_red_list, prefix = NULL){
+add_dim_red_seurat <- function(seurat_obj, dim_red_list, assay.used = "RNA", prefix = ""){
+  # NOT FINISHED
+  pcas <- list()
+  tsnes <- list()
+  umaps <- list()
 
-  pca.dim.reduc <- new(Class = "DimReduc",
-                       cell.embeddings =  as.matrix(dim_red_list$cell.embeddings),
-                       feature.loadings = as.matrix(dim_red_list$feature.loadings),
-                       assay.used = "RNA",
-                       stdev = dim_red_list$sdev,
-                       key = paste0("PC", prefix))
+  # if the list has pca_ then
+  # iterate over all pca_X_
+  if(any(str_detect(names(dim_red_list), "^pca"))) {
 
-  tsne.dim.reduc <- new(Class = "DimReduc",
-                        cell.embeddings =  as.matrix(dim_red_list$tsne_out),
-                        assay.used = "RNA",
-                        key = paste0("tSNE", prefix))
+    # pca names
+    pca_names <- names(dim_red_list)[str_detect(names(dim_red_list), "^pca")]
 
-  umap.dim.reduc <- new(Class = "DimReduc",
-                        cell.embeddings =  as.matrix(dim_red_list$umap_out),
-                        assay.used = "RNA",
-                        key = paste0("UMAP", prefix))
+    # get unique pca types
+    pca_prefix <- unique(str_remove(pca_names,
+                                    pattern = ("_cell.embeddings|_feature.loadings|_sdev")))
+
+    # for each unique pca prefix
+    for(j in 1:length(pca_prefix)) {
+      pca.dim.reduc <- new(Class = "DimReduc",
+                           cell.embeddings =  as.matrix(dim_red_list[[paste0(pca_prefix[j], "_cell.embeddings")]]),
+                           feature.loadings = as.matrix(dim_red_list[[paste0(pca_prefix[j], "_feature.loadings")]]),
+                           assay.used = assay.used,
+                           stdev = dim_red_list[[paste0(pca_prefix[j], "_sdev")]],
+                           key = paste0("PC", prefix))
+      pcas[[paste0(pca_prefix[j], prefix)]] <- pca.dim.reduc
+    }
 
 
-  prefix <- ifelse(is.null(prefix), "", prefix)
+  } else if(any(str_detect(names(dim_red_list), "^tsne"))) {
+    # else, get all uniue other objects, and iterate over
+    # get unique pca types
+    # tsne names
+    tsne_names <- names(dim_red_list)[str_detect(names(dim_red_list), "^tsne")]
 
-  seurat_obj[[paste("pca", prefix, sep = "")]] <- pca.dim.reduc
-  seurat_obj[[paste("tsne", prefix, sep = "")]] <- tsne.dim.reduc
-  seurat_obj[[paste("umap", prefix, sep = "")]] <- umap.dim.reduc
+    tsne_prefix <- unique(str_remove(tsne_names,
+                                     pattern = "_cell.embeddings"))
+    for(j in 1:length(tsne_prefix)) {
+      tsne.dim.reduc <- new(Class = "DimReduc",
+                            cell.embeddings =  as.matrix(dim_red_list[[paste0(tsne_prefix[j], "_cell.embeddings")]]),
+                            assay.used = assay.used,
+                            key = paste0("tSNE", prefix))
+      tsnes[paste0(tsne_prefix[j], prefix)] <- tsne.dim.reduc
+    }
+  } else if(any(str_detect(names(dim_red_list), "^umap"))) {
+
+    umap_names <- names(dim_red_list)[str_detect(names(dim_red_list), "^umap")]
+
+    umap_prefix <- unique(str_remove(umap_names,
+                                     pattern = "_cell.embeddings"))
+    for(j in 1:length(umap_prefix)) {
+      umap.dim.reduc <- new(Class = "DimReduc",
+                            cell.embeddings =  as.matrix(dim_red_list[[paste0(umap_prefix[j], "_cell.embeddings")]]),
+                            assay.used = assay.used,
+                            key = paste0("UMAP", prefix))
+      umaps[paste0(umap_prefix[j], prefix)] <- umap.dim.reduc
+    }
+  }
+
+  # get the name and add with prefix and then add to s object
+  all_dr <- c(pcas, tsnes, umaps)
+
+  for(k in 1:length(all_dr)) {
+    s_obj[[names(all_dr)[k]]] <- all_dr[[k]]
+  }
 
   return(seurat_obj)
 }
