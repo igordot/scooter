@@ -139,17 +139,20 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 #' @importFrom purrr reduce
 #' @export
 seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = NULL, metadata = TRUE) {
-#TODO: finish this function
+  #TODO THIS FUNCTION IS NOT DONE
   s_obj <- seurat_obj
 
   if(metadata == TRUE) {
-    s_obj_metadata <- s_obj@meta.data
+    s_obj_metadata <- s_obj@meta.data %>%
+      rownames_to_column("cell")
   }
 
   if(!is.null(reduction)) {
    # get index of reductions in the list
-   idx_reduction <- which(names(s_obj@reductions) %in% reduction)
-   reductions_to_save <- s_obj@reductions[idx_reduction]
+   reductions_to_save <- lapply(reduction, function(x){
+     as.data.frame(s_obj@reductions[[x]]@cell.embeddings)
+   })
+
    # set rownames to columns for easier joining
    reductions_to_save <- lapply(reductions_to_save,
                                 function(x) rownames_to_column(.data = x,
@@ -174,6 +177,8 @@ seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = 
     }
   }
 
+  out <- full_join(s_obj_metadata, s_obj_reduction, by = "cell")
+  return(out)
 }
 
 #' Function to create a color vector.
