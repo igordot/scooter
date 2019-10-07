@@ -46,6 +46,16 @@ run_dimensionality_reduction <- function(data, assay = "RNA", var_features = TRU
               umap_out = umap_out))
 }
 
+#' Add dimensionality reduction to seurat.
+#'
+#' @param seurat_obj Data.
+#' @param dim_red_list Assay in Seurat object.
+#' @param prefix Boolean. To use variable features.
+#'
+#' @return Seurat obj.
+#'
+#' @import Seurat
+#' @export
 add_dim_red_seurat <- function(seurat_obj, dim_red_list, prefix = NULL){
 
   pca.dim.reduc <- new(Class = "DimReduc",
