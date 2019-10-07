@@ -56,7 +56,7 @@ plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = 
                              y = eval(as.name(Y)),
                              color = eval(as.name(color)))) +
     geom_point(size = 1, alpha = 0.5) +
-    coord_fixed(ratio = (max(metadata[X]) - min(metadata[X]))/(max(metadata[Y]) - min(metadata[Y]))) +
+   # coord_fixed(ratio = (max(metadata[X]) - min(metadata[X]))/(max(metadata[Y]) - min(metadata[Y]))) +
     xlab(X) +
     ylab(Y) +
     scale_color_manual(values = colors_samples_named,
