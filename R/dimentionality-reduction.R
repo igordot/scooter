@@ -25,7 +25,7 @@ run_dimensionality_reduction <- function(data, assay = "RNA", var_features = TRU
                     var_features = var_features,
                     assay = assay,
                     num_pcs = num_pcs,
-                    prefix = paste0("PC", prefix, "_"))
+                    prefix = paste0("PC", prefix))
 
   feature.loadings <- pca_out$feature.loadings
   cell.embeddings <- pca_out$cell.embeddings
@@ -33,10 +33,10 @@ run_dimensionality_reduction <- function(data, assay = "RNA", var_features = TRU
   pca_obj = pca_out$pca_out
 
   tsne_out <- run_dr(data = cell.embeddings[,1:num_dim], dr_method = "tsne",
-                      prefix = paste0("tSNE", prefix, "_"))
+                      prefix = paste0("tSNE", prefix))
 
   umap_out<- run_dr(data = cell.embeddings[, 1:num_dim], dr_method = "umap",
-                    num_neighbors = num_neighbors, prefix = paste0("UMAP", prefix, "_"))
+                    num_neighbors = num_neighbors, prefix = paste0("UMAP", prefix))
 
   return(list(feature.loadings = feature.loadings,
               cell.embeddings = cell.embeddings,
