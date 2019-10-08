@@ -16,12 +16,12 @@
 #' @importFrom Seurat Embeddings DefaultAssay GetAssayData VariableFeatures
 #' @export
 #' @seealso run_pca(), run_tsne(), run_umap()
-run_dr <- function(data, dr_method, ...) {
+run_dr <- function(data, dr_method, prefix, ...) {
   UseMethod("run_dr")
 }
 
 #' @export
-run_dr.default <- function(data, dr_method = c("pca", "tsne", "umap"), ...) {
+run_dr.default <- function(data, dr_method = c("pca", "tsne", "umap"), prefix, ...) {
 
   dr_method = match.arg(dr_method)
 
@@ -71,6 +71,8 @@ run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = 
   dim_reduction <- run_dr(data = data.use, dr_method = dr_method, ...)
 
   if(dr_method == "pca") {
+    cell.embeddings <- as.matrix(dim_reduction$cell.embeddings)
+    colnames(cell.embeddings) <- paste0("PC", prefix, 1:ncol(cell.embeddings))
     dim_red_class <- new(Class = "DimReduc",
                          cell.embeddings =  as.matrix(dim_reduction$cell.embeddings),
                          feature.loadings = as.matrix(dim_reduction$feature.loadings),
@@ -78,13 +80,17 @@ run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = 
                          stdev = dim_reduction$sdev,
                          key = paste0("PC", prefix))
   } else if(dr_method == "tsne") {
+    cell.embeddings <- as.matrix(dim_reduction)
+    colnames(cell.embeddings) <- paste0("tSNE", prefix, 1:ncol(cell.embeddings))
     dim_red_class <- new(Class = "DimReduc",
-                          cell.embeddings =  as.matrix(dim_reduction),
+                          cell.embeddings =  cell.embeddings,
                           assay.used = assay,
                           key = paste0("tSNE", prefix))
   } else if(dr_method == "umap") {
+    cell.embeddings <- as.matrix(dim_reduction)
+    colnames(cell.embeddings) <- paste0("UMAP", prefix, 1:ncol(cell.embeddings))
     dim_red_class <- new(Class = "DimReduc",
-                          cell.embeddings =  as.matrix(dim_reduction),
+                          cell.embeddings =  cell.embeddings,
                           assay.used = assay,
                           key = paste0("UMAP", prefix))
   }

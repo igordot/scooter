@@ -4,7 +4,7 @@
 \alias{run_dr}
 \title{Run dimensionality reduction, pca, tse, and umap}
 \usage{
-run_dr(data, dr_method, ...)
+run_dr(data, dr_method, prefix, ...)
 }
 \arguments{
 \item{data}{Data to use for dimensionality reduction.}
