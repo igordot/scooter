@@ -68,12 +68,13 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
 #' @import Seurat
 #' @export
 differential_expression <- function(data, metadata, metadata_column, list_groups, proj_name, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL){
+  # TODO make the adding comparisons optional
 
   # If there is a column called cell leave it, if not, make rownames cell
-  if(sum(grepl("^cell$", colnames(metadata)))){
-    metadata = metadata %>%  as.tibble()
+  if("cell" %in% colnames(metadata)) {
+      metadata = metadata %>%  as.tibble()
   } else {
-    metadata = metadata %>% as.data.frame %>% rownames_to_column("cell") %>%  as.tibble()
+    metadata = metadata %>% as_tibble(rownames = "cell")
   }
 
   # initialize a tibble to save de in
@@ -139,7 +140,6 @@ differential_expression <- function(data, metadata, metadata_column, list_groups
 #' @return .
 #'
 #' @import dplyr
-#' @import Seurat
 #' @export
 calc_clust_averages <- function(metadata, data, group){
 
@@ -164,6 +164,15 @@ calc_clust_averages <- function(metadata, data, group){
 
   current_data <- setDT(current_data)
   current_mean <- current_data[, lapply(.SD, mean), by = .(get(group)), .SDcols = 2:ncol(current_data)]
+
+  # if (length(x = temp.cells) > 1 ) {
+  #   data.temp <- apply(
+  #     X = data.use[features.assay, temp.cells, drop = FALSE],
+  #     MARGIN = 1,
+  #     FUN = fxn.average
+  #   )
+  # }
+
   colnames(current_mean)[which(colnames(current_mean) == "get")] <- group
 
   current_mean <- as.data.frame(current_mean)

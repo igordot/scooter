@@ -4,7 +4,7 @@
 \alias{run_umap}
 \title{Run UMAP}
 \usage{
-run_umap(data, num_neighbors, prefix = "UMAP_")
+run_umap(data, num_neighbors, min_dist = 0.3, prefix = "UMAP_")
 }
 \arguments{
 \item{data}{Data to run UMAP on.}

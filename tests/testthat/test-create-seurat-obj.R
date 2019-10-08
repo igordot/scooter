@@ -1,42 +1,40 @@
 test_that("import_matrix can read in 10x data", {
-  counts <- import_matrix(data_path = system.file("extdata",
+  counts <- import_mtx(data_path = system.file("extdata",
                                                   "outs/filtered_feature_bc_matrix",
                                                   package = "scooter"),
-                          gene.column = 2)
+                          gene_column = 2)
   truth <- readRDS(system.file("extdata",
                                "import_matrix_counts.rds",
                                package = "scooter"))
   expect_identical(counts, truth)
 })
 
-
 test_that("load_sample_counts_matrix can read in 10x data", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      data_path_10x = system.file("extdata", "",
-                                                                  package = "scooter"))
+                                      path = system.file("extdata",
+                                                         "",
+                                                         package = "scooter"))
   expect_identical(names(counts), c("Antibody Capture", "Gene Expression"))
 })
 
 test_that("load_sample_counts_matrix can read in tsv Antibody Capture file", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      AC_file = system.file("extdata", "HTO.tsv",
-                                                                 package = "scooter"),
-                                      delim = "\t")
+                                      path = system.file("extdata", "HTO.tsv",
+                                                                 package = "scooter"))
   expect_identical(names(counts), c("Antibody Capture"))
 })
 
 test_that("load_sample_counts_matrix can read in csv Antibody Capture file", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      AC_file = system.file("extdata",
+                                      path = system.file("extdata",
                                                                  "HTO.csv",
-                                                                 package = "scooter"),
-                                      delim = ",")
+                                                                 package = "scooter"))
   expect_identical(names(counts), c("Antibody Capture"))
 })
 
 test_that("Seurat object can be created from RNA data", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      data_path_10x = system.file("extdata", "",
+                                      path = system.file("extdata", "",
                                                                   package = "scooter"))
   s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
                              assay = "RNA", log_file = NULL)
@@ -46,7 +44,7 @@ test_that("Seurat object can be created from RNA data", {
 
 test_that("Seurat object can be created from ADT data", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      data_path_10x = system.file("extdata", "",
+                                      path = system.file("extdata", "",
                                                                   package = "scooter"))
   s_obj <- create_seurat_obj(counts_matrix = counts$`Antibody Capture`,
                              assay = "ADT", log_file = NULL)
@@ -62,7 +60,7 @@ test_that("Seurat obj can be created", {
 
 test_that("Assay can be added to Seurat object",{
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      data_path_10x = system.file("extdata", "",
+                                      path = system.file("extdata", "",
                                                                   package = "scooter"))
   s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
                              assay = "RNA", log_file = NULL)
@@ -83,7 +81,7 @@ test_that("Seurat object can be filtered", {
 
 test_that("Seurat object can be filtered", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      data_path_10x = system.file("extdata", "",
+                                      path = system.file("extdata", "",
                                                                   package = "scooter"))
   s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
                              assay = "RNA", log_file = NULL)
@@ -101,7 +99,7 @@ test_that("Seurat object can be filtered", {
 
 test_that("Seurat object can be log normalized", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      data_path_10x = system.file("extdata", "",
+                                      path = system.file("extdata", "",
                                                                   package = "scooter"))
   s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
                              assay = "RNA", log_file = NULL)
@@ -115,14 +113,14 @@ test_that("Seurat object can be log normalized", {
                             max_genes = NULL,
                             max_mt = 10)
   s_obj_norm <- normalize_data(data = s_obj_filt,
-                               normalize_method = "log_norm",
+                               method = "log_norm",
                                assay = "RNA")
   expect_gt(ncol(s_obj_norm@assays$RNA@scale.data), 180)
 })
 
 test_that("Seurat object can be SC transform", {
   counts <- load_sample_counts_matrix(sample_name = "test",
-                                      data_path_10x = system.file("extdata", "",
+                                      path = system.file("extdata", "",
                                                                   package = "scooter"))
   s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
                              assay = "RNA", log_file = NULL)
@@ -136,7 +134,7 @@ test_that("Seurat object can be SC transform", {
                             max_genes = NULL,
                             max_mt = 10)
   s_obj_norm <- normalize_data(data = s_obj_filt,
-                               normalize_method = "sct",
+                               method = "sct",
                                assay = "RNA")
   expect_gt(ncol(s_obj_norm@assays$SCT@scale.data), 180)
 })

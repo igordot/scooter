@@ -32,5 +32,7 @@ Imports:
     Rtsne,
     reticulate,
     uwot,
-    sctransform
+    sctransform,
+    data.table,
+    methods
 RoxygenNote: 6.1.1

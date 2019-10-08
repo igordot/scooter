@@ -11,6 +11,8 @@ run_dr(data, dr_method, ...)
 
 \item{dr_method}{Dimensionality reduction method.}
 
+\item{prefix}{.}
+
 \item{assay}{.}
 
 \item{features}{.}
@@ -18,6 +20,8 @@ run_dr(data, dr_method, ...)
 \item{graph}{.}
 
 \item{num_dim}{.}
+
+\item{min_dist}{.}
 
 \item{var_features}{.}
 }

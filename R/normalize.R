@@ -1,84 +1,3 @@
-#' Filter out cells based on minimum and maximum number of genes and maximum percentage mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.
-#'
-#' @param data A tibble with metadata.
-#' @param min_genes Minimum number of genes per cell.
-#' @param max_genes Maximim number of genes per cell.
-#' @param max_mt Maximum percentage of mitochondrial reads per cell.
-#' @param log_file log file.
-#'
-#' @return Filtered data
-#'
-#' @import dplyr
-#' @importFrom stats quantile
-#' @export
-filter_data <- function(data, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
-  UseMethod("filter_data")
-}
-
-filter_data.default <- function(data, log_file = NULL, min_genes, max_genes, max_mt) {
-
-  cells_subset =
-    data %>%
-    as.data.frame() %>%
-    rownames_to_column("cell") %>%
-    filter(.data$nFeature_RNA > min_genes,
-           .data$nFeature_RNA < max_genes,
-           .data$percent.mito < max_mt) %>%
-    pull(.data$cell)
-
-  return(cells_subset)
-}
-
-filter_data.Seurat <- function(data, log_file = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
-
-  s_obj = data
-  message_str <- glue("\n\n ========== filter data matrix ========== \n\n
-                      unfiltered min genes: {min(s_obj$nFeature_RNA)}
-                      unfiltered max genes: {max(s_obj$nFeature_RNA)}
-                      unfiltered mean num genes: {round(mean(s_obj$nFeature_RNA), 3)}
-                      unfiltered median num genes: {median(s_obj$nFeature_RNA)}")
-  write_message(message_str, log_file)
-
-  # convert arguments to integers (command line arguments end up as characters)
-  min_genes = as.numeric(min_genes)
-  max_genes = as.numeric(max_genes)
-  max_mt = as.numeric(max_mt)
-
-  # default cutoffs (gene numbers rounded to nearest 10)
-  # as.numeric() converts NULLs to 0 length numerics, so can't use is.null()
-  if (!length(min_genes)) min_genes = s_obj$nFeature_RNA %>%
-    quantile(0.02, names = FALSE) %>%
-    round(-1)
-
-  if (!length(max_genes)) max_genes = s_obj$nFeature_RNA %>%
-    quantile(0.98, names = FALSE) %>%
-    round(-1)
-
-  if (!length(max_mt)) max_mt = 10
-
-  message_str <- glue("min genes cutoff: {min_genes}
-                      max genes cutoff: {max_genes}
-                      max mitochondrial percentage cutoff: {max_mt}
-                      imported cells: {ncol(s_obj)}
-                      imported genes: {nrow(s_obj)}")
-  write_message(message_str, log_file)
-
-  # filter
-  cells_subset <- filter_data(s_obj@meta.data,
-                              log_file,
-                              min_genes,
-                              max_genes,
-                              max_mt)
-  # subset based on the cells that passed the filtering
-  s_obj = subset(s_obj, cells = cells_subset)
-
-  message_str <- glue("filtered cells: {ncol(s_obj)}
-                      filtered genes: {nrow(s_obj)}")
-  write_message(message_str, log_file)
-
-  return(s_obj)
-}
-
 #' Normalize data
 #'
 #' @param data Input data.
@@ -92,18 +11,18 @@ filter_data.Seurat <- function(data, log_file = NULL, min_genes = NULL, max_gene
 #'
 #' @import dplyr
 #' @export
-normalize_data <- function(data, normalize_method, nfeatures = 2000, metadata = NULL, assay = NULL, log_file = NULL) {
+normalize_data <- function(data, method, nfeatures = 2000, metadata = NULL, assay = NULL, log_file = NULL) {
   UseMethod("normalize_data")
 }
 
-normalize_data.default <- function(data, normalize_method, nfeatures = 2000, metadata = NULL, assay = NULL, log_file = NULL) {
+normalize_data.default <- function(data, method, nfeatures = 2000, metadata = NULL, assay = NULL, log_file = NULL) {
 
-  if (normalize_method == "log_norm") {
+  if (method == "log_norm") {
 
     normed <- log_normalize_data(data = data,
                                  log_file = log_file)
 
-  } else if ( normalize_method == "sct") {
+  } else if ( method == "sct") {
 
     normed <- sctransform_data(counts = data,
                                metadata = metadata,
@@ -113,9 +32,9 @@ normalize_data.default <- function(data, normalize_method, nfeatures = 2000, met
   return(normed)
 }
 
-normalize_data.Seurat <- function(data, normalize_method, nfeatures = 2000, metadata = NULL, assay = "RNA", log_file = NULL) {
+normalize_data.Seurat <- function(data, method, nfeatures = 2000, metadata = NULL, assay = "RNA", log_file = NULL) {
 
-  if (normalize_method == "sct") {
+  if (method == "sct") {
 
     # get counts data for the specified assay
     assay.obj <- GetAssay(object = data, assay = assay)
@@ -126,7 +45,7 @@ normalize_data.Seurat <- function(data, normalize_method, nfeatures = 2000, meta
 
     # run normalization
     normed_data <- normalize_data(data = counts,
-                                  normalize_method = normalize_method,
+                                  method = method,
                                   nfeatures = nfeatures,
                                   metadata = metadata,
                                   log_file = log_file,
@@ -162,7 +81,7 @@ normalize_data.Seurat <- function(data, normalize_method, nfeatures = 2000, meta
     counts <- GetAssayData(object = assay.obj, slot = 'counts')
 
     # normalize data
-    normed_data <- normalize_data(counts, normalize_method)
+    normed_data <- normalize_data(counts, method = method)
 
     # set data slot to normalized data
     data[[assay]]@data <- normed_data
@@ -222,6 +141,7 @@ log_normalize_data <- function(data, log_file = NULL) {
 #' @import dplyr
 #' @importFrom sctransform vst
 #' @export
+#'
 sctransform_data <- function(counts, metadata, nfeatures, log_file = NULL){
   # sc transform data
 
@@ -229,7 +149,7 @@ sctransform_data <- function(counts, metadata, nfeatures, log_file = NULL){
   write_message(message_str, log_file)
 
   # define clip range. This is unchanged from Seurat
-  clip.range <- c(-sqrt(ncol(counts)),sqrt(ncol(counts)))
+  clip.range <- c(-sqrt(ncol(counts)), sqrt(ncol(counts)))
 
   vst.out <- vst(counts,
                  cell_attr = metadata,
@@ -262,8 +182,8 @@ sctransform_data <- function(counts, metadata, nfeatures, log_file = NULL){
   scale.data <- ScaleData(
     scale.data,
     features = NULL,
-    vars.to.regress = c("percent.mito", "nCount_RNA"),
-    latent.data = metadata[, c("percent.mito", "nCount_RNA"), drop = FALSE],
+    vars.to.regress = c("pct_mito", "nCount_RNA"),
+    latent.data = metadata[, c("pct_mito", "nCount_RNA"), drop = FALSE],
     model.use = 'linear',
     use.umi = FALSE,
     do.scale = FALSE,
@@ -292,6 +212,7 @@ sctransform_data <- function(counts, metadata, nfeatures, log_file = NULL){
 #' @import dplyr
 #' @importFrom Seurat FindVariableFeatures ScaleData
 #' @export
+#'
 calculate_variance <- function(seurat_obj, assay = "RNA", nfeatures = 2000, log_file = NULL){
   # calculate variance of genes in a seurat object
 
@@ -320,8 +241,8 @@ calculate_variance <- function(seurat_obj, assay = "RNA", nfeatures = 2000, log_
   metadata <- s_obj@meta.data
   # scale data in the assay
   scaled.data = ScaleData(s_obj[[assay]],
-                          vars.to.regress = c("percent.mito", "nCount_RNA"),
-                          latent.data = metadata[,c("percent.mito", "nCount_RNA")],
+                          vars.to.regress = c("pct_mito", "nCount_RNA"),
+                          latent.data = metadata[,c("pct_mito", "nCount_RNA")],
                           verbose = FALSE)
 
   return(list(top.features = var_features@var.features,

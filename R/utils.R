@@ -140,6 +140,7 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 #' @export
 seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = NULL, metadata = TRUE) {
   #TODO THIS FUNCTION IS NOT DONE
+  # name it as.data.frame.seurat
   s_obj <- seurat_obj
 
   if(metadata == TRUE) {
