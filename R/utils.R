@@ -147,7 +147,7 @@ seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = 
     s_obj_metadata <- s_obj@meta.data %>%
       rownames_to_column("cell")
   }
-
+  seurat_to_matrix
   if(!is.null(reduction)) {
    # get index of reductions in the list
    reductions_to_save <- lapply(reduction, function(x){

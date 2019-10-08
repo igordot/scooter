@@ -63,7 +63,7 @@ plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = 
                        name = color)
 
   if(write){
-    ggsave(glue("{out_path}/{proj_name}.{X}.{Y}.{color}.png"),
+    ggsave(file = glue("{out_path}/{proj_name}.{X}.{Y}.{color}.png"),
            plot = current_plot,
            width = 8,
            height = 6,
