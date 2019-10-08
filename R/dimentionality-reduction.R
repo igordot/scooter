@@ -41,7 +41,7 @@ run_dr.default <- function(data, dr_method = c("pca", "tsne", "umap"), ...) {
 }
 
 #' @export
-run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = FALSE, features = NULL, graph = NULL, num_dim_use = NULL, ...) {
+run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = FALSE, features = NULL, graph = NULL, num_dim_use = NULL, reduction = NULL, ...) {
 
   if(var_features){
     features <- VariableFeatures(data[[assay]])
@@ -57,7 +57,7 @@ run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = 
   # if the number of dimensions is specified, use those dimensions from pca
   } else if (!is.null(num_dim_use)) {
 
-    data.use <- Embeddings(data[[reduction]])[, num_dim_use]
+    data.use <- Embeddings(data[[reduction]])[,1:num_dim_use]
     assay <- DefaultAssay(object = data[[reduction]])
 
   # if a graph is specified, use the graph
@@ -74,18 +74,18 @@ run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = 
     dim_red_class <- new(Class = "DimReduc",
                          cell.embeddings =  as.matrix(dim_reduction$cell.embeddings),
                          feature.loadings = as.matrix(dim_reduction$feature.loadings),
-                         assay.used = "RNA",
+                         assay.used = assay,
                          stdev = dim_reduction$sdev,
                          key = paste0("PC", prefix))
   } else if(dr_method == "tsne") {
     dim_red_class <- new(Class = "DimReduc",
-                          cell.embeddings =  as.matrix(dim_reduction$tsne_out),
-                          assay.used = "RNA",
+                          cell.embeddings =  as.matrix(dim_reduction),
+                          assay.used = assay,
                           key = paste0("tSNE", prefix))
   } else if(dr_method == "umap") {
     dim_red_class <- new(Class = "DimReduc",
-                          cell.embeddings =  as.matrix(dim_reduction$umap_out),
-                          assay.used = "RNA",
+                          cell.embeddings =  as.matrix(dim_reduction),
+                          assay.used = assay,
                           key = paste0("UMAP", prefix))
   }
   data[[glue("{dr_method}{prefix}")]] <- dim_red_class
