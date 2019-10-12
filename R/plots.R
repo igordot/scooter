@@ -45,25 +45,33 @@ plot_distribution.Seurat <- function(data, features, grouping, color_scheme = NU
 
 plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = NULL, X, Y, color, write = FALSE, color_vect = NULL){
 
+  # Create color vector if not supplied
   if(is.null(color_vect)){
     colors_samples_named <- create_color_vect(as.data.frame(metadata[color]))
   } else {
     colors_samples_named <- color_vect
   }
 
+  #
+  if(is.null(proj_name)){
+    proj_name <- ""
+  } else {
+    proj_name <- paste0(proj_name, ".")
+  }
+
   current_plot <- ggplot(sample_frac(metadata),
-                         aes(x = eval(as.name(X)),
-                             y = eval(as.name(Y)),
-                             color = eval(as.name(color)))) +
-    geom_point(size = 1, alpha = 0.5) +
-   # coord_fixed(ratio = (max(metadata[X]) - min(metadata[X]))/(max(metadata[Y]) - min(metadata[Y]))) +
+                         aes(x = sym(!!X),
+                             y = sym(!!Y),
+                             color = sym(!!color))) +
+    geom_point(size = 1, alpha = 0.7) +
+    coord_fixed(ratio = (max(metadata[X]) - min(metadata[X]))/(max(metadata[Y]) - min(metadata[Y]))) +
     xlab(X) +
     ylab(Y) +
     scale_color_manual(values = colors_samples_named,
                        name = color)
 
   if(write){
-    ggsave(file = glue("{out_path}/{proj_name}.{X}.{Y}.{color}.png"),
+    ggsave(file = glue("{out_path}/{proj_name}{X}.{Y}.{color}.png"),
            plot = current_plot,
            width = 8,
            height = 6,
@@ -73,20 +81,6 @@ plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = 
   return(current_plot)
 }
 
-loop_plot_scatter <- function(metadata, out_path, proj_name, log_file, X, Y, colors_vect){
-
-  for(i in colors_vect){
-    current_plot <- plot_scatter(metadata,
-                                 out_path,
-                                 proj_name,
-                                 log_file,
-                                 X,
-                                 Y,
-                                 i,
-                                 write = TRUE)
-  }
-
-}
 
 cluster_stats_bar <- function(metadata, group1, group2, write = FALSE, g1_col = NULL, g2_col = NULL, cluster = TRUE){
   # TODO: pull out plots into new function

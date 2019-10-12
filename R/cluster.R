@@ -141,6 +141,7 @@ differential_expression <- function(data, metadata, metadata_column, list_groups
 #'
 #' @import dplyr
 #' @export
+#'
 calc_clust_averages <- function(metadata, data, group){
 
   # get relevant metadata
@@ -165,21 +166,9 @@ calc_clust_averages <- function(metadata, data, group){
   current_data <- setDT(current_data)
   current_mean <- current_data[, lapply(.SD, mean), by = .(get(group)), .SDcols = 2:ncol(current_data)]
 
-  # if (length(x = temp.cells) > 1 ) {
-  #   data.temp <- apply(
-  #     X = data.use[features.assay, temp.cells, drop = FALSE],
-  #     MARGIN = 1,
-  #     FUN = fxn.average
-  #   )
-  # }
-
   colnames(current_mean)[which(colnames(current_mean) == "get")] <- group
 
   current_mean <- as.data.frame(current_mean)
-
-  if(write == TRUE) {
-    write_excel_csv(current_mean, path = glue("{out_path}/{proj_name}.{group}.means.csv"))
-  }
 
   return(current_mean)
 }
