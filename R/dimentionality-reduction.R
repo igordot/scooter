@@ -16,7 +16,7 @@
 #' @importFrom Seurat Embeddings DefaultAssay GetAssayData VariableFeatures
 #' @export
 #' @seealso run_pca(), run_tsne(), run_umap()
-run_dr <- function(data, dr_method, prefix, ...) {
+run_dr <- function(data, dr_method, prefix,  ...) {
   UseMethod("run_dr")
 }
 
@@ -27,21 +27,23 @@ run_dr.default <- function(data, dr_method = c("pca", "tsne", "umap"), prefix, .
 
   if (dr_method == "pca") {
 
-    out = run_pca(data = data, ...)
+    out = run_pca(data = data, prefix = prefix, ...)
 
   } else if (dr_method == "tsne") {
 
-    out = run_tsne(data = data, ...)
+    out = run_tsne(data = data, prefix = prefix, ...)
 
   } else if (dr_method == "umap") {
 
-    out = run_umap(data = data, ...)
+    out = run_umap(data = data, prefix = prefix, num_neighbors = num_neighbor)
 
   }
 }
 
 #' @export
-run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = FALSE, features = NULL, graph = NULL, num_dim_use = NULL, reduction = NULL, ...) {
+run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL,
+                          var_features = FALSE, features = NULL,
+                          graph = NULL, num_dim_use = NULL, reduction = NULL, ...) {
 
   if(var_features){
     features <- VariableFeatures(data[[assay]])
@@ -68,14 +70,16 @@ run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL, var_features = 
   }
 
   # run the specified dimensionality reduction method with the specified data
-  dim_reduction <- run_dr(data = data.use, dr_method = dr_method, ...)
+  dim_reduction <- run_dr(data = data.use, dr_method = dr_method, prefix = prefix, ...)
 
   if(dr_method == "pca") {
     cell.embeddings <- as.matrix(dim_reduction$cell.embeddings)
     colnames(cell.embeddings) <- paste0("PC", prefix, 1:ncol(cell.embeddings))
+    feature.loadings <- as.matrix(dim_reduction$feature.loadings)
+    colnames(feature.loadings) <- paste0("PC", prefix, 1:ncol(feature.loadings))
     dim_red_class <- new(Class = "DimReduc",
-                         cell.embeddings =  as.matrix(dim_reduction$cell.embeddings),
-                         feature.loadings = as.matrix(dim_reduction$feature.loadings),
+                         cell.embeddings =  cell.embeddings,
+                         feature.loadings = feature.loadings,
                          assay.used = assay,
                          stdev = dim_reduction$sdev,
                          key = paste0("PC", prefix))
@@ -170,7 +174,6 @@ run_tsne <- function(data, seed.use = 1,  dim.embed = 2, prefix = "tSNE_"){
 #' @importFrom uwot umap
 #' @export
 run_umap <- function(data, num_neighbors, min_dist = 0.3, prefix = "UMAP_") {
-
   # run umap
   umap_out <- umap(data, n_neighbors = num_neighbors, min_dist = min_dist)
 
