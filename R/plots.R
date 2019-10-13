@@ -25,7 +25,7 @@ plot_distribution.default <- function(data, features, grouping, color_scheme = N
     ggplot(dist_tbl, aes(x = !!sym(grouping), y = val)) +
     cowplot::theme_cowplot() +
     geom_violin(aes(fill = !!sym(grouping))) +
-    geom_jitter(size = 1, color = "black", alpha = 0.3, width = 0.3) +
+    #geom_jitter(size = 1, color = "black", alpha = 0.3, width = 0.3) +
     scale_fill_manual(values = color_scheme) +
     theme(
       axis.title = element_blank(),
