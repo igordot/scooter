@@ -60,9 +60,9 @@ plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = 
   }
 
   current_plot <- ggplot(sample_frac(metadata),
-                         aes(x = sym(!!X),
-                             y = sym(!!Y),
-                             color = sym(!!color))) +
+                         aes(x = !!sym(X),
+                             y = !!sym(Y),
+                             color = !!sym(color))) +
     geom_point(size = 1, alpha = 0.7) +
     coord_fixed(ratio = (max(metadata[X]) - min(metadata[X]))/(max(metadata[Y]) - min(metadata[Y]))) +
     xlab(X) +
