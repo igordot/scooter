@@ -67,11 +67,25 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
 #' @import dplyr
 #' @import Seurat
 #' @export
-differential_expression <- function(data, metadata, metadata_column, list_groups, proj_name, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL){
-  # TODO make the adding comparisons optional
+differential_expression <- function(data, metadata, metadata_column, list_groups = NULL, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL){
+
+
+  if(!is.null(list_groups)) {
+    # get unique combinations
+    unique_ids <- unique(unique(metadata[,metadata_column]))[[1]]
+    list_groups <- expand.grid(unique_ids,
+                               unique_ids,
+                               stringsAsFactors = FALSE)
+    list_groups <- list_groups %>%
+      filter(Var1 != Var2)
+    indx <- !duplicated(t(apply(list_groups, 1, sort)))
+    list_groups <- list_groups[indx,]
+  } else {
+    list_groups <- list_groups
+  }
 
   # If there is a column called cell leave it, if not, make rownames cell
-  if("cell" %in% colnames(metadata)) {
+  if("cell" %in% colnames (metadata)) {
       metadata = metadata %>%  as.tibble()
   } else {
     metadata = metadata %>% as_tibble(rownames = "cell")
