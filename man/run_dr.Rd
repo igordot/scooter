@@ -4,7 +4,9 @@
 \alias{run_dr}
 \title{Run dimensionality reduction, pca, tse, and umap}
 \usage{
-run_dr(data, dr_method, prefix, ...)
+run_dr(data, dr_method, prefix, assay = NULL, var_features = FALSE,
+  features = NULL, graph = NULL, num_dim_use = NULL,
+  reduction = NULL, num_neighbors = NULL, num_pcs = NULL, ...)
 }
 \arguments{
 \item{data}{Data to use for dimensionality reduction.}
@@ -15,6 +17,8 @@ run_dr(data, dr_method, prefix, ...)
 
 \item{assay}{.}
 
+\item{var_features}{.}
+
 \item{features}{.}
 
 \item{graph}{.}
@@ -22,8 +26,6 @@ run_dr(data, dr_method, prefix, ...)
 \item{num_dim}{.}
 
 \item{min_dist}{.}
-
-\item{var_features}{.}
 }
 \value{
 list of dimensionality reduced/

@@ -116,7 +116,7 @@ test_that("run dr umap", {
 
   s_obj_dr <- run_dr(s_obj_dr, dr_method = "umap",
                      prefix = "test", reduction = "pcatest",
-                     num_dim_use = 20, assay = "SCT", num_neighbor = 3)
+                     num_dim_use = 20, assay = "SCT", num_neighbors = 6)
 
   expect_equal(names(s_obj_dr@reductions), c("pcatest", "umaptest"))
 })
