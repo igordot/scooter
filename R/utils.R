@@ -129,7 +129,8 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 #'
 #' @param seurat_obj A Seurat object.
 #' @param assay Assay such as RNA.
-#' @param slot Slot such as counts.
+#' @param slot Slot such as counts. Default is scale.data.
+#' @param features Features from assay.
 #' @param reduction Character vector of reduction types.
 #' @param metadata Boolean. To grab metadata or not
 #'
@@ -138,48 +139,95 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 #' @import dplyr
 #' @importFrom purrr reduce
 #' @export
-seurat_to_matrix <- function(seurat_obj, assay = NULL, slot = NULL, reduction = NULL, metadata = TRUE) {
-  #TODO THIS FUNCTION IS NOT DONE
-  # name it as.data.frame.seurat
-  s_obj <- seurat_obj
+as.data.frame_Seurat <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL, reduction = NULL, metadata = TRUE) {
 
+
+  # if metadata, extract metadata
   if(metadata == TRUE) {
-    s_obj_metadata <- s_obj@meta.data %>%
+    metadata_out <- seurat_obj@meta.data %>%
       rownames_to_column("cell")
-  }
-  seurat_to_matrix
-  if(!is.null(reduction)) {
-   # get index of reductions in the list
-   reductions_to_save <- lapply(reduction, function(x){
-     as.data.frame(s_obj@reductions[[x]]@cell.embeddings)
-   })
-
-   # set rownames to columns for easier joining
-   reductions_to_save <- lapply(reductions_to_save,
-                                function(x) rownames_to_column(.data = x,
-                                                               "cell"))
-   # join lists by the new column
-   s_obj_reduction <- reduce(reductions_to_save,
-                             .f = left_join,
-                             by = "cell")
+  } else {
+    metadata_out = NULL
   }
 
   if(!is.null(assay)) {
+   assay_out <- as.data.frame_Seurat_assay(seurat_obj = seurat_obj , assay = assay, slot = slot,
+                               features = features)
+  } else {
+    assay_out = NULL
+  }
+
+  if(!is.null(reduction)) {
+    reduction_out <- as.data.frame_Seurat_reduction(seurat_obj = seurat_obj,
+                                                reduction = reduction)
+  } else {
+    reduction_out = NULL
+  }
+
+  data <- list(metadata_out, assay_out, reduction_out)
+  idx <- which(sapply(data, function(x) !is.null(x)))
+
+  data <- data[idx]
+
+  # merge the extracted data
+  if(length(data) == 1) {
+    data_out = as.data.frame(data)
+  } else {
+    data_out <- reduce(data,
+                       .f = full_join,
+                              by = "cell")
+  }
+
+  return(data_out)
+}
+
+as.data.frame_Seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL) {
+
+  # If assay is specified
+  if(!is.null(assay)) {
+    # and slot is specified
     if(!is.null(slot)) {
-      s_obj_assay <- s_obj@assays$assay$slot
+      # get data from that assay and slot
+      s_obj_assay <- slot(seurat_obj@assays[[assay]], name = slot)
+      if(!is.null(features)) {
+        s_obj_assay <- as.data.frame(s_obj_assay[features, , drop = FALSE])
+        rownames(s_obj_assay) <- features
+      }
+      s_obj_assay_out <- as.data.frame(t(s_obj_assay)) %>%
+        rownames_to_column("cell")
     } else {
-      s_obj_assay <- s_obj@assays$assay
+      # or just get that assay scale data
+      s_obj_assay <- slot(seurat_obj@assays[[assay]], name = "scale.data")
+      if(!is.null(features)) {
+        s_obj_assay <- t(as.data.frame(s_obj_assay[features,]))
+        rownames(s_obj_assay) <- features
+      }
+      s_obj_assay_out <- as.data.frame(t(s_obj_assay)) %>%
+        rownames_to_column("cell")
     }
+  } else {
+    stop("No assay specified")
   }
 
-  if(!is.null(slot)) {
-    if(!is.null(assay)) {
-      stop("No assay specified for slot")
-    }
-  }
+  return(s_obj_assay_out)
+}
 
-  out <- full_join(s_obj_metadata, s_obj_reduction, by = "cell")
-  return(out)
+as.data.frame_Seurat_reduction <- function(seurat_obj, reduction ) {
+  # if reduction is specified, extract specified reduction
+    # get index of reductions in the list
+  reductions_to_save <- lapply(reduction, function(x){
+    as.data.frame(seurat_obj@reductions[[x]]@cell.embeddings)})
+
+  # set rownames to columns for easier joining
+  reductions_to_save <- lapply(reductions_to_save,
+                               function(x) rownames_to_column(.data = x,
+                                                              "cell"))
+  # join lists by the new column
+  s_obj_reduction <- reduce(reductions_to_save,
+                            .f = left_join,
+                            by = "cell")
+
+  return(s_obj_reduction)
 }
 
 #' Function to create a color vector.

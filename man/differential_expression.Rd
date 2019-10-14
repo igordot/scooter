@@ -4,8 +4,8 @@
 \alias{differential_expression}
 \title{Calculate differential expression for}
 \usage{
-differential_expression(data, metadata, metadata_column, list_groups,
-  proj_name, log_fc_threshold = 0.5, min.pct = 0.1,
+differential_expression(data, metadata, metadata_column,
+  list_groups = NULL, log_fc_threshold = 0.5, min.pct = 0.1,
   test.use = "wilcox", out_path = ".", write = FALSE,
   log_file = NULL)
 }
@@ -18,8 +18,6 @@ differential_expression(data, metadata, metadata_column, list_groups,
 
 \item{list_groups}{list of groups to compare in the metadata column.}
 
-\item{proj_name}{Project name as a prefix for the output file.}
-
 \item{log_fc_threshold}{Log fc threshold.}
 
 \item{min.pct}{Minimum percentage of cells a gene must be expressed in to be tested.}
@@ -31,6 +29,8 @@ differential_expression(data, metadata, metadata_column, list_groups,
 \item{write}{Boolean to write or not.}
 
 \item{log_file}{log file.}
+
+\item{proj_name}{Project name as a prefix for the output file.}
 }
 \value{
 .
