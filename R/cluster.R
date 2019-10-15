@@ -154,8 +154,8 @@ differential_expression <- function(data, metadata, metadata_column, list_groups
 #' @return .
 #'
 #' @import dplyr
+#' @import data.table
 #' @export
-#'
 calc_clust_averages <- function(metadata, data, group){
 
   # get relevant metadata
