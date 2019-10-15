@@ -9,8 +9,8 @@ gather_seurat_objects <- function(seurat_obj_paths){
 
     current_seurat_obj = seurat_obj_paths[[i]]
     current_seurat_obj_name = names(seurat_obj_paths[i])
-    print(current_seurat_obj_name)
-    print(current_seurat_obj)
+    if(is.null(current_seurat_obj_name)) stop("The list is not named")
+
 
     if (!file.exists(current_seurat_obj)) stop(glue("seurat object rds {current_seurat_obj} does not exist"))
 

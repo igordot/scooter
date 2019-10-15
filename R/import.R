@@ -25,6 +25,9 @@ load_sample_counts_matrix = function(sample_name, path, log_file = NULL) {
     # read in AC data
     counts_df <- fread(path, stringsAsFactors = FALSE, data.table = FALSE)
 
+    counts_df <- counts_df %>%
+      column_to_rownames("V1")
+
     # remove any row that is called unmapped
     unmapped <- str_detect(toupper(rownames(counts_df)), "UNMAPPED")
     if(any(unmapped)) {
