@@ -34,15 +34,16 @@ integrate_seurat_log <- function(seurat_obj_list, num_dim){
   message("\n\n ========== Seurat::FindIntegrationAnchors() ========== \n\n")
 
   # find the integration anchors
-  anchors = FindIntegrationAnchors(object.list = seurat_obj_list, anchor.features = 2000, dims = 1:num_dim)
+  anchors = FindIntegrationAnchors(object.list = seurat_obj_list, anchor.features = 3000, dims = 1:num_dim)
   rm(seurat_obj_list)
 
   message("\n\n ========== Seurat::IntegrateData() ========== \n\n")
 
   # integrating all genes may cause issues and may not add any relevant information
   # integrated_obj = IntegrateData(anchorset = anchors, dims = 1:num_dim, features.to.integrate = exp_genes)
-  integrated_obj = IntegrateData(anchorset = anchors, dims = 1:num_dim)
+  integrated_obj = IntegrateData(anchorset = anchors, dims = 1:num_dim, normalization.method = "LogNormalize")
   rm(anchors)
+  integrated_obj <- ScaleData(integrated_obj, verbose = FALSE)
   return(integrated_obj)
 }
 
