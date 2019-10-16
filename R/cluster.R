@@ -69,7 +69,6 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
 #' @export
 differential_expression <- function(data, metadata, metadata_column, list_groups = NULL, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL){
 
-
   if(is.null(list_groups)) {
     # get unique combinations
     unique_ids <- unique(unique(metadata[,metadata_column]))[[1]]
@@ -86,50 +85,58 @@ differential_expression <- function(data, metadata, metadata_column, list_groups
 
   # If there is a column called cell leave it, if not, make rownames cell
   if("cell" %in% colnames (metadata)) {
-      metadata = metadata %>%  as.tibble()
+    metadata = metadata %>%  as.tibble()
   } else {
     metadata = metadata %>% as_tibble(rownames = "cell")
   }
 
   diff_exp <- list()
 
-  for(current_group in list_groups){
+  for(j in 1:nrow(list_groups)){
 
+    current_group <- list_groups[j,]
     cell_group1 <-  metadata %>%
-      filter(get(metadata_column) == current_group[1]) %>%
+      filter(get(metadata_column) == current_group[1][[1]]) %>%
       select("cell")
 
     cell_group2 <-  metadata %>%
-      filter(get(metadata_column) == current_group[2]) %>%
+      filter(get(metadata_column) == current_group[2][[1]]) %>%
       select("cell")
 
     message_str <- glue("{current_group[1]} versus {current_group[2]}")
     write_message(message_str, log_file)
 
-    current_comparison <- Seurat:::FindMarkers.default(
-      object = as.matrix(data),
-      reduction = NULL,
-      slot = "data",
-      cells.1 = cell_group1$cell,
-      cells.2 = cell_group2$cell,
-      logfc.threshold = log_fc_threshold,
-      test.use = test.use,
-      min.pct =  min.pct)
+    current_comparison <- tryCatch({
 
-    current_comparison_filt <- current_comparison %>%
-      select(p_val, avg_logFC, p_val_adj) %>%
-      rownames_to_column("gene") %>%
-      mutate(group_1 = rep(current_group[1])) %>%
-      mutate(group_2 = rep(current_group[2]))
+      current_comparison <- Seurat:::FindMarkers.default(
+        object = as.matrix(data),
+        reduction = NULL,
+        slot = "data",
+        cells.1 = cell_group1$cell,
+        cells.2 = cell_group2$cell,
+        logfc.threshold = log_fc_threshold,
+        test.use = test.use,
+        min.pct =  min.pct)
 
-    if(write == TRUE) {
+      current_comparison_filt <- current_comparison %>%
+        select(p_val, avg_logFC, p_val_adj) %>%
+        rownames_to_column("gene") %>%
+        mutate(group_1 = rep(current_group[1][[1]])) %>%
+        mutate(group_2 = rep(current_group[2][[1]]))
+
+    }, error = function(e) {
+      e
+    })
+
+    if(inherits(current_comparison, "error")) next
+
+    if(write) {
       write_excel_csv(current_comparison_filt,
-                      path = glue("{out_path}/.diff_exp.{metadata_column}{current_group[1]}.{current_group[2]}.csv"))
+                      path = glue("{out_path}/diffexp-{metadata_column}-{current_group[1][[1]]}.{current_group[2][[1]]}.csv"))
     }
 
     diff_exp[[glue("{current_group[1]}.{current_group[2]}")]] <- current_comparison_filt
   }
-
   return(diff_exp)
 }
 
