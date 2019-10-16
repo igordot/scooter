@@ -70,7 +70,7 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
 differential_expression <- function(data, metadata, metadata_column, list_groups = NULL, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL){
 
 
-  if(!is.null(list_groups)) {
+  if(is.null(list_groups)) {
     # get unique combinations
     unique_ids <- unique(unique(metadata[,metadata_column]))[[1]]
     list_groups <- expand.grid(unique_ids,
