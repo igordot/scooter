@@ -51,7 +51,7 @@ integrate_seurat_sct <- function(seurat_obj_list, num_dim){
   s_obj_features <- SelectIntegrationFeatures(object.list = seurat_obj_list, nfeatures = 3000)
 
   seurat_obj_list <- lapply(X = seurat_obj_list, FUN = function(x) {
-    x <- RunPCA(x, features = s_obj_features, verbose = FALSE) })
+    x <- RunPCA(x, features = s_obj_features, verbose = FALSE, assay = "SCT") })
 
   seurat_obj_list <- PrepSCTIntegration(object.list = seurat_obj_list, anchor.features = s_obj_features)
 
