@@ -156,6 +156,7 @@ calc_clust_averages <- function(metadata, data, group){
 
   # manitpulate data to merge with metadata
   data <- data %>%
+    as.data.frame() %>%
     column_to_rownames("gene") %>%
     t() %>%
     as.data.frame() %>%
