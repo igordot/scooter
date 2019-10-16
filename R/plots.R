@@ -95,9 +95,9 @@ cluster_stats_bar <- function(metadata, group1, group2, write = FALSE,
     mutate(pct_g1_in_g2 = n / sum(n)) %>%
     ungroup()
 
-  if(write == TRUE) {
+  if(write) {
 
-    write_excel_csv(summary_metadata, path = glue("{out_path}/{proj_name}.summary.{group1}{group2}.csv"))
+    write_excel_csv(summary_metadata, path = glue("{out_path}/summary.{group1}{group2}.csv"))
 
     # make both grouping variables factors
     summary_metadata %<>% mutate(!!group1 := as.factor(!!sym(group1)))
@@ -166,9 +166,9 @@ cluster_stats_bar <- function(metadata, group1, group2, write = FALSE,
                                summary_plots_g1 + theme(legend.position = "none"),
                                summary_plots_g1_legend)
 
-    if(write == TRUE) {
+    if(write) {
       ggsave(summary_plots,
-             file = glue("{out_path}/{proj_name}.{group1}{group2}.bar.png"),
+             file = glue("{out_path}/{group1}{group2}.bar.png"),
              height = 10,
              width = 10)
     }
