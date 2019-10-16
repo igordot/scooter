@@ -130,10 +130,6 @@ differential_expression <- function(data, metadata, metadata_column, list_groups
     diff_exp[[glue("{current_group[1]}.{current_group[2]}")]] <- current_comparison_filt
   }
 
-  if(write == TRUE) {
-    write_excel_csv(diff_exp_stats, path = glue("{out_path}/{proj_name}.diff_exp.{metadata_column}.csv"))
-  }
-
   return(diff_exp)
 }
 
