@@ -43,6 +43,7 @@ integrate_seurat_log <- function(seurat_obj_list, num_dim){
   # integrated_obj = IntegrateData(anchorset = anchors, dims = 1:num_dim, features.to.integrate = exp_genes)
   integrated_obj = IntegrateData(anchorset = anchors, dims = 1:num_dim, normalization.method = "LogNormalize")
   rm(anchors)
+  DefaultAssay(integrated_obj) <- "integrated"
   integrated_obj <- ScaleData(integrated_obj, verbose = FALSE)
   return(integrated_obj)
 }

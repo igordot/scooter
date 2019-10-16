@@ -30,7 +30,7 @@ test_that("merge_metadata can merge a dataframe and a tibble", {
   expect_equal(ncol(merged_metadata), 9)
 })
 
-test_that("as.data.frame_Seurat converts metadata to dataframe", {
+test_that("as_data_frame_seurat converts metadata to dataframe", {
   counts <- load_sample_counts_matrix(sample_name = "test",
                                       path = system.file("extdata", "",
                                                          package = "scooter"))
@@ -56,14 +56,14 @@ test_that("as.data.frame_Seurat converts metadata to dataframe", {
                      prefix = "test", reduction = "pcatest",
                      num_dim_use = 20, assay = "SCT", num_neighbors = 6)
 
-  metadata <- as.data.frame_Seurat(seurat_obj = s_obj_dr,
+  metadata <- as_data_frame_seurat(seurat_obj = s_obj_dr,
                        metadata = TRUE)
 
   expect_gt(ncol(metadata), ncol(s_obj_dr@meta.data))
 })
 
 
-test_that("as.data.frame_Seurat converts reduction to dataframe", {
+test_that("as_data_frame_seurat converts reduction to dataframe", {
   counts <- load_sample_counts_matrix(sample_name = "test",
                                       path = system.file("extdata", "",
                                                          package = "scooter"))
@@ -89,14 +89,14 @@ test_that("as.data.frame_Seurat converts reduction to dataframe", {
                      prefix = "test", reduction = "pcatest",
                      num_dim_use = 20, assay = "SCT", num_neighbors = 6)
 
-  metadata <- as.data.frame_Seurat(seurat_obj = s_obj_dr,
+  metadata <- as_data_frame_seurat(seurat_obj = s_obj_dr,
                                    metadata = FALSE,
                                    reduction = "pcatest")
 
   expect_equal(ncol(metadata), 21)
 })
 
-test_that("as.data.frame_Seurat converts assay to dataframe", {
+test_that("as_data_frame_seurat converts assay to dataframe", {
   counts <- load_sample_counts_matrix(sample_name = "test",
                                       path = system.file("extdata", "",
                                                          package = "scooter"))
@@ -122,7 +122,7 @@ test_that("as.data.frame_Seurat converts assay to dataframe", {
                      prefix = "test", reduction = "pcatest",
                      num_dim_use = 20, assay = "SCT", num_neighbors = 6)
 
-  metadata <- as.data.frame_Seurat(seurat_obj = s_obj_dr,
+  metadata <- as_data_frame_seurat(seurat_obj = s_obj_dr,
                                    metadata = FALSE,
                                    assay = "RNA",
                                    slot = "counts",
@@ -131,7 +131,7 @@ test_that("as.data.frame_Seurat converts assay to dataframe", {
   expect_equal(ncol(metadata), 3)
 })
 
-test_that("as.data.frame_Seurat converts metadata, reduction, and assay to dataframe", {
+test_that("as_data_frame_seurat converts metadata, reduction, and assay to dataframe", {
   counts <- load_sample_counts_matrix(sample_name = "test",
                                       path = system.file("extdata", "",
                                                          package = "scooter"))
@@ -157,7 +157,7 @@ test_that("as.data.frame_Seurat converts metadata, reduction, and assay to dataf
                      prefix = "test", reduction = "pcatest",
                      num_dim_use = 20, assay = "SCT", num_neighbors = 6)
 
-  metadata <- as.data.frame_Seurat(seurat_obj = s_obj_dr,
+  metadata <- as_data_frame_seurat(seurat_obj = s_obj_dr,
                                    metadata = TRUE,
                                    assay = "RNA",
                                    slot = "counts",

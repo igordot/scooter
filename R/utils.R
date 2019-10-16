@@ -139,8 +139,7 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 #' @import dplyr
 #' @importFrom purrr reduce
 #' @export
-as.data.frame_Seurat <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL, reduction = NULL, metadata = TRUE) {
-
+as_data_frame_seurat <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL, reduction = NULL, metadata = TRUE) {
 
   # if metadata, extract metadata
   if(metadata == TRUE) {
@@ -151,14 +150,14 @@ as.data.frame_Seurat <- function(seurat_obj, assay = NULL, slot = NULL, features
   }
 
   if(!is.null(assay)) {
-   assay_out <- as.data.frame_Seurat_assay(seurat_obj = seurat_obj , assay = assay, slot = slot,
+   assay_out <- as_data_frame_seurat_assay(seurat_obj = seurat_obj , assay = assay, slot = slot,
                                features = features)
   } else {
     assay_out = NULL
   }
 
   if(!is.null(reduction)) {
-    reduction_out <- as.data.frame_Seurat_reduction(seurat_obj = seurat_obj,
+    reduction_out <- as_data_frame_seurat_reduction(seurat_obj = seurat_obj,
                                                 reduction = reduction)
   } else {
     reduction_out = NULL
@@ -181,7 +180,7 @@ as.data.frame_Seurat <- function(seurat_obj, assay = NULL, slot = NULL, features
   return(data_out)
 }
 
-as.data.frame_Seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL) {
+as_data_frame_seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL) {
 
   # If assay is specified
   if(!is.null(assay)) {
@@ -212,7 +211,7 @@ as.data.frame_Seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, fe
   return(s_obj_assay_out)
 }
 
-as.data.frame_Seurat_reduction <- function(seurat_obj, reduction ) {
+as_data_frame_seurat_reduction <- function(seurat_obj, reduction ) {
   # if reduction is specified, extract specified reduction
     # get index of reductions in the list
   reductions_to_save <- lapply(reduction, function(x){

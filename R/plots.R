@@ -43,7 +43,8 @@ plot_distribution.Seurat <- function(data, features, grouping, color_scheme = NU
   plot_distribution(dist_tbl, features, grouping, color_scheme)
 }
 
-plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = NULL, X, Y, color, write = FALSE, color_vect = NULL){
+plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL,
+                        log_file = NULL, X, Y, color, write = FALSE, color_vect = NULL){
 
   # Create color vector if not supplied
   if(is.null(color_vect)){
@@ -81,8 +82,8 @@ plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL, log_file = 
   return(current_plot)
 }
 
-
-cluster_stats_bar <- function(metadata, group1, group2, write = FALSE, g1_col = NULL, g2_col = NULL, cluster = TRUE){
+cluster_stats_bar <- function(metadata, group1, group2, write = FALSE,
+                              g1_col = NULL, g2_col = NULL, cluster = TRUE){
   # TODO: pull out plots into new function
   # make barplots and output cluster stats
   summary_metadata <- metadata %>%
@@ -175,4 +176,6 @@ cluster_stats_bar <- function(metadata, group1, group2, write = FALSE, g1_col = 
   return(list(summary_metadata = summary_metadata,
               summary_plots = summary_plots))
 }
+
+
 
