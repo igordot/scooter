@@ -154,11 +154,6 @@ calc_clust_averages <- function(metadata, data, group){
   metadata <- metadata %>%
     select("cell", group)
 
-  # merge metadata and data on cell
-  if(nrow(metadata) != (ncol(data) - 1)) {
-    stop("the number of cells in metadata is not the same as the number of cells in data")
-  }
-
   # manitpulate data to merge with metadata
   data <- data %>%
     column_to_rownames("gene") %>%
