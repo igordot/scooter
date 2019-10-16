@@ -124,7 +124,7 @@ differential_expression <- function(data, metadata, metadata_column, list_groups
 
     if(write == TRUE) {
       write_excel_csv(current_comparison_filt,
-                      path = glue("{out_path}/{proj_name}.diff_exp.{metadata_column}{current_group[1]}.{current_group[2]}.csv"))
+                      path = glue("{out_path}/.diff_exp.{metadata_column}{current_group[1]}.{current_group[2]}.csv"))
     }
 
     diff_exp[[glue("{current_group[1]}.{current_group[2]}")]] <- current_comparison_filt
