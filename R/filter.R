@@ -69,6 +69,7 @@ filter_data.Seurat <- function(data, log_file = NULL, min_genes = NULL, max_gene
                               min_genes,
                               max_genes,
                               max_mt)
+
   # subset based on the cells that passed the filtering
   s_obj = subset(s_obj, cells = cells_subset)
 

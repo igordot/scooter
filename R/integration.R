@@ -1,5 +1,5 @@
 
-gather_seurat_objects <- function(seurat_obj_paths){
+gather_seurat_objects <- function(seurat_obj_paths, assay){
   # seurat obj paths is a named list
 
   seurat_obj_list = list()
@@ -22,7 +22,8 @@ gather_seurat_objects <- function(seurat_obj_paths){
     seurat_obj_list[[i]]@reductions = list()
     seurat_obj_list[[i]]@meta.data = seurat_obj_list[[i]]@meta.data %>% select(-starts_with("snn_res"))
 
-    var_genes_list[[current_seurat_obj_name]] = VariableFeatures(seurat_obj_list[[i]])
+
+    var_genes_list[[current_seurat_obj_name]] = VariableFeatures(seurat_obj_list[[i]], assay = assay)
 
   }
   return(list(seurat_objects = seurat_obj_list,
