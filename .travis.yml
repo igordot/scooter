@@ -2,8 +2,7 @@ language: r
 cache: packages
 
 r:
-  - oldrel
-  - release
+  - bioc-release
   - devel
 
 r_packages:
