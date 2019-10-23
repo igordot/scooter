@@ -3,6 +3,7 @@
 language: r
 sudo: required
 cache: packages
+warnings_are_errors: false
 
 r:
   - bioc-release
