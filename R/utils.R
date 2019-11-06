@@ -150,7 +150,8 @@ as_data_frame_seurat <- function(seurat_obj, assay = NULL, slot = NULL, features
   }
 
   if(!is.null(assay)) {
-   assay_out <- as_data_frame_seurat_assay(seurat_obj = seurat_obj , assay = assay, slot = slot,
+   assay_out <- as_data_frame_seurat_assay(seurat_obj = seurat_obj ,
+                                           assay = assay, slot = slot,
                                features = features)
   } else {
     assay_out = NULL
@@ -195,13 +196,12 @@ as_data_frame_seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, fe
       s_obj_assay_out <- as.data.frame(t(s_obj_assay)) %>%
         rownames_to_column("cell")
     } else {
-      # or just get that assay scale data
-      s_obj_assay <- slot(seurat_obj@assays[[assay]], name = "scale.data")
+      s_obj_assay <- slot(seurat_obj@assays[[assay]], name = "data")
       if(!is.null(features)) {
-        s_obj_assay <- t(as.data.frame(s_obj_assay[features,]))
-        rownames(s_obj_assay) <- features
+        s_obj_assay <- as.data.frame(s_obj_assay[features, , drop = FALSE])
+        colnames(s_obj_assay) <- features
       }
-      s_obj_assay_out <- as.data.frame(t(s_obj_assay)) %>%
+      s_obj_assay_out <- as.data.frame(s_obj_assay) %>%
         rownames_to_column("cell")
     }
   } else {

@@ -1,4 +1,4 @@
-test_that("import_matrix can read in 10x data", {
+test_that("import_mtx can read in 10x data", {
   counts <- import_mtx(data_path = system.file("extdata",
                                                   "outs/filtered_feature_bc_matrix",
                                                   package = "scooter"),
@@ -48,7 +48,6 @@ test_that("Seurat object can be created from ADT data", {
                                                                   package = "scooter"))
   s_obj <- create_seurat_obj(counts_matrix = counts$`Antibody Capture`,
                              assay = "ADT", log_file = NULL)
-  # only 462 genes are above zero in the test data
   expect_s4_class(s_obj, "Seurat")
 })
 

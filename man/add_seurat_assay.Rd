@@ -2,22 +2,22 @@
 % Please edit documentation in R/import.R
 \name{add_seurat_assay}
 \alias{add_seurat_assay}
-\title{Adds assay to Seurat object.}
+\title{Add assay to Seurat object.}
 \usage{
 add_seurat_assay(seurat_obj, assay, counts_matrix, log_file = NULL)
 }
 \arguments{
-\item{seurat_obj}{Existing seurat object.}
+\item{seurat_obj}{Seurat object.}
 
 \item{assay}{Seurat assay to add the matrix to.}
 
-\item{counts_matrix}{counts matrix.}
+\item{counts_matrix}{Raw counts matrix.}
 
-\item{log_file}{log file.}
+\item{log_file}{Filename for the logfile.}
 }
 \value{
-Seurat object.
+Seurat object of cells found in both the existing object and new data.
 }
 \description{
-Adds assay to Seurat object.
+Add assay to Seurat object.
 }

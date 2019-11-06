@@ -1,10 +1,12 @@
-#' Read data from a 10x Genomics Cell Ranger sparse matrix or from a text file.
+#' Read in Gene Expression and Antibody Capture data from a 10x Genomics Cell
+#' Ranger sparse matrix or read in Antibody Capture data from a text file.
 #'
-#' @param sample_name A character for the sample name to be a prefix for every cell.
-#' @param path A path to the data.
-#' @param log_file A log filename.
+#' @param sample_name A character that will be used as a prefix for all cell names.
+#' @param path Path to directory containing 10x matrix, or path to a text file.
+#' @param log_file Filename for the logfile.
 #'
-#' @return Named list of matrices. One matrix for each data type.
+#' @return Named list of matrices. One matrix for each data type. Currently the
+#' only two data types are 'Gene Expression' and 'Antibody Capture'
 #'
 #' @import dplyr
 #' @importFrom glue glue
@@ -12,21 +14,18 @@
 #' @importFrom data.table fread
 #' @export
 load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
-
+  # Heavily sourced from Seurat
   counts <- list()
 
   message_str <- glue("loading counts matrix for sample: {sample_name}")
   write_message(message_str, log_file)
 
-  # if path is a file, read it in
   if (file.exists(path) && !dir.exists(path)) {
 
-    # read in AC data
     counts_df <- fread(path, stringsAsFactors = FALSE, data.table = FALSE)
+    counts_df <- counts_df %>% column_to_rownames("V1") # datatable doesn't read in rownames
 
-    counts_df <- counts_df %>% column_to_rownames("V1")
-
-    # remove any row that is called unmapped
+    # sometimes there is an 'unmapped' row
     unmapped <- str_detect(toupper(rownames(counts_df)), "UNMAPPED")
     if (any(unmapped)) {
       counts_df <- counts_df[!unmapped, ]
@@ -35,30 +34,32 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
     counts_matrix <- list("Antibody Capture" = counts_df)
 
   } else {
-    # check if path is a directory
+
     if (!dir.exists(path)) {
       stop(glue("{path} is not a file and is not a directory"))
     }
-    # check if the outs directory has the necesary elements
-    data_dir <- list.files(
+
+    data_dir <- list.files( # directories should contain matrix.mtx files
       path = path,
       pattern = "matrix.mtx",
       full.names = TRUE,
       recursive = TRUE
     )
-    data_dir <- str_subset(data_dir, "filtered_.*_bc_matrix")[1]
+
+    data_dir <- str_subset(data_dir, "filtered_.*_bc_matrix")[1] # matrix.mtx file should be in filtered_*matrix directory
     data_dir <- dirname(data_dir)
+
     if (!dir.exists(data_dir)) {
       stop(glue("dir {data_dir} does not contain matrix.mtx"))
     }
+
     message_str <- glue("loading counts matrix dir: {data_dir}")
     write_message(message_str, log_file)
 
-    # read in the 10x counts
     counts_matrix <- import_mtx(data_dir)
   }
 
-  # rename the column names by adding a sample name prefix to every barcode
+  # rename the column(cell) names by adding a sample name prefix to every barcode
   counts_out <- list()
   for (i in 1:length(counts_matrix)) {
     current_mat <- counts_matrix[[i]]
@@ -73,7 +74,7 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
 #' Read in 10x Matrix Market format data.
 #'
 #' @param data_path Path to directory that holds the files output from 10x.
-#' @param gene.column The column with the gene names.
+#' @param gene_column The column with the gene names.
 #'
 #' @return Named list of matrices. One matrix for each data type as specified in
 #' the third column of the features.tsv file. As of Oct 3rd 2019, the two options
@@ -87,8 +88,6 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
   # caveat the name of the files have to be features.tsv.gz, matrix.mtx.gz, barcodes.tsv.gz
 
   message_str <- "\n\n ========== import cell ranger counts matrix ========== \n\n"
-  # write message will output a message, and write to a log file if a log file is
-  # supplied
   write_message(message_str, log_file)
 
   # check if the directory exists
@@ -96,14 +95,12 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
     stop(glue("dir {data_path} does not exist"))
   }
 
-  # read in features.tsv.gz
   feature_names <- read.delim(
     file = file.path(data_path, "features.tsv.gz"),
     header = FALSE,
     stringsAsFactors = FALSE
   )
 
-  # read in sparse gene expression matrix
   data <- readMM(file = file.path(data_path, "matrix.mtx.gz"))
 
   # set the rownames to unique gene names
@@ -131,7 +128,8 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
     data_levels <- levels(data_types)
 
     if (length(data_levels) > 1) {
-      message("10x matrix contains more than one data type and is being returned as a list of matrices.")
+      message_str <- "\n\n ==========  10x matrix contains more than one data type and is being returned as a list of matrices.==========\n\n"
+      write_message(message_str, log_file)
     }
 
     # split the data into a list with a matrix for each datatype
@@ -155,7 +153,8 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
 #'
 #' @param counts_matrix A matrix of raw counts.
 #' @param assay Seurat assay to add the data to.
-#' @param log_file log file.
+#' @param log_file Filename for the logfile.
+#' @param project Project name for Seurat object.
 #'
 #' @return Seurat object.
 #'
@@ -164,7 +163,7 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
 #' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
 create_seurat_obj <- function(counts_matrix, assay = "RNA",
-                              log_file = NULL) {
+                              log_file = NULL, project = "proj") {
 
   # check that the size of the input matrix is reasonable
   if (ncol(counts_matrix) < 10) {
@@ -206,7 +205,6 @@ create_seurat_obj <- function(counts_matrix, assay = "RNA",
 #' @importFrom Seurat AddMetaData
 #' @export
 calculate_mito_pct <- function(seurat_obj) {
-
   # nGene and nUMI are automatically calculated for every object by Seurat
   # calculate the percentage of mitochondrial genes here and store it in percent.mito using the AddMetaData
   s_obj <- seurat_obj
@@ -226,14 +224,14 @@ calculate_mito_pct <- function(seurat_obj) {
   return(s_obj)
 }
 
-#' Adds assay to Seurat object.
+#' Add assay to Seurat object.
 #'
 #' @param seurat_obj Seurat object.
 #' @param assay Seurat assay to add the matrix to.
-#' @param counts_matrix Counts matrix.
-#' @param log_file Log file.
+#' @param counts_matrix Raw counts matrix.
+#' @param log_file Filename for the logfile.
 #'
-#' @return Seurat object.
+#' @return Seurat object of cells found in both the existing object and new data.
 #'
 #' @importFrom Seurat CreateAssayObject
 #' @importFrom methods is
@@ -247,27 +245,25 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL) 
     stop(glue("{assay} already exists in the Seurat object"))
   }
 
-  s_obj <- seurat_obj
-
   # use cells that are found in both antibody capture and RNA
-  cells_to_use <- intersect(colnames(s_obj), colnames(counts_matrix))
+  cells_to_use <- intersect(colnames(seurat_obj), colnames(counts_matrix))
 
-  if (length(s_obj) != length(cells_to_use)) {
-    message_str <- "some cells in scrna matrix not in counts matrix"
+  if (length(seurat_obj) != length(cells_to_use)) {
+    message_str <- glue("{ncol(seurat_obj) - length(cells_to_use)} cells in seurat_object not in counts matrix")
     write_message(message_str, log_file)
   }
 
   if (ncol(counts_matrix) != length(cells_to_use)) {
-    message_str <- "some cells in counts matrix not in scrna matrix"
+    message_str <- glue("{ncol(seurat_obj) - ncol(counts_matrix)} cells in counts matrix not in scrna matrix")
     write_message(message_str, log_file)
   }
 
   # Subset  counts by joint cell barcodes
   counts_matrix <- as.matrix(counts_matrix[, cells_to_use])
-  s_obj <- subset(s_obj, cells = cells_to_use)
+  seurat_obj <- subset(seurat_obj, cells = cells_to_use)
 
   # add assay
-  s_obj[[assay]] <- CreateAssayObject(counts = counts_matrix)
+  seurat_obj[[assay]] <- CreateAssayObject(counts = counts_matrix)
 
-  return(s_obj)
+  return(seurat_obj)
 }
