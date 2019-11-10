@@ -21,7 +21,19 @@ test_that("load_sample_counts_matrix can read in tsv Antibody Capture file", {
   counts <- load_sample_counts_matrix(sample_name = "test",
                                       path = system.file("extdata", "HTO.tsv",
                                                                  package = "scooter"))
-  expect_identical(names(counts), c("Antibody Capture"))
+  expect_identical(rownames(counts$`Antibody Capture`), c("Hashtag1", "Hashtag2"))
+})
+
+test_that("scooter will error is there is no valid path", {
+  expect_error(load_sample_counts_matrix(sample_name = "test",
+                                      path = system.file("extdata-test", "",
+                                                         package = "scooter")))
+})
+
+test_that("scooter will error is there is no mtx in directory", {
+  expect_error(load_sample_counts_matrix(sample_name = "test",
+                                      path = system.file("R", "",
+                                                         package = "scooter")))
 })
 
 test_that("load_sample_counts_matrix can read in csv Antibody Capture file", {
@@ -30,6 +42,14 @@ test_that("load_sample_counts_matrix can read in csv Antibody Capture file", {
                                                                  "HTO.csv",
                                                                  package = "scooter"))
   expect_identical(names(counts), c("Antibody Capture"))
+})
+
+test_that("scooter will remove -1 from barcodes from txt file", {
+  counts <- load_sample_counts_matrix(sample_name = "test",
+                                      path = system.file("extdata",
+                                                         "pbmc.txt",
+                                                         package = "scooter"))
+  expect_that(colnames(counts$`Antibody Capture`)[1], equals("test:GGAATCTGCTTAGG"))
 })
 
 test_that("Seurat object can be created from RNA data", {
@@ -68,6 +88,16 @@ test_that("Assay can be added to Seurat object",{
                             counts_matrix = counts$`Antibody Capture`,
                             log_file = NULL)
   expect_s4_class(s_obj, "Seurat")
+})
+
+test_that("Assay cannot be added to a random object",{
+  counts <- load_sample_counts_matrix(sample_name = "test",
+                                      path = system.file("extdata", "",
+                                                         package = "scooter"))
+  expect_error(add_seurat_assay(seurat_obj = counts,
+                            assay = "ADT",
+                            counts_matrix = counts$`Antibody Capture`,
+                            log_file = NULL))
 })
 
 test_that("Seurat object can be filtered", {

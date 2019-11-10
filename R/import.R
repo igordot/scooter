@@ -31,6 +31,17 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
       counts_df <- counts_df[!unmapped, ]
     }
 
+    # if the cell names all have -1 at the end, remove the -1
+    cell_names <- colnames(counts_df)
+    if (all(str_detect(string = cell_names, pattern = "\\-1$"))) {
+      cell_names <- as.vector(as.character(sapply(
+        X = cell_names,
+        function(x) stringr::str_sub(x, end = (nchar(x) - 2))
+      )))
+    }
+    colnames(counts_df) <- cell_names
+
+
     counts_matrix <- list("Antibody Capture" = counts_df)
 
   } else {
