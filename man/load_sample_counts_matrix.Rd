@@ -2,20 +2,35 @@
 % Please edit documentation in R/import.R
 \name{load_sample_counts_matrix}
 \alias{load_sample_counts_matrix}
+<<<<<<< HEAD
 \title{Read data from a 10x Genomics Cell Ranger sparse matrix or from a text file.}
+=======
+\title{Read in Gene Expression and Antibody Capture data from a 10x Genomics Cell
+Ranger sparse matrix or read in Antibody Capture data from a text file.}
+>>>>>>> 610c700a364bb678b0e4e569923ba99074ad62ad
 \usage{
 load_sample_counts_matrix(sample_name, path, log_file = NULL)
 }
 \arguments{
-\item{sample_name}{A character for the sample name to be a prefix for every cell.}
+\item{sample_name}{A character that will be used as a prefix for all cell names.}
 
+<<<<<<< HEAD
 \item{path}{A path to the data.}
+=======
+\item{path}{Path to directory containing 10x matrix, or path to a text file.}
+>>>>>>> 610c700a364bb678b0e4e569923ba99074ad62ad
 
-\item{log_file}{A log filename.}
+\item{log_file}{Filename for the logfile.}
 }
 \value{
-Named list of matrices. One matrix for each data type.
+Named list of matrices. One matrix for each data type. Currently the
+only two data types are 'Gene Expression' and 'Antibody Capture'
 }
 \description{
+<<<<<<< HEAD
 Read data from a 10x Genomics Cell Ranger sparse matrix or from a text file.
+=======
+Read in Gene Expression and Antibody Capture data from a 10x Genomics Cell
+Ranger sparse matrix or read in Antibody Capture data from a text file.
+>>>>>>> 610c700a364bb678b0e4e569923ba99074ad62ad
 }

@@ -4,14 +4,17 @@
 \alias{create_seurat_obj}
 \title{Create a new Seurat object from a matrix.}
 \usage{
-create_seurat_obj(counts_matrix, assay = "RNA", log_file = NULL)
+create_seurat_obj(counts_matrix, assay = "RNA", log_file = NULL,
+  project = "proj")
 }
 \arguments{
 \item{counts_matrix}{A matrix of raw counts.}
 
 \item{assay}{Seurat assay to add the data to.}
 
-\item{log_file}{log file.}
+\item{log_file}{Filename for the logfile.}
+
+\item{project}{Project name for Seurat object.}
 }
 \value{
 Seurat object.
