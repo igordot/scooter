@@ -2,14 +2,14 @@
 % Please edit documentation in R/import.R
 \name{load_sample_counts_matrix}
 \alias{load_sample_counts_matrix}
-\title{Reads in data from 10x, or from a delimited file.}
+\title{Read data from a 10x Genomics Cell Ranger sparse matrix or from a text file.}
 \usage{
 load_sample_counts_matrix(sample_name, path, log_file = NULL)
 }
 \arguments{
 \item{sample_name}{A character for the sample name to be a prefix for every cell.}
 
-\item{path}{A path to the 10x data /<data_path>/outs.}
+\item{path}{A path to the data.}
 
 \item{log_file}{A log filename.}
 }
@@ -17,5 +17,5 @@ load_sample_counts_matrix(sample_name, path, log_file = NULL)
 Named list of matrices. One matrix for each data type.
 }
 \description{
-Reads in data from 10x, or from a delimited file.
+Read data from a 10x Genomics Cell Ranger sparse matrix or from a text file.
 }

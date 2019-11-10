@@ -166,3 +166,39 @@ test_that("as_data_frame_seurat converts metadata, reduction, and assay to dataf
 
   expect_equal(ncol(metadata), 31)
 })
+
+test_that("as_data_frame_seurat converts metadata, reduction, and assay to dataframe", {
+  counts <- load_sample_counts_matrix(sample_name = "test",
+                                      path = system.file("extdata", "",
+                                                         package = "scooter"))
+  s_obj <- create_seurat_obj(counts_matrix = counts$`Gene Expression`,
+                             assay = "RNA", log_file = NULL)
+  s_obj <- add_seurat_assay(seurat_obj = s_obj,
+                            assay = "ADT",
+                            counts_matrix = counts$`Antibody Capture`,
+                            log_file = NULL)
+  s_obj_filt <- filter_data(data = s_obj,
+                            log_file = NULL,
+                            min_genes = NULL,
+                            max_genes = NULL,
+                            max_mt = 10)
+  s_obj_norm <- normalize_data(data = s_obj_filt,
+                               method = "log_norm",
+                               assay = "RNA")
+  s_obj_dr <- run_dr(s_obj_norm, dr_method = "pca",
+                     prefix = "test", var_features = TRUE,
+                     num_pcs = 20, assay = "RNA")
+
+  s_obj_dr <- run_dr(s_obj_dr, dr_method = "umap",
+                     prefix = "test", reduction = "pcatest",
+                     num_dim_use = 20, assay = "RNA", num_neighbors = 6)
+
+  metadata <- as_data_frame_seurat(seurat_obj = s_obj_dr,
+                                   metadata = TRUE,
+                                   assay = "RNA",
+                                   slot = "scale.data",
+                                   features = c("MAP4", "FTL"),
+                                   reduction = c("pcatest", "umaptest"))
+
+  expect_equal(ncol(metadata), 31)
+})

@@ -7,13 +7,13 @@
 add_seurat_assay(seurat_obj, assay, counts_matrix, log_file = NULL)
 }
 \arguments{
-\item{seurat_obj}{Existing seurat object.}
+\item{seurat_obj}{Seurat object.}
 
 \item{assay}{Seurat assay to add the matrix to.}
 
-\item{counts_matrix}{counts matrix.}
+\item{counts_matrix}{Counts matrix.}
 
-\item{log_file}{log file.}
+\item{log_file}{Log file.}
 }
 \value{
 Seurat object.
