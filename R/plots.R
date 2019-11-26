@@ -45,14 +45,37 @@ plot_distribution.Seurat <- function(data, features, grouping, color_scheme = NU
 
 plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL,
                         log_file = NULL, X, Y, color, write = FALSE, color_vect = NULL){
-
-  # Create color vector if not supplied
-  if(is.null(color_vect)){
-    colors_samples_named <- create_color_vect(as.data.frame(metadata[color]))
+  
+  if(is.factor(metadata[color][[1]]) | is.character(metadata[color][[1]])) {
+    # Create color vector if not supplied
+    if(is.null(color_vect)){
+      colors_samples_named <- create_color_vect(as.data.frame(metadata[color]))
+    } else {
+      colors_samples_named <- color_vect
+    }
+    current_plot <- ggplot(sample_frac(metadata),
+                           aes(x = !!sym(X),
+                               y = !!sym(Y),
+                               color = !!sym(color))) +
+      geom_point(size = 1, alpha = 0.7) +
+      # coord_fixed(ratio = (max(metadata[,which(colnames(metadata) == X)]) - min(metadata[,which(colnames(metadata) == X)]))/(max(metadata[,which(colnames(metadata) == Y)]) - min(metadata[,which(colnames(metadata) == Y)]))) +
+      xlab(X) +
+      ylab(Y) +
+      scale_color_manual(values = colors_samples_named,
+                         name = color)
+    
   } else {
-    colors_samples_named <- color_vect
+    current_plot <- ggplot(sample_frac(metadata),
+                           aes(x = !!sym(X),
+                               y = !!sym(Y),
+                               color = !!sym(color))) +
+      geom_point(size = 1, alpha = 0.7) +
+      # coord_fixed(ratio = (max(metadata[,which(colnames(metadata) == X)]) - min(metadata[,which(colnames(metadata) == X)]))/(max(metadata[,which(colnames(metadata) == Y)]) - min(metadata[,which(colnames(metadata) == Y)]))) +
+      xlab(X) +
+      ylab(Y) +
+      ggsci::scale_color_material("purple")
   }
-
+  
   #
   if(is.null(proj_name)){
     proj_name <- ""
@@ -60,16 +83,7 @@ plot_scatter<- function(metadata, out_path = NULL, proj_name = NULL,
     proj_name <- paste0(proj_name, ".")
   }
 
-  current_plot <- ggplot(sample_frac(metadata),
-                         aes(x = !!sym(X),
-                             y = !!sym(Y),
-                             color = !!sym(color))) +
-    geom_point(size = 1, alpha = 0.7) +
-   # coord_fixed(ratio = (max(metadata[,which(colnames(metadata) == X)]) - min(metadata[,which(colnames(metadata) == X)]))/(max(metadata[,which(colnames(metadata) == Y)]) - min(metadata[,which(colnames(metadata) == Y)]))) +
-    xlab(X) +
-    ylab(Y) +
-    scale_color_manual(values = colors_samples_named,
-                       name = color)
+
 
   if(write){
     ggsave(file = glue("{out_path}/{proj_name}{X}.{Y}.{color}.png"),
