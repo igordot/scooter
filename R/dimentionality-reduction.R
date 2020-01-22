@@ -55,13 +55,13 @@ run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL,
   if(var_features){
     features <- VariableFeatures(data[[assay]])
     data.use <- t(GetAssayData(object = data,
-                               slot = 'data',
+                               slot = 'scale.data',
                                assay = assay)[features, ])
   # if the features are specified, get features from the specified assay
   } else if (!is.null(features)) {
 
     data.use <- t(GetAssayData(object = data,
-                                   slot = 'data',
+                                   slot = 'scale.data',
                                    assay = assay)[features, ])
   # if the number of dimensions is specified, use those dimensions from pca
   } else if (!is.null(num_dim_use)) {
