@@ -107,8 +107,7 @@ merge_metadata.default <- function(metadata1, metadata2, log_file = NULL) {
 
   # compile all cell metadata into a single table
   cells_metadata = metadata1 %>%
-    full_join(metadata2, by = "cell") %>%
-    arrange(.data$cell) %>%
+    plyr::join(metadata2, by = "cell") %>%
     as.data.frame()
 
 
