@@ -11,7 +11,7 @@
 #' @import dplyr
 #' @import Seurat
 #' @export
-calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res = NULL){
+calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res = NULL, algorithm = 3){
   # TODO: allow UMAP graphs to be used
 
   message_str <- "========== Seurat::FindNeighbors() =========="
@@ -42,7 +42,7 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
   }
 
   clusters <-  Seurat:::FindClusters.default(snn_graph,
-                                             algorithm = 3,
+                                             algorithm = algorithm,
                                              resolution = res_range,
                                              verbose = FALSE)
   return(clusters)
