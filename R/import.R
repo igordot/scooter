@@ -1,5 +1,5 @@
 #' Read in Gene Expression and Antibody Capture data from a 10x Genomics Cell
-#' Ranger sparse matrix or read in Antibody Capture data from a text file.
+#' Ranger sparse matrix or from a text file.
 #'
 #' @param sample_name A character that will be used as a prefix for all cell names.
 #' @param path Path to directory containing 10x matrix, or path to a text file.
@@ -23,7 +23,8 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
   if (file.exists(path) && !dir.exists(path)) {
 
     counts_df <- fread(path, stringsAsFactors = FALSE, data.table = FALSE)
-    counts_df <- counts_df %>% column_to_rownames("V1") # datatable doesn't read in rownames
+    # data.table doesn't read in rownames
+    counts_df <- counts_df %>% column_to_rownames("V1")
 
     # sometimes there is an 'unmapped' row
     unmapped <- str_detect(toupper(rownames(counts_df)), "UNMAPPED")
@@ -41,8 +42,12 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
     }
     colnames(counts_df) <- cell_names
 
-
-    counts_matrix <- list("Antibody Capture" = counts_df)
+    # determine data type based on number of features
+    if (nrow(counts_df) < 1000) {
+      counts_matrix <- list("Antibody Capture" = counts_df)
+    } else {
+      counts_matrix <- list("Gene Expression" = counts_df)
+    }
 
   } else {
 
@@ -82,7 +87,7 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
   return(counts_out)
 }
 
-#' Read in 10x Matrix Market format data.
+#' Read in 10x Genomics Cell Ranger Matrix Market format data.
 #'
 #' @param data_path Path to directory that holds the files output from 10x.
 #' @param gene_column The column with the gene names.
@@ -92,7 +97,7 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
 #' are `Gene Expression` and `Antibody Capture`
 #'
 #' @importFrom Matrix readMM
-#' @importFrom stringr str_sub
+#' @importFrom stringr str_detect str_sub
 #' @export
 import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
   # Heavily sourced from Seurat
@@ -220,7 +225,7 @@ calculate_mito_pct <- function(seurat_obj) {
   # calculate the percentage of mitochondrial genes here and store it in percent.mito using the AddMetaData
   s_obj <- seurat_obj
 
-  # get all mitochondrial genes
+  # get all mitochondrial genes (may fail depending on species or annotation)
   mt_genes <- grep("^MT-", rownames(s_obj@assays$RNA@counts),
     ignore.case = TRUE, value = TRUE
   )
@@ -260,7 +265,7 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL) 
   cells_to_use <- intersect(colnames(seurat_obj), colnames(counts_matrix))
 
   if (length(seurat_obj) != length(cells_to_use)) {
-    message_str <- glue("{ncol(seurat_obj) - length(cells_to_use)} cells in seurat_object not in counts matrix")
+    message_str <- glue("{ncol(seurat_obj) - length(cells_to_use)} cells in seurat object are not in counts matrix")
     write_message(message_str, log_file)
   }
 
@@ -269,7 +274,7 @@ add_seurat_assay <- function(seurat_obj, assay, counts_matrix, log_file = NULL) 
     write_message(message_str, log_file)
   }
 
-  # Subset  counts by joint cell barcodes
+  # subset counts by joint cell barcodes
   counts_matrix <- as.matrix(counts_matrix[, cells_to_use])
   seurat_obj <- subset(seurat_obj, cells = cells_to_use)
 
