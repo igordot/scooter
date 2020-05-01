@@ -12,12 +12,8 @@ r:
 
 r_packages:
   - covr
-
-r_binary_packages:
-  - magrittr
   - devtools
   - tidyverse
-  - ggplot2
   - shiny
 
 after_success:
