@@ -2,7 +2,7 @@
 % Please edit documentation in R/import.R
 \name{import_mtx}
 \alias{import_mtx}
-\title{Read in 10x Matrix Market format data.}
+\title{Read in 10x Genomics Cell Ranger Matrix Market format data.}
 \usage{
 import_mtx(data_path, gene_column = 2, log_file = NULL)
 }
@@ -17,5 +17,5 @@ the third column of the features.tsv file. As of Oct 3rd 2019, the two options
 are `Gene Expression` and `Antibody Capture`
 }
 \description{
-Read in 10x Matrix Market format data.
+Read in 10x Genomics Cell Ranger Matrix Market format data.
 }

@@ -3,7 +3,7 @@
 \name{load_sample_counts_matrix}
 \alias{load_sample_counts_matrix}
 \title{Read in Gene Expression and Antibody Capture data from a 10x Genomics Cell
-Ranger sparse matrix or read in Antibody Capture data from a text file.}
+Ranger sparse matrix or from a text file.}
 \usage{
 load_sample_counts_matrix(sample_name, path, log_file = NULL)
 }
@@ -20,5 +20,5 @@ only two data types are 'Gene Expression' and 'Antibody Capture'
 }
 \description{
 Read in Gene Expression and Antibody Capture data from a 10x Genomics Cell
-Ranger sparse matrix or read in Antibody Capture data from a text file.
+Ranger sparse matrix or from a text file.
 }

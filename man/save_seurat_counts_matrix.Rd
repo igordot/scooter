@@ -4,8 +4,15 @@
 \alias{save_seurat_counts_matrix}
 \title{Function to write Seurat counts matrix to csv.}
 \usage{
-save_seurat_counts_matrix(seurat_obj, proj_name = "", label = "",
-  out_dir = ".", assay = "RNA", slot = "data", log_file = NULL)
+save_seurat_counts_matrix(
+  seurat_obj,
+  proj_name = "",
+  label = "",
+  out_dir = ".",
+  assay = "RNA",
+  slot = "data",
+  log_file = NULL
+)
 }
 \arguments{
 \item{seurat_obj}{A Seurat object.}

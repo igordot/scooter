@@ -4,14 +4,15 @@
 #' @param num_dim Number of PCs to use for tsne and umap.
 #' @param num_neighbors Number of neighbors to use for umap.
 #' @param log_file log file.
-#' @param res .
+#' @param res Resolution
+#' @param algorithm See Seurat::FindClusters()
 #'
 #' @return .
 #'
 #' @import dplyr
 #' @import Seurat
 #' @export
-calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res = NULL, algorithm = 3){
+calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res = NULL, algorithm = 3) {
   # TODO: allow UMAP graphs to be used
 
   message_str <- "========== Seurat::FindNeighbors() =========="
@@ -21,30 +22,32 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
   if (num_dim > 50) stop("too many dims: ", num_dim)
 
   snn_graph <- Seurat:::FindNeighbors.default(
-    pcs[,1:num_dim],
+    pcs[, 1:num_dim],
     distance.matrix = FALSE,
     k.param = num_neighbors,
     compute.SNN = TRUE,
-    prune.SNN = 1/15,
+    prune.SNN = 1 / 15,
     nn.eps = 0,
-    force.recalc = TRUE)
+    force.recalc = TRUE
+  )
 
   snn_graph <- as.Graph(snn_graph[["snn"]])
 
   message_str <- "\n\n ========== Seurat::FindClusters() ========== \n\n"
   write_message(message_str, log_file)
 
-  if(is.null(res)){
+  if (is.null(res)) {
     res_range <- seq(0.1, 2.5, 0.1)
-    if (nrow(pcs) > 1000) res_range = c(res_range, 3, 4, 5, 6, 7, 8, 9)
-  }else{
+    if (nrow(pcs) > 1000) res_range <- c(res_range, 3, 4, 5, 6, 7, 8, 9)
+  } else {
     res_range <- res
   }
 
-  clusters <-  Seurat:::FindClusters.default(snn_graph,
-                                             algorithm = algorithm,
-                                             resolution = res_range,
-                                             verbose = FALSE)
+  clusters <- Seurat:::FindClusters.default(snn_graph,
+    algorithm = algorithm,
+    resolution = res_range,
+    verbose = FALSE
+  )
   return(clusters)
 }
 
@@ -67,47 +70,48 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
 #' @import dplyr
 #' @import Seurat
 #' @export
-differential_expression_paired <- function(data, metadata, metadata_column, list_groups = NULL, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL){
+differential_expression_paired <- function(data, metadata, metadata_column, list_groups = NULL, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL) {
 
   # get unique combinations of the factors in the metadata column of interest.
   # Compare all possible combinations
-  if(is.null(list_groups)) {
+  if (is.null(list_groups)) {
     # get unique combinations
-    unique_ids <- unique(unique(metadata[,metadata_column]))[[1]]
+    unique_ids <- unique(unique(metadata[, metadata_column]))[[1]]
     list_groups <- expand.grid(unique_ids,
-                               unique_ids,
-                               stringsAsFactors = FALSE)
+      unique_ids,
+      stringsAsFactors = FALSE
+    )
     list_groups <- list_groups %>%
       filter(Var1 != Var2)
     indx <- !duplicated(t(apply(list_groups, 1, sort)))
-    list_groups <- list_groups[indx,]
+    list_groups <- list_groups[indx, ]
   } else {
     list_groups <- list_groups
   }
 
   # If there is a column called cell leave it, if not, make rownames cell
-  if("cell" %in% colnames (metadata)) {
-    metadata = metadata %>%  as.tibble()
+  if ("cell" %in% colnames(metadata)) {
+    metadata <- metadata %>% as.tibble()
   } else {
-    metadata = metadata %>% as_tibble(rownames = "cell")
+    metadata <- metadata %>% as_tibble(rownames = "cell")
   }
 
   diff_exp <- list()
 
-  for(j in 1:nrow(list_groups)){
+  for (j in 1:nrow(list_groups)) {
 
     # Current comparison
-    current_group <- list_groups[j,]
+    current_group <- list_groups[j, ]
     group1 <- current_group[1][[1]]
     group2 <- current_group[2][[1]]
 
     # get the cells for one side
-    cell_group1 <-  metadata %>%
+    cell_group1 <- metadata %>%
       filter(get(metadata_column) == group1) %>%
       select("cell")
 
     # get the cells for the other side
-    cell_group2 <-  metadata %>%
+    cell_group2 <- metadata %>%
       filter(get(metadata_column) == group2) %>%
       select("cell")
 
@@ -116,34 +120,37 @@ differential_expression_paired <- function(data, metadata, metadata_column, list
 
     # Run FindMarkers. If there aren't any genes that pass the logfc
     # cutoff or something, then go to the next comparison
-    current_comparison <- tryCatch({
+    current_comparison <- tryCatch(
+      {
+        current_comparison <- Seurat:::FindMarkers.default(
+          object = as.matrix(data),
+          reduction = NULL,
+          slot = "data",
+          cells.1 = cell_group1$cell,
+          cells.2 = cell_group2$cell,
+          logfc.threshold = log_fc_threshold,
+          test.use = test.use,
+          min.pct = min.pct
+        )
 
-      current_comparison <- Seurat:::FindMarkers.default(
-        object = as.matrix(data),
-        reduction = NULL,
-        slot = "data",
-        cells.1 = cell_group1$cell,
-        cells.2 = cell_group2$cell,
-        logfc.threshold = log_fc_threshold,
-        test.use = test.use,
-        min.pct =  min.pct)
+        current_comparison_filt <- current_comparison %>%
+          select(p_val, avg_logFC, p_val_adj) %>%
+          rownames_to_column("gene") %>%
+          mutate(group_1 = rep(group1)) %>%
+          mutate(group_2 = rep(group2))
+      },
+      error = function(e) {
+        e
+      }
+    )
 
-      current_comparison_filt <- current_comparison %>%
-        select(p_val, avg_logFC, p_val_adj) %>%
-        rownames_to_column("gene") %>%
-        mutate(group_1 = rep(group1)) %>%
-        mutate(group_2 = rep(group2))
-
-    }, error = function(e) {
-      e
-    })
-
-    if(inherits(current_comparison, "error")) next
+    if (inherits(current_comparison, "error")) next
 
     # write out each comparison
-    if(write) {
+    if (write) {
       write_excel_csv(current_comparison_filt,
-                      path = glue("{out_path}/diffexp-{metadata_column}-{group1}.{group2}.csv"))
+        path = glue("{out_path}/diffexp-{metadata_column}-{group1}.{group2}.csv")
+      )
     }
 
     # save data in a list
@@ -175,15 +182,15 @@ differential_expression_paired <- function(data, metadata, metadata_column, list
 differential_expression_global <- function(data, metadata, metadata_column,
                                            log_fc_threshold = 0.5, min.pct = 0.1,
                                            test.use = "wilcox", out_path = ".",
-                                           write = FALSE, log_file = NULL){
+                                           write = FALSE, log_file = NULL) {
 
 
   # If there is a column called cell leave it, if not, make rownames cell
-  if("cell" %in% colnames (metadata)) {
-    metadata = metadata %>%
+  if ("cell" %in% colnames(metadata)) {
+    metadata <- metadata %>%
       as_tibble()
   } else {
-    metadata = metadata %>%
+    metadata <- metadata %>%
       as_tibble(rownames = "cell")
   }
 
@@ -191,48 +198,50 @@ differential_expression_global <- function(data, metadata, metadata_column,
 
   list_groups <- unique(select(.data = metadata, !!sym(metadata_column)))[[1]]
 
-  for(j in 1:length(list_groups)){
-
+  for (j in 1:length(list_groups)) {
     current_group <- list_groups[j]
 
-    cell_group1 <-  metadata %>%
+    cell_group1 <- metadata %>%
       filter(get(metadata_column) == current_group) %>%
       select("cell")
 
-    cell_group2 <-  metadata %>%
+    cell_group2 <- metadata %>%
       filter(get(metadata_column) != current_group) %>%
       select("cell")
 
     message_str <- glue("{current_group} versus all")
     write_message(message_str, log_file)
 
-    current_comparison <- tryCatch({
+    current_comparison <- tryCatch(
+      {
+        current_comparison <- Seurat:::FindMarkers.default(
+          object = as.matrix(data),
+          reduction = NULL,
+          slot = "data",
+          cells.1 = cell_group1$cell,
+          cells.2 = cell_group2$cell,
+          logfc.threshold = log_fc_threshold,
+          test.use = test.use,
+          min.pct = min.pct
+        )
 
-      current_comparison <- Seurat:::FindMarkers.default(
-        object = as.matrix(data),
-        reduction = NULL,
-        slot = "data",
-        cells.1 = cell_group1$cell,
-        cells.2 = cell_group2$cell,
-        logfc.threshold = log_fc_threshold,
-        test.use = test.use,
-        min.pct =  min.pct)
+        current_comparison_filt <- current_comparison %>%
+          select(p_val, avg_logFC, p_val_adj) %>%
+          rownames_to_column("gene") %>%
+          mutate(group_1 = rep(current_group)) %>%
+          mutate(group_2 = rep("All"))
+      },
+      error = function(e) {
+        e
+      }
+    )
 
-      current_comparison_filt <- current_comparison %>%
-        select(p_val, avg_logFC, p_val_adj) %>%
-        rownames_to_column("gene") %>%
-        mutate(group_1 = rep(current_group)) %>%
-        mutate(group_2 = rep("All"))
+    if (inherits(current_comparison, "error")) next
 
-    }, error = function(e) {
-      e
-    })
-
-    if(inherits(current_comparison, "error")) next
-
-    if(write) {
+    if (write) {
       write_excel_csv(current_comparison_filt,
-                      path = glue("{out_path}/diffexp-{metadata_column}-{current_group}.All.csv"))
+        path = glue("{out_path}/diffexp-{metadata_column}-{current_group}.All.csv")
+      )
     }
 
     diff_exp[[glue("{current_group}.All")]] <- current_comparison_filt
@@ -251,7 +260,7 @@ differential_expression_global <- function(data, metadata, metadata_column,
 #' @import dplyr
 #' @import data.table
 #' @export
-calc_clust_averages <- function(metadata, data, group){
+calc_clust_averages <- function(metadata, data, group) {
 
   # get relevant metadata
   metadata <- metadata %>%
@@ -279,26 +288,25 @@ calc_clust_averages <- function(metadata, data, group){
 }
 
 FindAllMarkers <- function(
-  object,
-  assay = NULL,
-  features = NULL,
-  logfc.threshold = 0.25,
-  test.use = 'wilcox',
-  slot = 'data',
-  min.pct = 0.1,
-  min.diff.pct = -Inf,
-  node = NULL,
-  verbose = TRUE,
-  only.pos = FALSE,
-  max.cells.per.ident = Inf,
-  random.seed = 1,
-  latent.vars = NULL,
-  min.cells.feature = 3,
-  min.cells.group = 3,
-  pseudocount.use = 1,
-  return.thresh = 1e-2,
-  ...
-) {
+                           object,
+                           assay = NULL,
+                           features = NULL,
+                           logfc.threshold = 0.25,
+                           test.use = "wilcox",
+                           slot = "data",
+                           min.pct = 0.1,
+                           min.diff.pct = -Inf,
+                           node = NULL,
+                           verbose = TRUE,
+                           only.pos = FALSE,
+                           max.cells.per.ident = Inf,
+                           random.seed = 1,
+                           latent.vars = NULL,
+                           min.cells.feature = 3,
+                           min.cells.group = 3,
+                           pseudocount.use = 1,
+                           return.thresh = 1e-2,
+                           ...) {
   MapVals <- function(vec, from, to) {
     vec2 <- setNames(object = to, nm = from)[as.character(x = vec)]
     vec2[is.na(x = vec2)] <- vec[is.na(x = vec2)]
@@ -310,7 +318,7 @@ FindAllMarkers <- function(
   if (is.null(x = node)) {
     idents.all <- sort(x = unique(x = Idents(object = object)))
   } else {
-    tree <- Tool(object = object, slot = 'BuildClusterTree')
+    tree <- Tool(object = object, slot = "BuildClusterTree")
     if (is.null(x = tree)) {
       stop("Please run 'BuildClusterTree' before finding markers on nodes")
     }
@@ -390,7 +398,7 @@ FindAllMarkers <- function(
           x = gde,
           subset = (myAUC > return.thresh | myAUC < (1 - return.thresh))
         )
-      } else if (is.null(x = node) || test.use %in% c('bimod', 't')) {
+      } else if (is.null(x = node) || test.use %in% c("bimod", "t")) {
         gde <- gde[order(gde$p_val, -gde[, 2]), ]
         gde <- subset(x = gde, subset = p_val < return.thresh)
       }
@@ -427,4 +435,3 @@ FindAllMarkers <- function(
   }
   return(gde.all)
 }
-

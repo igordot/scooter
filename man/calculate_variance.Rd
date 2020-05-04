@@ -4,8 +4,12 @@
 \alias{calculate_variance}
 \title{Get variable genes and scale data.}
 \usage{
-calculate_variance(seurat_obj, assay = "RNA", nfeatures = 2000,
-  log_file = NULL)
+calculate_variance(
+  seurat_obj,
+  assay = "RNA",
+  nfeatures = 2000,
+  log_file = NULL
+)
 }
 \arguments{
 \item{seurat_obj}{Seurat object.}

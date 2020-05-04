@@ -4,9 +4,17 @@
 \alias{differential_expression_global}
 \title{Calculate differential expression for}
 \usage{
-differential_expression_global(data, metadata, metadata_column,
-  log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox",
-  out_path = ".", write = FALSE, log_file = NULL)
+differential_expression_global(
+  data,
+  metadata,
+  metadata_column,
+  log_fc_threshold = 0.5,
+  min.pct = 0.1,
+  test.use = "wilcox",
+  out_path = ".",
+  write = FALSE,
+  log_file = NULL
+)
 }
 \arguments{
 \item{data}{Gene expression data.}

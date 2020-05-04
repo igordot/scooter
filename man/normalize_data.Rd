@@ -4,8 +4,14 @@
 \alias{normalize_data}
 \title{Normalize data}
 \usage{
-normalize_data(data, method, nfeatures = 2000, metadata = NULL,
-  assay = NULL, log_file = NULL)
+normalize_data(
+  data,
+  method,
+  nfeatures = 2000,
+  metadata = NULL,
+  assay = NULL,
+  log_file = NULL
+)
 }
 \arguments{
 \item{data}{Input data.}

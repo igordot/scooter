@@ -4,8 +4,14 @@
 \alias{as_data_frame_seurat}
 \title{Function to extract data from Seurat object.}
 \usage{
-as_data_frame_seurat(seurat_obj, assay = NULL, slot = NULL,
-  features = NULL, reduction = NULL, metadata = TRUE)
+as_data_frame_seurat(
+  seurat_obj,
+  assay = NULL,
+  slot = NULL,
+  features = NULL,
+  reduction = NULL,
+  metadata = TRUE
+)
 }
 \arguments{
 \item{seurat_obj}{A Seurat object.}

@@ -49,7 +49,7 @@ test_that("scooter will remove -1 from barcodes from txt file", {
                                       path = system.file("extdata",
                                                          "pbmc.txt",
                                                          package = "scooter"))
-  expect_that(colnames(counts$`Antibody Capture`)[1], equals("test:GGAATCTGCTTAGG"))
+  expect_that(colnames(counts$`Gene Expression`)[1], equals("test:GGAATCTGCTTAGG"))
 })
 
 test_that("Seurat object can be created from RNA data", {

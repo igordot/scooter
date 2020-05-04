@@ -4,8 +4,12 @@
 \alias{create_seurat_obj}
 \title{Create a new Seurat object from a matrix.}
 \usage{
-create_seurat_obj(counts_matrix, assay = "RNA", log_file = NULL,
-  project = "proj")
+create_seurat_obj(
+  counts_matrix,
+  assay = "RNA",
+  log_file = NULL,
+  project = "proj"
+)
 }
 \arguments{
 \item{counts_matrix}{A matrix of raw counts.}

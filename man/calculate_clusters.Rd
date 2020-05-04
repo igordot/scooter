@@ -4,8 +4,14 @@
 \alias{calculate_clusters}
 \title{Run dimensionality reduction, pca, tse, and umap}
 \usage{
-calculate_clusters(pcs, num_dim, log_file, num_neighbors = 30,
-  res = NULL)
+calculate_clusters(
+  pcs,
+  num_dim,
+  log_file,
+  num_neighbors = 30,
+  res = NULL,
+  algorithm = 3
+)
 }
 \arguments{
 \item{pcs}{Data.}
@@ -16,7 +22,9 @@ calculate_clusters(pcs, num_dim, log_file, num_neighbors = 30,
 
 \item{num_neighbors}{Number of neighbors to use for umap.}
 
-\item{res}{.}
+\item{res}{Resolution}
+
+\item{algorithm}{See Seurat::FindClusters()}
 }
 \value{
 .
