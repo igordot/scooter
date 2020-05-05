@@ -15,6 +15,7 @@ normalize_data <- function(data, method, nfeatures = 2000, metadata = NULL, assa
   UseMethod("normalize_data")
 }
 
+#' @export
 normalize_data.default <- function(data, method, nfeatures = 2000, metadata = NULL, assay = NULL, log_file = NULL) {
 
   if (method == "log_norm") {
@@ -32,6 +33,7 @@ normalize_data.default <- function(data, method, nfeatures = 2000, metadata = NU
   return(normed)
 }
 
+#' @export
 normalize_data.Seurat <- function(data, method, nfeatures = 2000, metadata = NULL, assay = "RNA", log_file = NULL) {
 
   if (method == "sct") {
@@ -139,6 +141,7 @@ log_normalize_data <- function(data, log_file = NULL) {
 #' @return A named list of the vst output, the final scaled data, and the top variable genes.
 #'
 #' @import dplyr
+#' @importFrom stats setNames
 #' @importFrom sctransform vst
 #' @export
 #'

@@ -9,9 +9,11 @@ run_umap(data, num_neighbors, min_dist = 0.3, prefix = "UMAP_")
 \arguments{
 \item{data}{Data to run UMAP on.}
 
-\item{num_neighbors}{num neighbors.}
+\item{num_neighbors}{Number of neighbors.}
 
-\item{prefix}{suffix.}
+\item{min_dist}{Distance metric.}
+
+\item{prefix}{Prefix.}
 }
 \value{
 umap

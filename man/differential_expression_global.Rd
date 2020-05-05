@@ -34,10 +34,6 @@ differential_expression_global(
 \item{write}{Boolean to write or not.}
 
 \item{log_file}{log file.}
-
-\item{list_groups}{dataframe of groups to compare in the metadata column.}
-
-\item{proj_name}{Project name as a prefix for the output file.}
 }
 \value{
 .

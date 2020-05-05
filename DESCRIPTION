@@ -29,6 +29,7 @@ Imports:
     RColorBrewer,
     ggsci,
     Matrix,
+    matrixStats,
     Seurat (>= 3.1.0),
     irlba,
     Rtsne,

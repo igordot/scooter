@@ -180,8 +180,9 @@ run_tsne <- function(data, seed.use = 1, dim.embed = 2, prefix = "tSNE_") {
 #' Run UMAP
 #'
 #' @param data Data to run UMAP on.
-#' @param num_neighbors num neighbors.
-#' @param prefix suffix.
+#' @param num_neighbors Number of neighbors.
+#' @param min_dist Distance metric.
+#' @param prefix Prefix.
 #'
 #' @return umap
 #'

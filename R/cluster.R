@@ -165,8 +165,6 @@ differential_expression_paired <- function(data, metadata, metadata_column, list
 #' @param data Gene expression data.
 #' @param metadata Metadata.
 #' @param metadata_column Column in metadata.
-#' @param list_groups dataframe of groups to compare in the metadata column.
-#' @param proj_name Project name as a prefix for the output file.
 #' @param log_fc_threshold Log fc threshold.
 #' @param min.pct Minimum percentage of cells a gene must be expressed in to be tested.
 #' @param test.use Test to use.

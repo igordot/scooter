@@ -96,6 +96,7 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
 #' the third column of the features.tsv file. As of Oct 3rd 2019, the two options
 #' are `Gene Expression` and `Antibody Capture`
 #'
+#' @import utils
 #' @importFrom Matrix readMM
 #' @importFrom stringr str_detect str_sub
 #' @export
