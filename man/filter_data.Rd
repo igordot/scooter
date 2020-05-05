@@ -2,7 +2,7 @@
 % Please edit documentation in R/filter.R
 \name{filter_data}
 \alias{filter_data}
-\title{Filter out cells based on minimum and maximum number of genes and maximum percentage mitochondrial reads. If cutoffs are not provided, the min_genes will be the 0.02 quantile, and the max genes will be 0.98 quantile and the mitochondrial percentage will be 10%.}
+\title{Filter cells based on the number of genes and mitochondrial reads.}
 \usage{
 filter_data(
   data,
@@ -15,7 +15,7 @@ filter_data(
 \arguments{
 \item{data}{A tibble with metadata.}
 
-\item{log_file}{log file.}
+\item{log_file}{Log file.}
 
 \item{min_genes}{Minimum number of genes per cell.}
 

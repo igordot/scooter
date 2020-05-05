@@ -8,6 +8,7 @@ max_scores <- function(scores, method, threshold = 0) {
   scores$module <- colnames(scores)[apply(scores,1,which.max)]
   return(scores)
 }
+
 #' Get geneset scores.
 #'
 #' @param module_tbl geneset table.
@@ -26,7 +27,7 @@ geneset_score = function(module_tbl, counts_raw, min_cpm = 0, limit_pct = 1) {
     filter(.$gene %in% rownames(counts_raw)) %>%
     with(split(.$gene, celltype))
 
-  if (class(counts_raw) != "matrix") { stop("expression matrix is not a matrix") }
+  if (!is(counts_raw, "matrix")) { stop("expression matrix is not a matrix") }
   if (max(counts_raw) < 100) { stop("expression values appear to be log-scaled") }
 
   # filter matrix for expressed genes only
@@ -64,7 +65,7 @@ geneset_score = function(module_tbl, counts_raw, min_cpm = 0, limit_pct = 1) {
 filter_mat_by_cpm = function(counts_raw, min_cpm = 0) {
   # filter matrix by a specified CPM value (higher in at least one sample/column for each gene/row)
 
-  if (class(counts_raw) != "matrix") { stop("expression matrix is not a matrix") }
+  if (!is(counts_raw, "matrix")) { stop("expression matrix is not a matrix") }
   if (max(counts_raw) < 100) { stop("expression values appear to be log-scaled") }
   #if (nrow(counts_raw) < 10000) { stop("expression matrix has too few genes") }
 
@@ -86,7 +87,7 @@ rescale_vector = function(x, limit_pct = 1) {
 normalize_mat_by_gene = function(counts_raw, limit_pct = 1) {
 
   if (limit_pct > 1) { stop("percentile should be expressed as a fraction") }
-  if (class(counts_raw) != "matrix") { stop("expression matrix is not a matrix") }
+  if (!is(counts_raw, "matrix")) { stop("expression matrix is not a matrix") }
   if (max(counts_raw) < 100) { stop("expression values appear to be log-scaled") }
 
   counts_raw = apply(counts_raw, MARGIN = 1, FUN = rescale_vector, limit_pct = limit_pct)

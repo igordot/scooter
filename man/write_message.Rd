@@ -19,5 +19,4 @@ Small function to write to message and to log file.
 }
 \examples{
 write_message(message_str = "Finished Step 1", log_file = "log.file.txt")
-
 }

@@ -7,15 +7,15 @@
 #'
 #' @examples
 #' write_message(message_str = "Finished Step 1", log_file = "log.file.txt")
-#'
 #' @export
 write_message <- function(message_str, log_file = NULL) {
   # Small function to write to message and to log file if log file is not null
   message(message_str)
-  if(!is.null(log_file)){
+  if (!is.null(log_file)) {
     write(message_str,
-          file = log_file,
-          append = TRUE)
+      file = log_file,
+      append = TRUE
+    )
   }
 }
 
@@ -44,17 +44,18 @@ save_seurat_counts_matrix <- function(seurat_obj, proj_name = "", label = "", ou
   # save counts matrix as a basic gzipped text file
   # object@data stores normalized and log-transformed single cell expression
   # used for visualizations, such as violin and feature plots, most diff exp tests, finding high-variance genes
-  counts = GetAssayData(seurat_obj, assay = assay) %>%
+  counts <- GetAssayData(seurat_obj, assay = assay) %>%
     as.matrix() %>%
     round(3)
 
-  counts = counts %>%
+  counts <- counts %>%
     as.data.frame() %>%
     rownames_to_column("gene") %>%
     arrange(gene)
 
   write_csv(counts,
-            path = glue("{out_dir}/{proj_name}.{label}.counts.csv.gz"))
+    path = glue("{out_dir}/{proj_name}.{label}.counts.csv.gz")
+  )
 
   rm(counts)
 }
@@ -79,34 +80,33 @@ merge_metadata <- function(metadata1, metadata2, log_file = NULL) {
 
 #' @export
 merge_metadata.default <- function(metadata1, metadata2, log_file = NULL) {
-
   message_str <- "\n\n ========== saving metadata ========== \n\n"
   write_message(message_str, log_file)
 
   # check that there is a cell column, if not, make the rownames the cell column
-  if(any(str_detect("^cell$", colnames(metadata1)))) {
-    metadata1 = metadata1 %>%
+  if (any(str_detect("^cell$", colnames(metadata1)))) {
+    metadata1 <- metadata1 %>%
       as_tibble()
   } else {
-    metadata1 = metadata1 %>%
-      as.data.frame %>%
+    metadata1 <- metadata1 %>%
+      as.data.frame() %>%
       rownames_to_column("cell") %>%
       as_tibble()
   }
 
   # check that there is a cell column, if not, make the rownames the cell column
-  if(any(str_detect("^cell$", colnames(metadata2)))){
-    metadata2 = metadata2 %>%
+  if (any(str_detect("^cell$", colnames(metadata2)))) {
+    metadata2 <- metadata2 %>%
       as_tibble()
   } else {
-    metadata2 = metadata2 %>%
-      as.data.frame %>%
+    metadata2 <- metadata2 %>%
+      as.data.frame() %>%
       rownames_to_column("cell") %>%
       as_tibble()
   }
 
   # compile all cell metadata into a single table
-  cells_metadata = metadata1 %>%
+  cells_metadata <- metadata1 %>%
     plyr::join(metadata2, by = "cell") %>%
     as.data.frame()
 
@@ -116,11 +116,10 @@ merge_metadata.default <- function(metadata1, metadata2, log_file = NULL) {
 
 #' @export
 merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
-
   message_str <- "\n\n ========== saving metadata ========== \n\n"
   write_message(message_str, log_file)
 
-  metadata1 = metadata1@meta.data
+  metadata1 <- metadata1@meta.data
   merge_metadata(metadata1, metadata2, log_file = log_file)
 }
 
@@ -141,26 +140,30 @@ merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
 as_data_frame_seurat <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL, reduction = NULL, metadata = TRUE) {
 
   # if metadata, extract metadata
-  if(metadata == TRUE) {
+  if (metadata == TRUE) {
     metadata_out <- seurat_obj@meta.data %>%
       rownames_to_column("cell")
   } else {
-    metadata_out = NULL
+    metadata_out <- NULL
   }
 
-  if(!is.null(assay)) {
-   assay_out <- as_data_frame_seurat_assay(seurat_obj = seurat_obj ,
-                                           assay = assay, slot = slot,
-                               features = features)
+  if (!is.null(assay)) {
+    assay_out <- as_data_frame_seurat_assay(
+      seurat_obj = seurat_obj,
+      assay = assay, slot = slot,
+      features = features
+    )
   } else {
-    assay_out = NULL
+    assay_out <- NULL
   }
 
-  if(!is.null(reduction)) {
-    reduction_out <- as_data_frame_seurat_reduction(seurat_obj = seurat_obj,
-                                                reduction = reduction)
+  if (!is.null(reduction)) {
+    reduction_out <- as_data_frame_seurat_reduction(
+      seurat_obj = seurat_obj,
+      reduction = reduction
+    )
   } else {
-    reduction_out = NULL
+    reduction_out <- NULL
   }
 
   data <- list(metadata_out, assay_out, reduction_out)
@@ -169,12 +172,13 @@ as_data_frame_seurat <- function(seurat_obj, assay = NULL, slot = NULL, features
   data <- data[idx]
 
   # merge the extracted data
-  if(length(data) == 1) {
-    data_out = as.data.frame(data)
+  if (length(data) == 1) {
+    data_out <- as.data.frame(data)
   } else {
     data_out <- reduce(data,
-                       .f = full_join,
-                              by = "cell")
+      .f = full_join,
+      by = "cell"
+    )
   }
 
   return(data_out)
@@ -183,12 +187,12 @@ as_data_frame_seurat <- function(seurat_obj, assay = NULL, slot = NULL, features
 as_data_frame_seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, features = NULL) {
 
   # If assay is specified
-  if(!is.null(assay)) {
+  if (!is.null(assay)) {
     # and slot is specified
-    if(!is.null(slot)) {
+    if (!is.null(slot)) {
       # get data from that assay and slot
       s_obj_assay <- slot(seurat_obj@assays[[assay]], name = slot)
-      if(!is.null(features)) {
+      if (!is.null(features)) {
         s_obj_assay <- as.data.frame(s_obj_assay[features, , drop = FALSE])
         rownames(s_obj_assay) <- features
       }
@@ -196,7 +200,7 @@ as_data_frame_seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, fe
         rownames_to_column("cell")
     } else {
       s_obj_assay <- slot(seurat_obj@assays[[assay]], name = "data")
-      if(!is.null(features)) {
+      if (!is.null(features)) {
         s_obj_assay <- as.data.frame(s_obj_assay[features, , drop = FALSE])
         colnames(s_obj_assay) <- features
       }
@@ -210,20 +214,28 @@ as_data_frame_seurat_assay <- function(seurat_obj, assay = NULL, slot = NULL, fe
   return(s_obj_assay_out)
 }
 
-as_data_frame_seurat_reduction <- function(seurat_obj, reduction ) {
+as_data_frame_seurat_reduction <- function(seurat_obj, reduction) {
   # if reduction is specified, extract specified reduction
-    # get index of reductions in the list
-  reductions_to_save <- lapply(reduction, function(x){
-    as.data.frame(seurat_obj@reductions[[x]]@cell.embeddings)})
+  # get index of reductions in the list
+  reductions_to_save <- lapply(reduction, function(x) {
+    as.data.frame(seurat_obj@reductions[[x]]@cell.embeddings)
+  })
 
   # set rownames to columns for easier joining
-  reductions_to_save <- lapply(reductions_to_save,
-                               function(x) rownames_to_column(.data = x,
-                                                              "cell"))
+  reductions_to_save <- lapply(
+    reductions_to_save,
+    function(x) {
+      rownames_to_column(
+        .data = x,
+        "cell"
+      )
+    }
+  )
   # join lists by the new column
   s_obj_reduction <- reduce(reductions_to_save,
-                            .f = left_join,
-                            by = "cell")
+    .f = left_join,
+    by = "cell"
+  )
 
   return(s_obj_reduction)
 }
@@ -241,13 +253,14 @@ as_data_frame_seurat_reduction <- function(seurat_obj, reduction ) {
 create_color_vect <- function(seurat_obj, group = "orig.ident") {
   # create a vector of colors for the Idents of the s_obj
   sample_names <- switch(class(seurat_obj),
-                         Seurat = seurat_obj[[group]] %>% unique() %>% arrange(get(group)),
-                         data.frame = unique(seurat_obj))
+    Seurat = seurat_obj[[group]] %>% unique() %>% arrange(get(group)),
+    data.frame = unique(seurat_obj)
+  )
 
-  colors_samples = c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+  colors_samples <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
   # create a named color scheme to ensure names and colors are in the proper order
   sample_names[] <- lapply(sample_names, as.character)
-  colors_samples_named = colors_samples[1:nrow(sample_names)]
-  names(colors_samples_named) = sample_names[,1]
+  colors_samples_named <- colors_samples[1:nrow(sample_names)]
+  names(colors_samples_named) <- sample_names[, 1]
   return(colors_samples_named)
 }

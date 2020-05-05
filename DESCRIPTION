@@ -1,19 +1,21 @@
 Package: scooter
-Title: What the Package Does (One Line, Title Case)
+Title: Streamlined scRNA-Seq Analysis Pipeline
 Version: 0.0.0.9000
 Authors@R: c(
     person("Igor", "Dolgalev", email = "igor.dolgalev@nyumc.org", role = c("cre", "aut")), 
     person("Anna", "Yeaton", email = "ahyeaton@gmail.com", role = "aut"))
-Description: What the package does (one paragraph).
+Description: Streamlined scRNA-Seq analysis pipeline.
 License: MIT + file LICENCE
 Encoding: UTF-8
 LazyData: true
 biocViews:
+Depends: 
+    R (>= 3.5)
 Suggests: 
     roxygen2,
     testthat
 Imports: 
-    rlang (>= 0.1.2),
+    rlang (>= 0.2),
     magrittr,
     tibble,
     readr,
@@ -28,10 +30,8 @@ Imports:
     ggsci,
     Matrix,
     Seurat (>= 3.1.0),
-    SingleCellExperiment,
     irlba,
     Rtsne,
-    reticulate,
     uwot,
     sctransform,
     data.table,
