@@ -7,7 +7,7 @@ test_that("merge_metadata can merge a Seurat object and a dataframe", {
   merged_metadata <- merge_metadata(metadata1 = pbmc_obj,
                                     metadata2 = metadata,
                                     log_file = NULL)
-  expect_equal(ncol(merged_metadata), 9)
+  expect_equal(ncol(merged_metadata), 8)
 })
 
 test_that("merge_metadata can merge two dataframes", {

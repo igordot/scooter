@@ -117,10 +117,15 @@ merge_metadata.default <- function(metadata1, metadata2, log_file = NULL) {
 #' @export
 merge_metadata.Seurat <- function(metadata1, metadata2, log_file = NULL) {
   message_str <- "\n\n ========== saving metadata ========== \n\n"
+
   write_message(message_str, log_file)
 
   metadata1 <- metadata1@meta.data
-  merge_metadata(metadata1, metadata2, log_file = log_file)
+
+  s_metadata <- merge_metadata(metadata1, metadata2, log_file = log_file) %>%
+    column_to_rownames("cell")
+
+  return(s_metadata)
 }
 
 #' Function to extract data from Seurat object.

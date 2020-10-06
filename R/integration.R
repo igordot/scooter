@@ -30,37 +30,59 @@ gather_seurat_objects <- function(seurat_obj_paths, assay){
               variable_genes = var_genes_list))
 }
 
-integrate_seurat_log <- function(seurat_obj_list, num_dim){
+integrate_seurat_log <- function(seurat_obj_list, num_dim, k.anchor = 5, k.filter = 200, k.score = 30, max.features = 200, anchor.features = 3000, k.weight = 100){
   message("\n\n ========== Seurat::FindIntegrationAnchors() ========== \n\n")
 
   # find the integration anchors
-  anchors = FindIntegrationAnchors(object.list = seurat_obj_list, anchor.features = 3000, dims = 1:num_dim)
+  anchors = FindIntegrationAnchors(object.list = seurat_obj_list,
+                                   anchor.features = anchor.features,
+                                   dims = 1:num_dim,
+                                   k.anchor = k.anchor,
+                                   k.filter = k.filter,
+                                   k.score = k.score,
+                                   max.features = max.features)
   rm(seurat_obj_list)
 
   message("\n\n ========== Seurat::IntegrateData() ========== \n\n")
 
   # integrating all genes may cause issues and may not add any relevant information
   # integrated_obj = IntegrateData(anchorset = anchors, dims = 1:num_dim, features.to.integrate = exp_genes)
-  integrated_obj = IntegrateData(anchorset = anchors, dims = 1:num_dim, normalization.method = "LogNormalize")
+  integrated_obj = IntegrateData(anchorset = anchors,
+                                 dims = 1:num_dim,
+                                 k.weight = k.weight,
+                                 normalization.method = "LogNormalize")
   rm(anchors)
   DefaultAssay(integrated_obj) <- "integrated"
   integrated_obj <- ScaleData(integrated_obj, verbose = FALSE)
   return(integrated_obj)
 }
 
-integrate_seurat_sct <- function(seurat_obj_list, num_dim){
+integrate_seurat_sct <- function(seurat_obj_list, num_dim, k.anchor = 5, k.filter = 200, k.score = 30, max.features = 200, anchor.features = 3000, k.weight = 100){
 
-  s_obj_features <- SelectIntegrationFeatures(object.list = seurat_obj_list, nfeatures = 3000)
+  s_obj_features <- SelectIntegrationFeatures(object.list = seurat_obj_list, nfeatures = anchor.features)
 
   seurat_obj_list <- lapply(X = seurat_obj_list, FUN = function(x) {
     x <- RunPCA(x, features = s_obj_features, verbose = FALSE, assay = "SCT") })
 
   seurat_obj_list <- PrepSCTIntegration(object.list = seurat_obj_list, anchor.features = s_obj_features)
 
-  anchors <- FindIntegrationAnchors(object.list = seurat_obj_list, normalization.method = "SCT",
-                                    anchor.features = s_obj_features, dims = 1:num_dim, reduction = 'rpca')
+  anchors <- FindIntegrationAnchors(object.list = seurat_obj_list,
+                                    normalization.method = "SCT",
+                                    anchor.features = s_obj_features,
+                                    dims = 1:num_dim,
+                                    reduction = 'rpca',
+                                    k.anchor = k.anchor,
+                                    k.filter = k.filter,
+                                    k.score = k.score,
+                                    max.features = max.features)
 
-  integrated_obj <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
+  message("\n\n ========== Seurat::IntegrateData() ========== \n\n")
+
+  integrated_obj <- IntegrateData(anchorset = anchors,
+                                  normalization.method = "SCT",
+                                  k.weight = k.weight,
+                                  dims = 1:num_dim)
+  DefaultAssay(integrated_obj) <- "integrated"
 
   return(integrated_obj)
 

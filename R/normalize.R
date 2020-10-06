@@ -38,45 +38,46 @@ normalize_data.Seurat <- function(data, method, nfeatures = 2000, metadata = NUL
 
   if (method == "sct") {
 
-    # get counts data for the specified assay
-    assay.obj <- GetAssay(object = data, assay = assay)
-    counts <- GetAssayData(object = assay.obj, slot = 'counts')
+   data =  SCTransform(data)
+    # # get counts data for the specified assay
+    # assay.obj <- GetAssay(object = data, assay = assay)
+    # counts <- GetAssayData(object = assay.obj, slot = 'counts')
+    #
+    # # get metadata
+    # metadata <- data@meta.data
+    #
+    # # run normalization
+    # normed_data <- normalize_data(data = counts,
+    #                               method = method,
+    #                               nfeatures = nfeatures,
+    #                               metadata = metadata,
+    #                               log_file = log_file,
+    #                               assay = assay)
+    #
+    # # Create new SCT assay.
+    #
+    # # set the counts of the SCT assay to the output of the sct
+    # assay.out <- CreateAssayObject(counts = normed_data[["vst.out"]]$umi_corrected)
+    #
+    # # set the variable features to the top variable features from sct
+    # VariableFeatures(object = assay.out) <- normed_data[["top.features"]]
+    #
+    # # log norm the counts data from sct to make the data data
+    # assay.out <- SetAssayData(
+    #   object = assay.out,
+    #   slot = 'data',
+    #   new.data = log1p(GetAssayData(object = assay.out, slot = 'counts')))
+    #
+    # # set the scale data to the scaled sct'ed data
+    # assay.out <- SetAssayData(
+    #   object = assay.out,
+    #   slot = 'scale.data',
+    #   new.data = normed_data[["scale.data"]]
+    # )
+    #
+    # data[["SCT"]] <- assay.out
 
-    # get metadata
-    metadata <- data@meta.data
-
-    # run normalization
-    normed_data <- normalize_data(data = counts,
-                                  method = method,
-                                  nfeatures = nfeatures,
-                                  metadata = metadata,
-                                  log_file = log_file,
-                                  assay = assay)
-
-    # Create new SCT assay.
-
-    # set the counts of the SCT assay to the output of the sct
-    assay.out <- CreateAssayObject(counts = normed_data[["vst.out"]]$umi_corrected)
-
-    # set the variable features to the top variable features from sct
-    VariableFeatures(object = assay.out) <- normed_data[["top.features"]]
-
-    # log norm the counts data from sct to make the data data
-    assay.out <- SetAssayData(
-      object = assay.out,
-      slot = 'data',
-      new.data = log1p(GetAssayData(object = assay.out, slot = 'counts')))
-
-    # set the scale data to the scaled sct'ed data
-    assay.out <- SetAssayData(
-      object = assay.out,
-      slot = 'scale.data',
-      new.data = normed_data[["scale.data"]]
-    )
-
-    data[["SCT"]] <- assay.out
-
-  } else {
+  } else if(method == "lognorm") {
 
     # get counts for specified assay
     assay.obj <- GetAssay(object = data, assay = assay)
@@ -99,6 +100,8 @@ normalize_data.Seurat <- function(data, method, nfeatures = 2000, metadata = NUL
 
     # add top features to variable features
     VariableFeatures(data[[assay]]) <- scaled.data$top.features
+  } else {
+    print("something is wrong")
   }
   return(data)
 }

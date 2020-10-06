@@ -106,7 +106,7 @@ plot_scatter <- function(metadata, out_path = NULL, proj_name = NULL,
   return(current_plot)
 }
 
-cluster_stats_bar <- function(metadata, group1, group2, write = FALSE,
+cluster_stats_bar <- function(metadata, group1, group2,  out_path = ".", write = FALSE,
                               g1_col = NULL, g2_col = NULL, cluster = TRUE) {
   # TODO: pull out plots into new function
   # make barplots and output cluster stats
