@@ -24,7 +24,8 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
 
     counts_df <- fread(path, stringsAsFactors = FALSE, data.table = FALSE)
     # data.table doesn't read in rownames
-    counts_df <- counts_df %>% column_to_rownames("V1")
+    # assuming first column is the gene/feature names
+    counts_df <- counts_df %>% column_to_rownames(colnames(counts_df)[1])
 
     # sometimes there is an 'unmapped' row
     unmapped <- str_detect(toupper(rownames(counts_df)), "UNMAPPED")
