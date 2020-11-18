@@ -16,15 +16,15 @@ normalize_data(
 \arguments{
 \item{data}{Input data.}
 
+\item{method}{Normalization method ("log" or "sct").}
+
 \item{nfeatures}{.}
 
 \item{metadata}{.}
 
 \item{assay}{.}
 
-\item{log_file}{log file.}
-
-\item{normalize_method}{.}
+\item{log_file}{Log file.}
 }
 \value{
 Normalized data

@@ -4,11 +4,13 @@
 #' @param dr_method Dimensionality reduction method.
 #' @param prefix .
 #' @param assay .
+#' @param var_features .
 #' @param features .
 #' @param graph .
-#' @param num_dim .
-#' @param min_dist .
-#' @param var_features .
+#' @param num_dim_use .
+#' @param reduction .
+#' @param num_neighbors .
+#' @param num_pcs .
 #'
 #' @return list of dimensionality reduced/
 #'

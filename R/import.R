@@ -3,7 +3,7 @@
 #'
 #' @param sample_name A character that will be used as a prefix for all cell names.
 #' @param path Path to directory containing 10x matrix, or path to a text file.
-#' @param log_file Filename for the logfile.
+#' @param log_file Filename for the log file.
 #'
 #' @return Named list of matrices. One matrix for each data type. Currently the
 #' only two data types are 'Gene Expression' and 'Antibody Capture'
@@ -21,7 +21,6 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
   write_message(message_str, log_file)
 
   if (file.exists(path) && !dir.exists(path)) {
-
     counts_df <- fread(path, stringsAsFactors = FALSE, data.table = FALSE)
     # data.table doesn't read in rownames
     # assuming first column is the gene/feature names
@@ -49,9 +48,7 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
     } else {
       counts_matrix <- list("Gene Expression" = counts_df)
     }
-
   } else {
-
     if (!dir.exists(path)) {
       stop(glue("{path} is not a file and is not a directory"))
     }
@@ -92,6 +89,7 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
 #'
 #' @param data_path Path to directory that holds the files output from 10x.
 #' @param gene_column The column with the gene names.
+#' @param log_file Filename for the log file.
 #'
 #' @return Named list of matrices. One matrix for each data type as specified in
 #' the third column of the features.tsv file. As of Oct 3rd 2019, the two options
@@ -252,7 +250,7 @@ calculate_mito_pct <- function(seurat_obj) {
 #' @param seurat_obj Seurat object.
 #' @param assay Seurat assay to add the matrix to.
 #' @param counts_matrix Raw counts matrix.
-#' @param log_file Filename for the logfile.
+#' @param log_file Filename for the log file.
 #'
 #' @return Seurat object of cells found in both the existing object and new data.
 #'

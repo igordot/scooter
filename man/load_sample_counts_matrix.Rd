@@ -12,7 +12,7 @@ load_sample_counts_matrix(sample_name, path, log_file = NULL)
 
 \item{path}{Path to directory containing 10x matrix, or path to a text file.}
 
-\item{log_file}{Filename for the logfile.}
+\item{log_file}{Filename for the log file.}
 }
 \value{
 Named list of matrices. One matrix for each data type. Currently the

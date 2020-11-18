@@ -34,9 +34,13 @@ run_dr(
 
 \item{graph}{.}
 
-\item{num_dim}{.}
+\item{num_dim_use}{.}
 
-\item{min_dist}{.}
+\item{reduction}{.}
+
+\item{num_neighbors}{.}
+
+\item{num_pcs}{.}
 }
 \value{
 list of dimensionality reduced/

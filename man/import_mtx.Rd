@@ -10,6 +10,8 @@ import_mtx(data_path, gene_column = 2, log_file = NULL)
 \item{data_path}{Path to directory that holds the files output from 10x.}
 
 \item{gene_column}{The column with the gene names.}
+
+\item{log_file}{Filename for the log file.}
 }
 \value{
 Named list of matrices. One matrix for each data type as specified in

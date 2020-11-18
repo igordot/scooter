@@ -13,7 +13,7 @@ add_seurat_assay(seurat_obj, assay, counts_matrix, log_file = NULL)
 
 \item{counts_matrix}{Raw counts matrix.}
 
-\item{log_file}{Filename for the logfile.}
+\item{log_file}{Filename for the log file.}
 }
 \value{
 Seurat object of cells found in both the existing object and new data.

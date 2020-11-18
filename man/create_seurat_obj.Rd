@@ -7,6 +7,8 @@
 create_seurat_obj(
   counts_matrix,
   assay = "RNA",
+  min_cells = 1,
+  min_genes = 1,
   log_file = NULL,
   project = "proj"
 )
@@ -15,6 +17,10 @@ create_seurat_obj(
 \item{counts_matrix}{A matrix of raw counts.}
 
 \item{assay}{Seurat assay to add the data to.}
+
+\item{min_cells}{Include genes/features detected in at least this many cells.}
+
+\item{min_genes}{Include cells where at least this many genes/features are detected.}
 
 \item{log_file}{Filename for the logfile.}
 
