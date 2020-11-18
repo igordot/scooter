@@ -1,11 +1,11 @@
 #' Normalize data
 #'
 #' @param data Input data.
-#' @param normalize_method .
+#' @param method Normalization method ("log" or "sct").
 #' @param nfeatures .
 #' @param metadata .
 #' @param assay .
-#' @param log_file log file.
+#' @param log_file Log file.
 #'
 #' @return Normalized data
 #'
@@ -18,7 +18,7 @@ normalize_data <- function(data, method, nfeatures = 2000, metadata = NULL, assa
 #' @export
 normalize_data.default <- function(data, method, nfeatures = 2000, metadata = NULL, assay = NULL, log_file = NULL) {
 
-  if (method == "log_norm") {
+  if (method == "log") {
 
     normed <- log_normalize_data(data = data,
                                  log_file = log_file)
@@ -77,7 +77,7 @@ normalize_data.Seurat <- function(data, method, nfeatures = 2000, metadata = NUL
     #
     # data[["SCT"]] <- assay.out
 
-  } else if(method == "lognorm") {
+  } else if(method == "log") {
 
     # get counts for specified assay
     assay.obj <- GetAssay(object = data, assay = assay)
