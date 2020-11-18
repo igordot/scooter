@@ -171,6 +171,8 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
 #'
 #' @param counts_matrix A matrix of raw counts.
 #' @param assay Seurat assay to add the data to.
+#' @param min_cells Include genes/features detected in at least this many cells.
+#' @param min_genes Include cells where at least this many genes/features are detected.
 #' @param log_file Filename for the logfile.
 #' @param project Project name for Seurat object.
 #'
@@ -181,6 +183,7 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
 #' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
 create_seurat_obj <- function(counts_matrix, assay = "RNA",
+                              min_cells = 1, min_genes = 1,
                               log_file = NULL, project = "proj") {
 
   # check that the size of the input matrix is reasonable
@@ -202,7 +205,9 @@ create_seurat_obj <- function(counts_matrix, assay = "RNA",
     project = "proj",
     assay = assay,
     names.field = 1,
-    names.delim = ":"
+    names.delim = ":",
+    min.cells = min_cells,
+    min.features = min_genes
   )
 
   # Calculate mito pct
