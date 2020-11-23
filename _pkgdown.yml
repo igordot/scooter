@@ -1,0 +1,5 @@
+url: https://igordot.github.io/scooter
+
+template:
+  params:
+    bootswatch: readable
