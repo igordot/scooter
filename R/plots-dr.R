@@ -13,13 +13,13 @@ get_color_scheme <- function(type = "clusters") {
     color_scheme <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
   }
   if (type == "clusters") {
-    color_scheme <- c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51))
+    color_scheme <- (pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51), pal_igv(alpha = 0.6)(51))
   }
 
   return(color_scheme)
 }
 
-#' Determine the point size for tSNE plots (smaller for larger datasets).
+#' Determine the point size for reduced dimensions scatter plots (smaller for larger datasets).
 #'
 #' @param num_cells Number of cells (points on the plot).
 #'
@@ -31,6 +31,7 @@ get_dr_point_size <- function(num_cells) {
   if (num_cells > 5000) pt_size <- 1.0
   if (num_cells > 10000) pt_size <- 0.8
   if (num_cells > 25000) pt_size <- 0.6
+  if (num_cells > 50000) pt_size <- 0.4
   return(pt_size)
 
 }
