@@ -8,12 +8,13 @@
 #'
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom ggsci pal_d3 pal_igv
+#' @export
 get_color_scheme <- function(type = "clusters") {
   if (type == "samples") {
     color_scheme <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
   }
   if (type == "clusters") {
-    color_scheme <- (pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51), pal_igv(alpha = 0.6)(51))
+    color_scheme <- c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51), pal_igv(alpha = 0.6)(51))
   }
 
   return(color_scheme)
@@ -24,6 +25,7 @@ get_color_scheme <- function(type = "clusters") {
 #' @param num_cells Number of cells (points on the plot).
 #'
 #' @return Numeric point size.
+#' @export
 get_dr_point_size <- function(num_cells) {
 
   pt_size <- 1.8

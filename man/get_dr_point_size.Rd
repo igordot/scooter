@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots-dr.R
 \name{get_dr_point_size}
 \alias{get_dr_point_size}
-\title{Determine the point size for tSNE plots (smaller for larger datasets).}
+\title{Determine the point size for reduced dimensions scatter plots (smaller for larger datasets).}
 \usage{
 get_dr_point_size(num_cells)
 }
@@ -13,5 +13,5 @@ get_dr_point_size(num_cells)
 Numeric point size.
 }
 \description{
-Determine the point size for tSNE plots (smaller for larger datasets).
+Determine the point size for reduced dimensions scatter plots (smaller for larger datasets).
 }
