@@ -10,9 +10,11 @@ r:
   - release
   - devel
 
+r_binary_packages:
+  - devtools
+
 r_packages:
   - covr
-  - devtools
   - tidyverse
   - shiny
 
