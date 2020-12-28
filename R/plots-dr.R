@@ -22,11 +22,13 @@ get_color_scheme <- function(type = "clusters") {
 
 #' Determine the point size for reduced dimensions scatter plots (smaller for larger datasets).
 #'
-#' @param num_cells Number of cells (points on the plot).
+#' @param num_cells Number of cells (points on the plot) or a Seurat object.
 #'
 #' @return Numeric point size.
 #' @export
 get_dr_point_size <- function(num_cells) {
+
+  if (class(num_cells) == "Seurat") num_cells <- ncol(num_cells)
 
   pt_size <- 1.8
   if (num_cells > 1000) pt_size <- 1.2
