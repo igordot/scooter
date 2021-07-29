@@ -31,11 +31,10 @@ get_dr_point_size <- function(num_cells) {
   if (class(num_cells) == "Seurat") num_cells <- ncol(num_cells)
 
   pt_size <- 1.8
-  if (num_cells > 1000) pt_size <- 1.2
+  if (num_cells > 1000) pt_size <- 1.4
   if (num_cells > 5000) pt_size <- 1.0
-  if (num_cells > 10000) pt_size <- 0.8
-  if (num_cells > 25000) pt_size <- 0.6
-  if (num_cells > 50000) pt_size <- 0.4
+  if (num_cells > 10000) pt_size <- 0.6
+  if (num_cells > 50000) pt_size <- 0.2
   return(pt_size)
 
 }

@@ -1,6 +1,6 @@
 Package: scooter
 Title: Streamlined scRNA-Seq Analysis Pipeline
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: c(
     person("Igor", "Dolgalev", email = "igor.dolgalev@nyumc.org", role = c("cre", "aut")), 
     person("Anna", "Yeaton", email = "ahyeaton@gmail.com", role = "aut"))
@@ -10,31 +10,31 @@ Encoding: UTF-8
 LazyData: true
 biocViews:
 Depends: 
-    R (>= 3.5)
+    R (>= 4.0.0)
 Suggests: 
     roxygen2,
     testthat
 Imports: 
-    rlang (>= 0.2),
-    magrittr,
-    tibble,
-    readr,
-    dplyr,
-    tidyr,
-    stringr,
-    glue,
-    purrr,
-    ggplot2 (>= 3.0.0),
     cowplot,
-    RColorBrewer,
+    data.table,
+    dplyr,
+    ggplot2,
     ggsci,
+    glue,
+    irlba,
+    magrittr,
     Matrix,
     matrixStats,
-    Seurat (>= 3.1.0),
-    irlba,
+    methods,
+    purrr,
+    RColorBrewer,
+    readr,
+    rlang (>= 0.2),
     Rtsne,
-    uwot,
     sctransform,
-    data.table,
-    methods
+    Seurat (>= 4.0.2),
+    stringr,
+    tibble,
+    tidyr,
+    uwot
 RoxygenNote: 7.1.1
