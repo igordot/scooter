@@ -53,14 +53,16 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
       stop(glue("{path} is not a file and is not a directory"))
     }
 
-    data_dir <- list.files( # directories should contain matrix.mtx files
+    # directories should contain matrix.mtx (or matrix.mtx.gz) files
+    data_dir <- list.files(
       path = path,
       pattern = "matrix.mtx",
       full.names = TRUE,
       recursive = TRUE
     )
 
-    data_dir <- str_subset(data_dir, "filtered_.*_bc_matrix")[1] # matrix.mtx file should be in filtered_*matrix directory
+    # matrix.mtx file should be in filtered_feature (cellranger count) or sample_feature (cellranger multi) directory
+    data_dir <- str_subset(data_dir, "filtered_gene_bc_mat|filtered_feature_bc_mat|sample_feature_bc_mat")[1]
     data_dir <- dirname(data_dir)
 
     if (!dir.exists(data_dir)) {
