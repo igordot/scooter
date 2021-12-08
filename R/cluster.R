@@ -21,17 +21,19 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
   if (num_dim < 5) stop("too few dims: ", num_dim)
   if (num_dim > 50) stop("too many dims: ", num_dim)
 
-  snn_graph <- Seurat:::FindNeighbors.default(
-    pcs[, 1:num_dim],
-    distance.matrix = FALSE,
-    k.param = num_neighbors,
-    compute.SNN = TRUE,
-    prune.SNN = 1 / 15,
-    nn.eps = 0,
-    force.recalc = TRUE
-  )
+  #snn_graph <- Seurat:::FindNeighbors.default(
+   # pcs[, 1:num_dim],
+   # distance.matrix = FALSE,
+   # k.param = num_neighbors,
+   # compute.SNN = TRUE,
+   # prune.SNN = 1 / 15,
+   # nn.eps = 0,
+   # force.recalc = TRUE
+  #)
+  
+  t = Seurat:::FindNeighbors.Seurat(seurat_obj, reduction = "pcalognorm")
 
-  snn_graph <- as.Graph(snn_graph[["snn"]])
+  snn_graph <- as.Graph(t@graphs$RNA_snn)
 
   message_str <- "\n\n ========== Seurat::FindClusters() ========== \n\n"
   write_message(message_str, log_file)
