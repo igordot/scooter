@@ -34,6 +34,9 @@
     <loc>https://igordot.github.io/scooter/reference/calculate_variance.html</loc>
   </url>
   <url>
+    <loc>https://igordot.github.io/scooter/reference/check_identity_column.html</loc>
+  </url>
+  <url>
     <loc>https://igordot.github.io/scooter/reference/create_color_vect.html</loc>
   </url>
   <url>
@@ -44,6 +47,9 @@
   </url>
   <url>
     <loc>https://igordot.github.io/scooter/reference/differential_expression_paired.html</loc>
+  </url>
+  <url>
+    <loc>https://igordot.github.io/scooter/reference/differential_expression_per_cluster.html</loc>
   </url>
   <url>
     <loc>https://igordot.github.io/scooter/reference/filter_data.html</loc>
@@ -101,6 +107,9 @@
   </url>
   <url>
     <loc>https://igordot.github.io/scooter/reference/sctransform_data.html</loc>
+  </url>
+  <url>
+    <loc>https://igordot.github.io/scooter/reference/set_identity.html</loc>
   </url>
   <url>
     <loc>https://igordot.github.io/scooter/reference/tidyeval.html</loc>
