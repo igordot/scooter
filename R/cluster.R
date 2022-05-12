@@ -21,17 +21,17 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
   if (num_dim < 5) stop("too few dims: ", num_dim)
   if (num_dim > 50) stop("too many dims: ", num_dim)
 
-  #snn_graph <- Seurat:::FindNeighbors.default(
-   # pcs[, 1:num_dim],
-   # distance.matrix = FALSE,
-   # k.param = num_neighbors,
-   # compute.SNN = TRUE,
-   # prune.SNN = 1 / 15,
-   # nn.eps = 0,
-   # force.recalc = TRUE
-  #)
-  
-  t = Seurat:::FindNeighbors.Seurat(seurat_obj, reduction = "pcalognorm")
+  # snn_graph <- Seurat:::FindNeighbors.default(
+  # pcs[, 1:num_dim],
+  # distance.matrix = FALSE,
+  # k.param = num_neighbors,
+  # compute.SNN = TRUE,
+  # prune.SNN = 1 / 15,
+  # nn.eps = 0,
+  # force.recalc = TRUE
+  # )
+
+  t <- Seurat:::FindNeighbors.Seurat(seurat_obj, reduction = "pcalognorm")
 
   snn_graph <- as.Graph(t@graphs$RNA_snn)
 
@@ -51,202 +51,6 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
     verbose = FALSE
   )
   return(clusters)
-}
-
-#' Calculate differential expression for
-#'
-#' @param data Gene expression data.
-#' @param metadata Metadata.
-#' @param metadata_column Column in metadata.
-#' @param list_groups dataframe of groups to compare in the metadata column.
-#' @param proj_name Project name as a prefix for the output file.
-#' @param log_fc_threshold Log fc threshold.
-#' @param min.pct Minimum percentage of cells a gene must be expressed in to be tested.
-#' @param test.use Test to use.
-#' @param out_path output path.
-#' @param write Boolean to write or not.
-#' @param log_file log file.
-#'
-#' @return .
-#'
-#' @import dplyr
-#' @import Seurat
-#' @export
-differential_expression_paired <- function(data, metadata, metadata_column, list_groups = NULL, log_fc_threshold = 0.5, min.pct = 0.1, test.use = "wilcox", out_path = ".", write = FALSE, log_file = NULL) {
-
-  # get unique combinations of the factors in the metadata column of interest.
-  # Compare all possible combinations
-  if (is.null(list_groups)) {
-    # get unique combinations
-    unique_ids <- unique(unique(metadata[, metadata_column]))[[1]]
-    list_groups <- expand.grid(unique_ids,
-      unique_ids,
-      stringsAsFactors = FALSE
-    )
-    list_groups <- list_groups %>%
-      filter(Var1 != Var2)
-    indx <- !duplicated(t(apply(list_groups, 1, sort)))
-    list_groups <- list_groups[indx, ]
-  } else {
-    list_groups <- list_groups
-  }
-
-  # If there is a column called cell leave it, if not, make rownames cell
-  if ("cell" %in% colnames(metadata)) {
-    metadata <- metadata %>% as.tibble()
-  } else {
-    metadata <- metadata %>% as_tibble(rownames = "cell")
-  }
-
-  diff_exp <- list()
-
-  for (j in 1:nrow(list_groups)) {
-
-    # Current comparison
-    current_group <- list_groups[j, ]
-    group1 <- current_group[1][[1]]
-    group2 <- current_group[2][[1]]
-
-    # get the cells for one side
-    cell_group1 <- metadata %>%
-      filter(get(metadata_column) == group1) %>%
-      select("cell")
-
-    # get the cells for the other side
-    cell_group2 <- metadata %>%
-      filter(get(metadata_column) == group2) %>%
-      select("cell")
-
-    message_str <- glue("{group1} versus {group2}")
-    write_message(message_str, log_file)
-
-    # Run FindMarkers. If there aren't any genes that pass the logfc
-    # cutoff or something, then go to the next comparison
-    current_comparison <- tryCatch(
-      {
-        current_comparison <- Seurat:::FindMarkers.default(
-          object = as.matrix(data),
-          reduction = NULL,
-          slot = "data",
-          cells.1 = cell_group1$cell,
-          cells.2 = cell_group2$cell,
-          logfc.threshold = log_fc_threshold,
-          test.use = test.use,
-          min.pct = min.pct
-        )
-
-        current_comparison_filt <- current_comparison %>%
-          select(p_val, avg_logFC, p_val_adj) %>%
-          rownames_to_column("gene") %>%
-          mutate(group_1 = rep(group1)) %>%
-          mutate(group_2 = rep(group2))
-      },
-      error = function(e) {
-        e
-      }
-    )
-
-    if (inherits(current_comparison, "error")) next
-
-    # write out each comparison
-    if (write) {
-      write_excel_csv(current_comparison_filt,
-        path = glue("{out_path}/diffexp-{metadata_column}-{group1}.{group2}.csv")
-      )
-    }
-
-    # save data in a list
-    diff_exp[[glue("{group1}.{group2}")]] <- current_comparison_filt
-  }
-
-  return(diff_exp)
-}
-
-#' Calculate differential expression for
-#'
-#' @param data Gene expression data.
-#' @param metadata Metadata.
-#' @param metadata_column Column in metadata.
-#' @param log_fc_threshold Log fc threshold.
-#' @param min.pct Minimum percentage of cells a gene must be expressed in to be tested.
-#' @param test.use Test to use.
-#' @param out_path output path.
-#' @param write Boolean to write or not.
-#' @param log_file log file.
-#'
-#' @return .
-#'
-#' @import dplyr
-#' @import Seurat
-#' @export
-differential_expression_global <- function(data, metadata, metadata_column,
-                                           log_fc_threshold = 0.5, min.pct = 0.1,
-                                           test.use = "wilcox", out_path = ".",
-                                           write = FALSE, log_file = NULL) {
-
-
-  # If there is a column called cell leave it, if not, make rownames cell
-  if ("cell" %in% colnames(metadata)) {
-    metadata <- metadata %>%
-      as_tibble()
-  } else {
-    metadata <- metadata %>%
-      as_tibble(rownames = "cell")
-  }
-
-  diff_exp <- list()
-
-  list_groups <- unique(select(.data = metadata, !!sym(metadata_column)))[[1]]
-
-  for (j in 1:length(list_groups)) {
-    current_group <- list_groups[j]
-
-    cell_group1 <- metadata %>%
-      filter(get(metadata_column) == current_group) %>%
-      select("cell")
-
-    cell_group2 <- metadata %>%
-      filter(get(metadata_column) != current_group) %>%
-      select("cell")
-
-    message_str <- glue("{current_group} versus all")
-    write_message(message_str, log_file)
-
-    current_comparison <- tryCatch(
-      {
-        current_comparison <- Seurat:::FindMarkers.default(
-          object = as.matrix(data),
-          reduction = NULL,
-          slot = "data",
-          cells.1 = cell_group1$cell,
-          cells.2 = cell_group2$cell,
-          logfc.threshold = log_fc_threshold,
-          test.use = test.use,
-          min.pct = min.pct
-        )
-
-        current_comparison_filt <- current_comparison %>%
-          select(p_val, avg_logFC, p_val_adj) %>%
-          rownames_to_column("gene") %>%
-          mutate(group_1 = rep(current_group)) %>%
-          mutate(group_2 = rep("All"))
-      },
-      error = function(e) {
-        e
-      }
-    )
-
-    if (inherits(current_comparison, "error")) next
-
-    if (write) {
-      write_excel_csv(current_comparison_filt,
-        path = glue("{out_path}/diffexp-{metadata_column}-{current_group}.All.csv")
-      )
-    }
-
-    diff_exp[[glue("{current_group}.All")]] <- current_comparison_filt
-  }
-  return(diff_exp)
 }
 
 #' Get cluster averages.
@@ -287,8 +91,7 @@ calc_clust_averages <- function(metadata, data, group) {
   return(current_mean)
 }
 
-FindAllMarkers <- function(
-                           object,
+FindAllMarkers <- function(object,
                            assay = NULL,
                            features = NULL,
                            logfc.threshold = 0.25,

@@ -1,3 +1,54 @@
+#' Set identity of the Seurat object.
+#'
+#' Wrapper for SeuratObject::Idents() with extra safety checks.
+#'
+#' @param seurat_obj A Seurat object.
+#' @param identity_column The name of the identity column to pull from object metadata.
+#
+#' @return A Seurat object with an updated identity set.
+#'
+#' @importFrom SeuratObject Idents
+#'
+#' @export
+set_identity <- function(seurat_obj, identity_column) {
+  so <- seurat_obj
+
+  # check if the specified identity column is one of meta data columns
+  identity_column <- check_identity_column(seurat_obj = seurat_obj, identity_column = identity_column)
+
+  # set identities based on specified column
+  message("setting identity column: ", identity_column)
+  SeuratObject::Idents(so) <- identity_column
+
+  return(so)
+}
+
+#' Check identity of the Seurat object.
+#'
+#' @param seurat_obj A Seurat object.
+#' @param identity_column The name of the identity column to pull from object metadata.
+#
+#' @return The name of the identity column, potentially corrected if resolution.
+#'
+#' @export
+check_identity_column <- function(seurat_obj, identity_column) {
+
+  # check if the grouping variable is one of meta data columns
+  if (!(identity_column %in% colnames(seurat_obj@meta.data))) {
+
+    # check if grouping variable is the resolution value (X.X instead of res.X.X)
+    # res_column = stringr::str_c("snn_res.", identity_column)
+    res_column <- stringr::str_c("res.", identity_column)
+    if (res_column %in% colnames(seurat_obj@meta.data)) {
+      identity_column <- res_column
+    } else {
+      stop("unknown grouping variable: ", identity_column)
+    }
+  }
+
+  return(identity_column)
+}
+
 #' Small function to write to message and to log file.
 #'
 #' @param message_str A string to write as a message.

@@ -22,7 +22,7 @@ Usage:
   scrna-10x-scooter.R identify <analysis_dir> <resolution>
   scrna-10x-scooter.R combine <analysis_dir> <sample_analysis_dir>...
   scrna-10x-scooter.R integrate <analysis_dir> <reduction> <num_dim> <batch_analysis_dir>...
-  scrna-10x-scooter.R de <analysis_dir> <resolution>
+  scrna-10x-scooter.R de <analysis_dir> <resolution> <group_var>
   scrna-10x-scooter.R hto <analysis_dir>
   scrna-10x-scooter.R plot umap <analysis_dir> <genes_csv>
   scrna-10x-scooter.R --help
@@ -81,6 +81,7 @@ create_seurat_obj_qc = function(seurat_obj) {
 
   vln_theme =
     theme(
+      plot.background = element_rect(fill = "white"),
       axis.title.x = element_blank(),
       axis.title.y = element_blank(),
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
@@ -118,17 +119,17 @@ create_seurat_obj_qc = function(seurat_obj) {
     FeatureScatter(
       s_obj, feature1 = "num_UMIs", feature2 = "num_genes", group.by = "orig.ident", cols = colors_samples
     ) +
-    theme(aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
+    theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
   cor_ncr_pmt_plot =
     FeatureScatter(
       s_obj, feature1 = "num_UMIs", feature2 = "pct_mito", group.by = "orig.ident", cols = colors_samples
     ) +
-    theme(aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
+    theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
   cor_nfr_pmt_plot =
     FeatureScatter(
       s_obj, feature1 = "num_genes", feature2 = "pct_mito", group.by = "orig.ident", cols = colors_samples
     ) +
-    theme(aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
+    theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
   cor_unfilt_plot = plot_grid(cor_ncr_nfr_plot, cor_ncr_pmt_plot, cor_nfr_pmt_plot, ncol = 3)
   ggsave("qc.correlations.unfiltered.png", plot = cor_unfilt_plot, width = 18, height = 5, units = "in")
   Sys.sleep(1)
@@ -219,6 +220,7 @@ filter_data = function(seurat_obj, min_genes = NULL, max_genes = NULL, max_mt = 
 
   vln_theme =
     theme(
+      plot.background = element_rect(fill = "white"),
       axis.title.x = element_blank(),
       axis.title.y = element_blank(),
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
@@ -358,7 +360,7 @@ add_adt_assay_qc = function(seurat_obj, sample_name) {
   # plot ADT metrics
   plot_adt_qc(seurat_obj = seurat_obj)
 
-  seurat_obj = set_identity(seurat_obj = seurat_obj, group_var = "orig.ident")
+  seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = "orig.ident")
 
   return(seurat_obj)
 
@@ -374,6 +376,7 @@ plot_adt_qc = function(seurat_obj) {
 
   vln_theme =
     theme(
+      plot.background = element_rect(fill = "white"),
       axis.title.x = element_blank(),
       axis.title.y = element_blank(),
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
@@ -405,19 +408,19 @@ plot_adt_qc = function(seurat_obj) {
       seurat_obj, feature1 = "num_genes", feature2 = "num_ADT_genes",
       group.by = "orig.ident", cols = colors_samples_named
     ) +
-    theme(aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
+    theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
   cor_genes_plot =
     FeatureScatter(
       seurat_obj, feature1 = "num_UMIs", feature2 = "num_ADT_UMIs",
       group.by = "orig.ident", cols = colors_samples_named
     ) +
-    theme(aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
+    theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
   cor_mito_plot =
     FeatureScatter(
       seurat_obj, feature1 = "pct_mito", feature2 = "num_ADT_UMIs",
       group.by = "orig.ident", cols = colors_samples_named
     ) +
-    theme(aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
+    theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, plot.title = element_text(hjust = 0.5))
   cor_adt_plot = plot_grid(cor_umis_plot, cor_genes_plot, cor_mito_plot, ncol = 3)
   ggsave("qc.adt.correlations.png", plot = cor_adt_plot, width = 18, height = 5, units = "in")
   Sys.sleep(1)
@@ -543,14 +546,14 @@ split_adt_hto_assay = function(seurat_obj) {
   plot_hto_qc(seurat_obj = seurat_obj)
 
   # save HTO stats
-  seurat_obj = set_identity(seurat_obj = seurat_obj, group_var = "hash.ID")
+  seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = "hash.ID")
   calculate_cluster_stats(seurat_obj = seurat_obj, label = "hto")
 
   # update metadata, setting the hashtag as the sample name
   seurat_obj@meta.data$library = factor(seurat_obj@meta.data$orig.ident)
   seurat_obj@meta.data$orig.ident = factor(seurat_obj@meta.data$hash.ID)
 
-  seurat_obj = set_identity(seurat_obj = seurat_obj, group_var = "orig.ident")
+  seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = "orig.ident")
 
   return(seurat_obj)
 
@@ -581,7 +584,7 @@ plot_hto_qc = function(seurat_obj) {
     scale_fill_manual(values = colors_hto) +
     facet_matrix(vars(-cell, -hash.ID, -HTO_classification.global), layer.diag = 2, layer.upper = 3) +
     guides(color = guide_legend(override.aes = list(size = 5))) +
-    theme(aspect.ratio = 1, legend.title = element_blank(), strip.background = element_blank())
+    theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, legend.title = element_blank(), strip.background = element_blank())
   save_plot(filename = "qc.hto.correlation.png", plot = hto_facet_plot, base_height = 8, base_width = 10)
   Sys.sleep(1)
   save_plot(filename = "qc.hto.correlation.pdf", plot = hto_facet_plot, base_height = 8, base_width = 10)
@@ -590,7 +593,7 @@ plot_hto_qc = function(seurat_obj) {
   # number of UMIs for singlets, doublets and negative cells
   hto_umi_plot =
     VlnPlot(seurat_obj, features = "num_UMIs", group.by = "HTO_classification.global", pt.size = 0.1) +
-    theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
+    theme(plot.background = element_rect(fill = "white"), axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
     scale_fill_manual(values = colors_hto) +
     scale_y_continuous(labels = comma)
   save_plot("qc.hto.umis.png", plot = hto_umi_plot, base_height = 6, base_width = 6)
@@ -599,7 +602,7 @@ plot_hto_qc = function(seurat_obj) {
   # number of genes for singlets, doublets and negative cells
   hto_gene_plot =
     VlnPlot(seurat_obj, features = "num_genes", group.by = "HTO_classification.global", pt.size = 0.1) +
-    theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
+    theme(plot.background = element_rect(fill = "white"), axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
     scale_fill_manual(values = colors_hto) +
     scale_y_continuous(labels = comma)
   save_plot("qc.hto.genes.png", plot = hto_gene_plot, base_height = 6, base_width = 6)
@@ -608,33 +611,39 @@ plot_hto_qc = function(seurat_obj) {
   # number of genes for singlets, doublets and negative cells
   hto_mito_plot =
     VlnPlot(seurat_obj, features = "pct_mito", group.by = "HTO_classification.global", pt.size = 0.1) +
-    theme(axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
+    theme(plot.background = element_rect(fill = "white"), axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
     scale_fill_manual(values = colors_hto) +
     scale_y_continuous(labels = comma)
   save_plot("qc.hto.mito.png", plot = hto_mito_plot, base_height = 6, base_width = 6)
   Sys.sleep(1)
 
   group_var = "HTO_classification.global"
-  seurat_obj = set_identity(seurat_obj = seurat_obj, group_var = group_var)
+  seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = group_var)
   plot_umap =
     DimPlot(
       seurat_obj, reduction = "umap",
       pt.size = get_dr_point_size(seurat_obj), cols = colors_hto, shuffle = TRUE, raster = FALSE
     ) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   save_plot(glue("dr.umap.{group_var}.png"), plot = plot_umap, base_height = 6, base_width = 8)
   Sys.sleep(1)
   save_plot(glue("dr.umap.{group_var}.pdf"), plot = plot_umap, base_height = 6, base_width = 8)
   Sys.sleep(1)
 
   group_var = "hash.ID"
-  seurat_obj = set_identity(seurat_obj = seurat_obj, group_var = group_var)
+  seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = group_var)
   plot_umap =
     DimPlot(
       seurat_obj, reduction = "umap",
       pt.size = get_dr_point_size(seurat_obj), cols = colors_hto, shuffle = TRUE, raster = FALSE
     ) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   save_plot(glue("dr.umap.{group_var}.png"), plot = plot_umap, base_height = 6, base_width = 8)
   Sys.sleep(1)
   save_plot(glue("dr.umap.{group_var}.pdf"), plot = plot_umap, base_height = 6, base_width = 8)
@@ -650,7 +659,7 @@ split_seurat_obj = function(seurat_obj, original_wd, split_var = "orig.ident") {
   # set identity to the column used for splitting
   s_obj = seurat_obj
   DefaultAssay(s_obj) = "RNA"
-  s_obj = set_identity(seurat_obj = s_obj, group_var = split_var)
+  s_obj = scooter::set_identity(seurat_obj = s_obj, identity_column = split_var)
 
   # clean up metadata
   s_obj@assays$RNA@var.features = vector()
@@ -677,7 +686,7 @@ split_seurat_obj = function(seurat_obj, original_wd, split_var = "orig.ident") {
         setwd(split_dir)
         write(glue("subset {s} cells: {ncol(split_obj)}"), file = "create.log", append = TRUE)
         split_obj = calculate_variance(seurat_obj = split_obj, jackstraw_max_cells = 100)
-        split_obj = set_identity(seurat_obj = split_obj, group_var = "orig.ident")
+        split_obj = scooter::set_identity(seurat_obj = split_obj, identity_column = "orig.ident")
         saveRDS(split_obj, file = "seurat_obj.rds")
         calculate_cluster_stats(split_obj, label = "sample")
       }
@@ -755,7 +764,7 @@ combine_seurat_obj = function(original_wd, sample_analysis_dirs) {
 
   # encode sample name as factor (also sets alphabetical sample order)
   merged_obj@meta.data$orig.ident = factor(merged_obj@meta.data$orig.ident)
-  merged_obj = set_identity(seurat_obj = merged_obj, group_var = "orig.ident")
+  merged_obj = scooter::set_identity(seurat_obj = merged_obj, identity_column = "orig.ident")
 
   # print combined sample stats
   message(glue("combined cells: {ncol(merged_obj)}"))
@@ -794,6 +803,7 @@ combine_seurat_obj = function(original_wd, sample_analysis_dirs) {
 
   vln_theme =
     theme(
+      plot.background = element_rect(fill = "white"),
       axis.title.x = element_blank(),
       axis.title.y = element_blank(),
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
@@ -997,6 +1007,7 @@ integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_
 
   vln_theme =
     theme(
+      plot.background = element_rect(fill = "white"),
       axis.title.x = element_blank(),
       axis.title.y = element_blank(),
       axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
@@ -1085,7 +1096,10 @@ calculate_variance = function(seurat_obj, jackstraw_max_cells = 10000) {
       s_obj, group.by = "orig.ident", reduction = "pca",
       pt.size = 0.5, cols = colors_samples, shuffle = TRUE, raster = FALSE
     ) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   ggsave("variance.pca.png", plot = pca_plot, width = 8, height = 6, units = "in")
 
   message("\n\n ========== Seurat::DimHeatmap() ========== \n\n")
@@ -1153,7 +1167,10 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
       s_obj, reduction = "pca", group.by = "orig.ident",
       pt.size = 0.5, cols = colors_samples, shuffle = TRUE, raster = FALSE
     ) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   ggsave("variance.pca.png", plot = pca_plot, width = 10, height = 6, units = "in")
 
   message("\n\n ========== Seurat::RunTSNE() ========== \n\n")
@@ -1166,10 +1183,13 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
   dr_pt_size = get_dr_point_size(s_obj)
 
   # tSNE using original sample names (shuffle cells so any one group does not appear overrepresented due to ordering)
-  s_obj = set_identity(seurat_obj = s_obj, group_var = "orig.ident")
+  s_obj = scooter::set_identity(seurat_obj = s_obj, identity_column = "orig.ident")
   plot_tsne =
     DimPlot(s_obj, reduction = "tsne", pt.size = dr_pt_size, cols = colors_samples, shuffle = TRUE, raster = FALSE) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   ggsave(glue("dr.tsne.{num_dim}.sample.png"), plot = plot_tsne, width = 10, height = 6, units = "in")
   Sys.sleep(1)
   ggsave(glue("dr.tsne.{num_dim}.sample.pdf"), plot = plot_tsne, width = 10, height = 6, units = "in")
@@ -1181,10 +1201,13 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
   s_obj = RunUMAP(s_obj, reduction = "pca", dims = 1:num_dim, n.neighbors = num_neighbors, verbose = FALSE)
 
   # tSNE using original sample names (shuffle cells so any one group does not appear overrepresented due to ordering)
-  s_obj = set_identity(seurat_obj = s_obj, group_var = "orig.ident")
+  s_obj = scooter::set_identity(seurat_obj = s_obj, identity_column = "orig.ident")
   plot_umap =
     DimPlot(s_obj, reduction = "umap", pt.size = dr_pt_size, cols = colors_samples, shuffle = TRUE, raster = FALSE) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   ggsave(glue("dr.umap.{num_dim}.sample.png"), plot = plot_umap, width = 10, height = 6, units = "in")
   Sys.sleep(1)
   ggsave(glue("dr.umap.{num_dim}.sample.pdf"), plot = plot_umap, width = 10, height = 6, units = "in")
@@ -1216,10 +1239,13 @@ calculate_clusters = function(seurat_obj, num_dim, num_neighbors = 30) {
   dr_pt_size = get_dr_point_size(s_obj)
 
   # tSNE using original sample names (shuffle cells so any one group does not appear overrepresented due to ordering)
-  s_obj = set_identity(seurat_obj = s_obj, group_var = "orig.ident")
+  s_obj = scooter::set_identity(seurat_obj = s_obj, identity_column = "orig.ident")
   plot_tsne =
     DimPlot(s_obj, reduction = "tsne", pt.size = dr_pt_size, cols = colors_samples, shuffle = TRUE, raster = FALSE) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   ggsave(glue("dr.tsne.{num_dim}.sample.png"), plot = plot_tsne, width = 10, height = 6, units = "in")
   Sys.sleep(1)
   ggsave(glue("dr.tsne.{num_dim}.sample.pdf"), plot = plot_tsne, width = 10, height = 6, units = "in")
@@ -1231,10 +1257,13 @@ calculate_clusters = function(seurat_obj, num_dim, num_neighbors = 30) {
   s_obj = RunUMAP(s_obj, reduction = "pca", dims = 1:num_dim, n.neighbors = num_neighbors, verbose = FALSE)
 
   # tSNE using original sample names (shuffle cells so any one group does not appear overrepresented due to ordering)
-  s_obj = set_identity(seurat_obj = s_obj, group_var = "orig.ident")
+  s_obj = scooter::set_identity(seurat_obj = s_obj, identity_column = "orig.ident")
   plot_umap =
     DimPlot(s_obj, reduction = "umap", pt.size = dr_pt_size, cols = colors_samples, shuffle = TRUE, raster = FALSE) +
-    theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+    theme(
+      plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+      axis.ticks = element_blank(), axis.text = element_blank()
+    )
   ggsave(glue("dr.umap.{num_dim}.sample.png"), plot = plot_umap, width = 10, height = 6, units = "in")
   Sys.sleep(1)
   ggsave(glue("dr.umap.{num_dim}.sample.pdf"), plot = plot_umap, width = 10, height = 6, units = "in")
@@ -1357,7 +1386,7 @@ plot_clusters = function(seurat_obj, resolution, filename_base) {
   s_obj = seurat_obj
 
   # set identities based on specified resolution
-  s_obj = set_identity(seurat_obj = s_obj, group_var = resolution)
+  s_obj = scooter::set_identity(seurat_obj = s_obj, identity_column = resolution)
 
   # print stats
   num_clusters = Idents(s_obj) %>% as.character() %>% n_distinct()
@@ -1373,7 +1402,10 @@ plot_clusters = function(seurat_obj, resolution, filename_base) {
         s_obj, reduction = "tsne",
         pt.size = get_dr_point_size(s_obj), cols = colors_clusters, shuffle = TRUE, raster = FALSE
       ) +
-      theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+      theme(
+        plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+        axis.ticks = element_blank(), axis.text = element_blank()
+      )
     ggsave(glue("{filename_base}.tsne.png"), plot = plot_tsne, width = 9, height = 6, units = "in")
     Sys.sleep(1)
     ggsave(glue("{filename_base}.tsne.pdf"), plot = plot_tsne, width = 9, height = 6, units = "in")
@@ -1384,7 +1416,10 @@ plot_clusters = function(seurat_obj, resolution, filename_base) {
         s_obj, reduction = "umap",
         pt.size = get_dr_point_size(s_obj), cols = colors_clusters, shuffle = TRUE, raster = FALSE
       ) +
-      theme(aspect.ratio = 1, axis.ticks = element_blank(), axis.text = element_blank())
+      theme(
+        plot.background = element_rect(fill = "white"), aspect.ratio = 1,
+        axis.ticks = element_blank(), axis.text = element_blank()
+      )
     ggsave(glue("{filename_base}.umap.png"), plot = plot_umap, width = 9, height = 6, units = "in")
     Sys.sleep(1)
     ggsave(glue("{filename_base}.umap.pdf"), plot = plot_umap, width = 9, height = 6, units = "in")
@@ -1393,44 +1428,6 @@ plot_clusters = function(seurat_obj, resolution, filename_base) {
     if (file.exists("Rplots.pdf")) file.remove("Rplots.pdf")
 
   }
-
-  return(s_obj)
-
-}
-
-# check grouping variable/resolution against existing meta data columns
-check_group_var = function(seurat_obj, group_var) {
-
-  s_obj = seurat_obj
-
-  # check if the grouping variable is one of meta data columns
-  if (!(group_var %in% colnames(s_obj@meta.data))) {
-
-    # check if grouping variable is the resolution value (X.X instead of res.X.X)
-    # res_column = str_c("snn_res.", group_var)
-    res_column = str_c("res.", group_var)
-    if (res_column %in% colnames(s_obj@meta.data)) {
-      group_var = res_column
-    } else {
-      stop("unknown grouping variable: ", group_var)
-    }
-
-  }
-
-  return(group_var)
-
-}
-
-# set identity based on a specified variable/resolution
-set_identity = function(seurat_obj, group_var) {
-
-  s_obj = seurat_obj
-
-  group_var = check_group_var(seurat_obj = s_obj, group_var = group_var)
-
-  # set identities based on selected grouping variable
-  message("setting grouping variable: ", group_var)
-  Idents(s_obj) = group_var
 
   return(s_obj)
 
@@ -1446,22 +1443,13 @@ plot_cluster_markers_top = function(seurat_obj, genes, filename_base) {
   # switch to "RNA" assay from potentially "integrated"
   DefaultAssay(seurat_obj) = "RNA"
 
-  # tSNE plots color-coded by expression level (should be square to match the original tSNE plots)
-  feat_plot =
-    FeaturePlot(
-      seurat_obj, features = genes, reduction = "tsne", cells = sample(colnames(seurat_obj)),
-      pt.size = 0.5, cols = gradient_colors, ncol = 4
-    )
-  ggsave(glue("{filename_base}.tsne.png"), plot = feat_plot, width = 16, height = 10, units = "in")
-  # ggsave(glue("{filename_base}.tsne.pdf"), plot = feat_plot, width = 16, height = 10, units = "in")
-
   # UMAP plots color-coded by expression level (should be square to match the original tSNE plots)
   feat_plot =
     FeaturePlot(
       seurat_obj, features = genes, reduction = "umap", cells = sample(colnames(seurat_obj)),
       pt.size = 0.5, cols = gradient_colors, ncol = 4
     )
-  ggsave(glue("{filename_base}.umap.png"), plot = feat_plot, width = 16, height = 10, units = "in")
+  ggsave(glue("{filename_base}.umap.png"), plot = feat_plot, width = 16, height = 10, units = "in", dpi = 150)
   # ggsave(glue("{filename_base}.umap.pdf"), plot = feat_plot, width = 16, height = 10, units = "in")
 
   # dot plot visualization
@@ -1472,7 +1460,7 @@ plot_cluster_markers_top = function(seurat_obj, genes, filename_base) {
   # gene violin plots (size.use below 0.2 doesn't seem to make a difference)
   # skip PDF since every cell has to be plotted and they become too big
   vln_plot = VlnPlot(seurat_obj, features = genes, pt.size = 0.1, combine = TRUE, cols = colors_clusters, ncol = 4)
-  ggsave(glue("{filename_base}.violin.png"), plot = vln_plot, width = 16, height = 10, units = "in")
+  ggsave(glue("{filename_base}.violin.png"), plot = vln_plot, width = 16, height = 10, units = "in", dpi = 150)
 
   # expression levels per cluster for bar plots (averaging and output are in non-log space)
   cluster_avg_exp = AverageExpression(seurat_obj, assay = "RNA", features = genes, verbose = FALSE)[["RNA"]]
@@ -1485,13 +1473,13 @@ plot_cluster_markers_top = function(seurat_obj, genes, filename_base) {
   names(color_scheme_named) = clust_names
   barplot_plot = ggplot(cluster_avg_exp_long, aes(x = cluster, y = avg_exp, fill = cluster)) +
     geom_col(color = "black") +
-    theme(legend.position = "none") +
+    theme(plot.background = element_rect(fill = "white"), legend.position = "none") +
     scale_fill_manual(values = color_scheme_named) +
     scale_y_continuous(expand = c(0, 0)) +
     theme_cowplot() +
     facet_wrap(~ gene, ncol = 4, scales = "free")
-  ggsave(glue("{filename_base}.barplot.png"), plot = barplot_plot, width = 16, height = 10, units = "in")
-  # ggsave(glue("{filename_base}.barplot.pdf"), plot = barplot_plot, width = 16, height = 10, units = "in")
+  ggsave(glue("{filename_base}.barplot.png"), plot = barplot_plot, width = 20, height = 10, units = "in", dpi = 150)
+  # ggsave(glue("{filename_base}.barplot.pdf"), plot = barplot_plot, width = 20, height = 10, units = "in")
 
 }
 
@@ -1537,8 +1525,11 @@ plot_dr_umap_genes = function(seurat_obj, genes_csv) {
           cells = sample(colnames(seurat_obj)), pt.size = dr_point_size, cols = gradient_colors, raster = FALSE
         ) +
         labs(title = g) +
-        theme(aspect.ratio = 1, plot.title = element_text(hjust = 0.5),
-          axis.ticks = element_blank(), axis.text = element_blank())
+        theme(
+          plot.background = element_rect(fill = "white"),
+          aspect.ratio = 1, plot.title = element_text(hjust = 0.5),
+          axis.ticks = element_blank(), axis.text = element_blank()
+        )
       save_plot(glue("{plot_dir}/dr.umap.gene.{g}.png"), plot = gene_umap, base_height = 6.5, base_width = 7)
       Sys.sleep(1)
       # save_plot(glue("{plot_dir}/dr.umap.gene.{g}.pdf"), plot = gene_umap, base_height = 6.5, base_width = 7)
@@ -1621,7 +1612,8 @@ calculate_cluster_expression = function(seurat_obj, label) {
   # cluster averages split by sample (orig.ident)
   num_samples = n_distinct(seurat_obj@meta.data$orig.ident)
   if (num_samples > 1) {
-    sample_avg_exp = AverageExpression(seurat_obj, assay = "RNA", add.ident = "orig.ident", verbose = FALSE)[["RNA"]]
+    seurat_obj@meta.data$persample = paste0(Idents(seurat_obj), "|", seurat_obj@meta.data$orig.ident)
+    sample_avg_exp = AverageExpression(seurat_obj, assay = "RNA", group.by = "persample", verbose = FALSE)[["RNA"]]
     sample_avg_exp = sample_avg_exp %>% round(3) %>% as.data.frame() %>% rownames_to_column("gene") %>% arrange(gene)
     write_csv(sample_avg_exp, glue("expression.mean.{label}.per-sample.csv"))
     Sys.sleep(1)
@@ -1875,110 +1867,6 @@ plot_cluster_markers_heatmap = function(seurat_obj, markers_tbl, num_genes, file
 
 }
 
-# calculate differentially expressed genes within each cluster
-calculate_cluster_de_genes = function(seurat_obj, label, test, group_var = "orig.ident") {
-
-  message("\n\n ========== calculate cluster DE genes ========== \n\n")
-
-  # create a separate sub-directory for differential expression results
-  de_dir = glue("diff-expression-{group_var}")
-  if (!dir.exists(de_dir)) { dir.create(de_dir) }
-
-  # common settings
-  num_de_genes = 50
-
-  # results table
-  de_all_genes_tbl = tibble()
-
-  # get DE genes for each cluster
-  clusters = levels(seurat_obj)
-  for (clust_name in clusters) {
-
-    message(glue("calculating DE genes for cluster {clust_name}"))
-
-    # subset to the specific cluster
-    clust_obj = subset(seurat_obj, idents = clust_name)
-
-    # revert back to the grouping variable sample/library labels
-    Idents(clust_obj) = group_var
-
-    message("cluster cells: ", ncol(clust_obj))
-    message("cluster groups: ", paste(levels(clust_obj), collapse = ", "))
-
-    # continue if cluster has multiple groups and more than 10 cells in each group
-    if (n_distinct(Idents(clust_obj)) > 1 && min(table(Idents(clust_obj))) > 10) {
-
-      # scale data for heatmap
-      clust_obj = ScaleData(clust_obj, assay = "RNA", features = rownames(clust_obj), vars.to.regress = c("num_UMIs", "pct_mito"))
-
-      # iterate through sample/library combinations (relevant if more than two)
-      group_combinations = combn(levels(clust_obj), m = 2, simplify = TRUE)
-      for (combination_num in 1:ncol(group_combinations)) {
-
-        # determine combination
-        g1 = group_combinations[1, combination_num]
-        g2 = group_combinations[2, combination_num]
-        comparison_label = glue("{g1}-vs-{g2}")
-        message(glue("comparison: {clust_name} {g1} vs {g2}"))
-
-        filename_label = glue("{de_dir}/de.{label}-{clust_name}.{comparison_label}.{test}")
-
-        # find differentially expressed genes (default Wilcoxon rank sum test)
-        de_genes = FindMarkers(clust_obj, ident.1 = g1, ident.2 = g2, assay = "RNA", test.use = test,
-                               min.pct = 0.1, logfc.threshold = 0, base = 2, fc.name = "log2FC", only.pos = FALSE,
-                               print.bar = FALSE)
-
-        # perform some light filtering and clean up
-        de_genes =
-          de_genes %>%
-          rownames_to_column("gene") %>%
-          mutate(cluster = clust_name, group1 = g1, group2 = g2, de_test = test) %>%
-          select(cluster, group1, group2, de_test, gene, log2FC, p_val, p_val_adj) %>%
-          mutate(
-            log2FC = round(log2FC, 3),
-            p_val = if_else(p_val < 0.00001, p_val, round(p_val, 5)),
-            p_val_adj = if_else(p_val_adj < 0.00001, p_val_adj, round(p_val_adj, 5))
-          ) %>%
-          arrange(p_val_adj, p_val)
-
-        message(glue("{comparison_label} num genes: {nrow(de_genes)}"))
-
-        # save stats table
-        write_csv(de_genes, glue("{filename_label}.csv"))
-
-        # add cluster genes to all genes
-        de_all_genes_tbl = bind_rows(de_all_genes_tbl, de_genes)
-
-        # heatmap of top genes
-        # if (nrow(de_genes) > 5) {
-        #   top_de_genes = de_genes %>% top_n(num_de_genes, -p_val_adj) %>% arrange(logFC) %>% pull(gene)
-        #   plot_hm = DoHeatmap(clust_obj, features = top_de_genes, assay = "RNA", slot = "scale.data")
-        #   heatmap_prefix = glue("{filename_label}.heatmap.top{num_de_genes}")
-        #   ggsave(glue("{heatmap_prefix}.png"), plot = plot_hm, width = 15, height = 10, units = "in")
-        #   Sys.sleep(1)
-        #   ggsave(glue("{heatmap_prefix}.pdf"), plot = plot_hm, width = 15, height = 10, units = "in")
-        #   Sys.sleep(1)
-        # }
-
-      }
-
-    } else {
-
-      message("skip cluster: ", clust_name)
-
-    }
-
-    message(" ")
-
-  }
-
-  # save stats table
-  write_csv(de_all_genes_tbl, glue("{de_dir}/de.{label}.{group_var}.{test}.all.csv"))
-  de_all_genes_tbl = de_all_genes_tbl %>% filter(p_val_adj < 0.01)
-  write_csv(de_all_genes_tbl, glue("{de_dir}/de.{label}.{group_var}.{test}.sig.csv"))
-
-}
-
 
 # ========== main ==========
 
@@ -2190,11 +2078,11 @@ if (opts$create) {
   if (opts$identify || opts$de) {
 
     # set resolution in the seurat object
-    group_var = check_group_var(seurat_obj = seurat_obj, group_var = opts$resolution)
-    seurat_obj = set_identity(seurat_obj = seurat_obj, group_var = group_var)
+    seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = opts$resolution)
 
     # use a grouping-specific sub-directory for all output
-    grouping_label = gsub("\\.", "", group_var)
+    grouping_label = scooter::check_identity_column(seurat_obj, opts$resolution)
+    grouping_label = gsub("\\.", "", grouping_label)
     num_clusters = Idents(seurat_obj) %>% as.character() %>% n_distinct()
     clust_label = glue("clust{num_clusters}")
     res_dir = glue("clusters-{grouping_label}-{clust_label}")
@@ -2234,8 +2122,9 @@ if (opts$create) {
         analysis_step = "diff"
         message(glue("\n\n ========== started analysis step {analysis_step} for {out_dir} ========== \n\n"))
 
-        calculate_cluster_de_genes(seurat_obj, label = clust_label, test = "wilcox")
-        calculate_cluster_de_genes(seurat_obj, label = clust_label, test = "MAST")
+        # calculate_cluster_de_genes(seurat_obj, label = clust_label, test = "wilcox", group_var = opts$group_var)
+        # calculate_cluster_de_genes(seurat_obj, label = clust_label, test = "MAST", group_var = opts$group_var)
+        de_tbl = differential_expression_per_cluster(seurat_obj, cluster_column = opts$resolution, group_column = opts$group_var, test = "wilcox")
 
     }
 

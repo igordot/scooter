@@ -7,7 +7,7 @@
 get_dr_point_size(num_cells)
 }
 \arguments{
-\item{num_cells}{Number of cells (points on the plot).}
+\item{num_cells}{Number of cells (points on the plot) or a Seurat object.}
 }
 \value{
 Numeric point size.
