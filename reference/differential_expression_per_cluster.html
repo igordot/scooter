@@ -44,37 +44,52 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">differential_expression_per_cluster</span><span class="op">(</span>
-  <span class="va">seurat_obj</span>,
-  <span class="va">cluster_column</span>,
-  <span class="va">group_column</span>,
-  test <span class="op">=</span> <span class="st">"wilcox"</span>,
-  out_path <span class="op">=</span> <span class="st">"."</span>,
-  write <span class="op">=</span> <span class="cn">TRUE</span>,
-  log_file <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">differential_expression_per_cluster</span><span class="op">(</span></span>
+<span>  <span class="va">seurat_obj</span>,</span>
+<span>  <span class="va">cluster_column</span>,</span>
+<span>  <span class="va">group_column</span>,</span>
+<span>  test <span class="op">=</span> <span class="st">"wilcox"</span>,</span>
+<span>  out_path <span class="op">=</span> <span class="st">"."</span>,</span>
+<span>  write <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  log_file <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>seurat_obj</dt>
 <dd><p>Gene expression data.</p></dd>
+
+
 <dt>cluster_column</dt>
 <dd><p>Metadata column specifying the groups to split by.</p></dd>
+
+
 <dt>group_column</dt>
 <dd><p>Metadata column specifying the groups for differential expressin within each split.</p></dd>
+
+
 <dt>test</dt>
 <dd><p>Statistical method to use.</p></dd>
+
+
 <dt>out_path</dt>
 <dd><p>Output path.</p></dd>
+
+
 <dt>write</dt>
 <dd><p>Boolean to save results to disk.</p></dd>
+
+
 <dt>log_file</dt>
 <dd><p>log file.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>.</p>
+    
+
+<p>.</p>
     </div>
 
   </div>
@@ -89,7 +104,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

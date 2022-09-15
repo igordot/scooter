@@ -44,34 +44,47 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">create_seurat_obj</span><span class="op">(</span>
-  <span class="va">counts_matrix</span>,
-  assay <span class="op">=</span> <span class="st">"RNA"</span>,
-  min_cells <span class="op">=</span> <span class="fl">1</span>,
-  min_genes <span class="op">=</span> <span class="fl">1</span>,
-  log_file <span class="op">=</span> <span class="cn">NULL</span>,
-  project <span class="op">=</span> <span class="st">"proj"</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">create_seurat_obj</span><span class="op">(</span></span>
+<span>  <span class="va">counts_matrix</span>,</span>
+<span>  assay <span class="op">=</span> <span class="st">"RNA"</span>,</span>
+<span>  min_cells <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  min_genes <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  log_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  project <span class="op">=</span> <span class="st">"proj"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>counts_matrix</dt>
 <dd><p>A matrix of raw counts.</p></dd>
+
+
 <dt>assay</dt>
 <dd><p>Seurat assay to add the data to.</p></dd>
+
+
 <dt>min_cells</dt>
 <dd><p>Include genes/features detected in at least this many cells.</p></dd>
+
+
 <dt>min_genes</dt>
 <dd><p>Include cells where at least this many genes/features are detected.</p></dd>
+
+
 <dt>log_file</dt>
 <dd><p>Filename for the logfile.</p></dd>
+
+
 <dt>project</dt>
 <dd><p>Project name for Seurat object.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Seurat object.</p>
+    
+
+<p>Seurat object.</p>
     </div>
 
   </div>
@@ -86,7 +99,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

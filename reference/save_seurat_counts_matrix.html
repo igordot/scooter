@@ -44,37 +44,52 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">save_seurat_counts_matrix</span><span class="op">(</span>
-  <span class="va">seurat_obj</span>,
-  proj_name <span class="op">=</span> <span class="st">""</span>,
-  label <span class="op">=</span> <span class="st">""</span>,
-  out_dir <span class="op">=</span> <span class="st">"."</span>,
-  assay <span class="op">=</span> <span class="st">"RNA"</span>,
-  slot <span class="op">=</span> <span class="st">"data"</span>,
-  log_file <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">save_seurat_counts_matrix</span><span class="op">(</span></span>
+<span>  <span class="va">seurat_obj</span>,</span>
+<span>  proj_name <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  label <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  out_dir <span class="op">=</span> <span class="st">"."</span>,</span>
+<span>  assay <span class="op">=</span> <span class="st">"RNA"</span>,</span>
+<span>  slot <span class="op">=</span> <span class="st">"data"</span>,</span>
+<span>  log_file <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>seurat_obj</dt>
 <dd><p>A Seurat object.</p></dd>
+
+
 <dt>proj_name</dt>
 <dd><p>Name of the project that will be the prefix of the file name.</p></dd>
+
+
 <dt>label</dt>
 <dd><p>An optional label for the file.</p></dd>
+
+
 <dt>out_dir</dt>
 <dd><p>Directory in which to save csv.</p></dd>
+
+
 <dt>assay</dt>
 <dd><p>The assay within the Seurat object to retrieve data from.</p></dd>
+
+
 <dt>slot</dt>
 <dd><p>The slot within the Seurat object to retrieve data from.</p></dd>
+
+
 <dt>log_file</dt>
 <dd><p>A log filename.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A csv file in the out_dir.</p>
+    
+
+<p>A csv file in the out_dir.</p>
     </div>
 
   </div>
@@ -89,7 +104,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
