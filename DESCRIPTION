@@ -10,7 +10,7 @@ Encoding: UTF-8
 LazyData: true
 biocViews:
 Depends: 
-    R (>= 4.0.0)
+    R (>= 4.1)
 Imports: 
     cowplot,
     data.table,
@@ -26,7 +26,7 @@ Imports:
     purrr,
     RColorBrewer,
     readr,
-    rlang (>= 0.2),
+    rlang (>= 1.0.0),
     Rtsne,
     sctransform,
     Seurat (>= 4.0.2),
