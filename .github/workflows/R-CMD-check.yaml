@@ -20,9 +20,9 @@ jobs:
         config:
           - {os: macOS-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: '4.0'}
+          - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-20.04,   r: '4.0'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
