@@ -158,7 +158,7 @@ create_seurat_obj_qc = function(seurat_obj) {
 }
 
 # filter data by number of genes and mitochondrial percentage
-filter_data = function(seurat_obj, min_genes = NULL, max_genes = NULL, max_mt = 10) {
+filter_data = function(seurat_obj, min_umis = 1000, min_genes = NULL, max_genes = NULL, max_mt = 10) {
 
   s_obj = seurat_obj
 
@@ -199,8 +199,8 @@ filter_data = function(seurat_obj, min_genes = NULL, max_genes = NULL, max_mt = 
   message(glue("imported genes: {nrow(s_obj)}"))
 
   # set a minimum UMIs cutoff
-  min_umis = 0
-  if (nrow(s_obj) > 1000) min_umis = 1000
+  # min_umis = 0
+  # if (nrow(s_obj) > 1000) min_umis = 1000
 
   # filter
   cells_subset =
@@ -424,6 +424,15 @@ plot_adt_qc = function(seurat_obj) {
   cor_adt_plot = plot_grid(cor_umis_plot, cor_genes_plot, cor_mito_plot, ncol = 3)
   ggsave("qc.adt.correlations.png", plot = cor_adt_plot, width = 18, height = 5, units = "in")
   Sys.sleep(1)
+
+  # generate ADT counts summary
+  counts_raw = GetAssayData(seurat_obj, assay = "ADT", slot = "counts") %>% as.matrix()
+  adt_counts_summary = rowSums(counts_raw) %>% enframe(name = "ADT", value = "total_counts")
+  adt_counts_summary$mean_counts = rowMeans(counts_raw) %>% round(1)
+  adt_counts_summary$median_counts = matrixStats::rowMedians(counts_raw)
+  adt_counts_summary$q05_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.05)
+  adt_counts_summary$q95_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.95)
+  write_csv(adt_counts_summary, "qc.adt.counts.csv")
 
 }
 
@@ -1649,11 +1658,13 @@ calculate_cluster_markers = function(seurat_obj, label, test, pairwise = FALSE) 
     markers_dir = "markers-global"
 
     # capture output to avoid excessive warnings
+    # default logfc.threshold = 0.25 = log2(1.189), log2(1.1) = 0.137
     markers_log =
       capture.output({
         all_markers =
           FindAllMarkers(
-            seurat_obj, assay = "RNA", test.use = test, min.pct = 0.1, base = 2, fc.name = "log2FC",
+            seurat_obj, assay = "RNA", test.use = test,
+            min.pct = 0.1, logfc.threshold = log2(1.1), base = 2, fc.name = "log2FC",
             only.pos = TRUE, min.diff.pct = -Inf, verbose = FALSE
           )
       }, type = "message")

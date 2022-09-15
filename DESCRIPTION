@@ -1,6 +1,6 @@
 Package: scooter
 Title: Streamlined scRNA-Seq Analysis Pipeline
-Version: 0.0.0.9003
+Version: 0.0.0.9004
 Authors@R: c(
     person("Igor", "Dolgalev", email = "igor.dolgalev@nyumc.org", role = c("cre", "aut")), 
     person("Anna", "Yeaton", email = "ahyeaton@gmail.com", role = "aut"))
