@@ -71,7 +71,7 @@ differential_expression_per_cluster <- function(seurat_obj, cluster_column, grou
           dplyr::mutate(cluster = clust_name, group1 = g1, group2 = g2, de_test = test) %>%
           dplyr::select(cluster, group1, group2, de_test, gene, log2FC, p_val, p_val_adj) %>%
           dplyr::mutate(
-            log2FC = round(log2FC, 3),
+            log2FC = round(log2FC, 5),
             p_val = if_else(p_val < 0.00001, p_val, round(p_val, 5)),
             p_val_adj = if_else(p_val_adj < 0.00001, p_val_adj, round(p_val_adj, 5))
           ) %>%
@@ -96,7 +96,7 @@ differential_expression_per_cluster <- function(seurat_obj, cluster_column, grou
   # save stats table
   if (write) {
     write_csv(de_all_genes_tbl, glue("{de_dir}/de.{cluster_column}.{group_column}.{test}.all.csv"))
-    de_sig_genes_tbl <- de_all_genes_tbl %>% dplyr::filter(p_val_adj < 0.01)
+    de_sig_genes_tbl <- de_all_genes_tbl %>% dplyr::filter(p_val_adj < 0.05)
     write_csv(de_sig_genes_tbl, glue("{de_dir}/de.{cluster_column}.{group_column}.{test}.sig.csv"))
     de_top_genes_tbl <- de_all_genes_tbl %>%
       dplyr::group_by(cluster, group1, group2) %>%
