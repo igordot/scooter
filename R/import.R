@@ -98,7 +98,7 @@ load_sample_counts_matrix <- function(sample_name, path, log_file = NULL) {
 #' are `Gene Expression` and `Antibody Capture`
 #'
 #' @import utils
-#' @importFrom Matrix readMM
+#' @importFrom Matrix readMM t
 #' @importFrom stringr str_detect str_sub
 #' @export
 import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
@@ -178,8 +178,9 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
 #'
 #' @return Seurat object.
 #'
-#' @import Matrix dplyr readr tibble
+#' @import dplyr readr tibble
 #' @importFrom glue glue
+#' @importFrom Matrix rowSums
 #' @importFrom Seurat CreateSeuratObject AddMetaData
 #' @export
 create_seurat_obj <- function(counts_matrix, assay = "RNA",
@@ -224,7 +225,7 @@ create_seurat_obj <- function(counts_matrix, assay = "RNA",
 #'
 #' @return Seurat object.
 #'
-#' @import Matrix
+#' @importFrom Matrix colSums
 #' @importFrom Seurat AddMetaData
 #' @export
 calculate_mito_pct <- function(seurat_obj) {

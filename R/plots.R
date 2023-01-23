@@ -8,6 +8,8 @@
 #' @return A vector of colors.
 #'
 #' @import ggplot2
+#' @importFrom data.table :=
+#' @importFrom magrittr %<>%
 #' @export
 plot_distribution <- function(data, features, grouping, color_scheme = NULL) {
   UseMethod("plot_distribution")

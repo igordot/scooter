@@ -62,7 +62,7 @@ calculate_clusters <- function(pcs, num_dim, log_file, num_neighbors = 30, res =
 #' @return .
 #'
 #' @import dplyr
-#' @import data.table
+#' @importFrom data.table .SD setDT
 #' @export
 calc_clust_averages <- function(metadata, data, group) {
 

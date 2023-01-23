@@ -126,7 +126,7 @@ run_dr.Seurat <- function(data, dr_method, prefix, assay = NULL,
 #'
 #' @return named list of feature loadings, cell embeddings, sdev, output from pca
 #'
-#' @import irlba
+#' @importFrom irlba prcomp_irlba
 #' @export
 run_pca <- function(data, num_pcs, prefix = "PC_") {
 
