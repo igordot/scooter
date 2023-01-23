@@ -1,5 +1,11 @@
-url: https://igordot.github.io/scooter
+url: https://igordot.github.io/scooter/
 
 template:
-  params:
-    bootswatch: readable
+  bootstrap: 5
+  bootswatch: zephyr
+
+navbar:
+  bg: light
+  structure:
+    left: []
+    right: [reference, news, github]
