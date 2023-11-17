@@ -30,7 +30,6 @@ Imports:
     Rtsne,
     sctransform,
     Seurat (>= 4.0.2),
-    Seurat (< 5.0.0),
     SeuratObject,
     stringr,
     tibble,
