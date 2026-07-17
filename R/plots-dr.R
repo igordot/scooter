@@ -10,11 +10,12 @@
 #' @importFrom ggsci pal_d3 pal_igv
 #' @export
 get_color_scheme <- function(type = "clusters") {
+  color_scheme <- c(pal_igv("default")(51), pal_igv(alpha = 0.6)(51), pal_igv(alpha = 0.3)(51))
   if (type == "samples") {
-    color_scheme <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), pal_igv("default")(51))
+    color_scheme <- c(brewer.pal(5, "Set1"), brewer.pal(8, "Dark2"), color_scheme)
   }
   if (type == "clusters") {
-    color_scheme <- c(pal_d3("category10")(10), pal_d3("category20b")(20), pal_igv("default")(51), pal_igv(alpha = 0.6)(51))
+    color_scheme <- c(pal_d3("category10")(10), pal_d3("category20b")(20), color_scheme)
   }
 
   return(color_scheme)

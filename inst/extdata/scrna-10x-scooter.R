@@ -10,28 +10,37 @@ Basic workflow steps:
 
 Additional optional steps:
   combine - merge multiple samples/libraries (no batch correction)
-  integrate - perform integration (batch correction) across multiple samples or sample batches
+  integrate - perform integration (batch correction) across multiple samples/libraries
   de - differential expression between samples/libraries within clusters
   adt - add antibody-derived tag data [retired]
   hto - add hashtag oligo data and split by hashtag
   plot umap - generate gene expression overlaid on a UMAP based on a table of genes and groups
 
 Usage:
-  scrna-10x-scooter.R create <analysis_dir> <sample_name> <sample_dir> [--min_genes=<n> --max_genes=<n> --mt=<n>]
-  scrna-10x-scooter.R cluster <analysis_dir> <num_dim>
-  scrna-10x-scooter.R identify <analysis_dir> <resolution>
+  scrna-10x-scooter.R create <analysis_dir> --sample_name=<x> --sample_dir=<x> [--min_umis=<n> --min_genes=<n> --max_genes=<n> --mt=<n>]
+  scrna-10x-scooter.R cluster <analysis_dir> --num_dim=<n>
+  scrna-10x-scooter.R identify <analysis_dir> --cluster_var=<x>
   scrna-10x-scooter.R combine <analysis_dir> <sample_analysis_dir>...
-  scrna-10x-scooter.R integrate <analysis_dir> <reduction> <num_dim> <batch_analysis_dir>...
-  scrna-10x-scooter.R de <analysis_dir> <resolution> <group_var>
+  scrna-10x-scooter.R integrate <analysis_dir> --batch_var=<x> --reduction=<x> --num_dim=<n>
+  scrna-10x-scooter.R de <analysis_dir> --cluster_var=<x> --group_var=<x>
   scrna-10x-scooter.R hto <analysis_dir>
-  scrna-10x-scooter.R plot umap <analysis_dir> <genes_csv>
+  scrna-10x-scooter.R plot umap <analysis_dir> (--genes_csv=<x> | --cluster_var=<x>)
   scrna-10x-scooter.R --help
 
 Options:
-  --min_genes=<n>   cutoff for minimum number of genes per cell (2nd percentile if not specified)
-  --max_genes=<n>   cutoff for maximum number of genes per cell (98th percentile if not specified)
-  --mt=<n>          cutoff for mitochondrial genes percentage per cell [default: 10]
-  -h, --help        show this screen
+  --min_umis=<n>     cutoff for minimum number of UMIs/counts per cell [default: 1000]
+  --min_genes=<n>    cutoff for minimum number of genes per cell (2nd percentile if not specified)
+  --max_genes=<n>    cutoff for maximum number of genes per cell (98th percentile if not specified)
+  --mt=<n>           cutoff for mitochondrial genes percentage per cell [default: 10]
+  --num_dim=<n>      number of dimensions for dimensionality reduction
+  --sample_name=<x>  sample/library name that will be used for plots and tables
+  --sample_dir=<x>   path to the Cell Ranger output directory for the specific sample/library
+  --batch_var=<x>    batch variable (such as `orig.ident`)
+  --reduction=<x>    dimensionality reduction type to for finding anchors (`cca` or `rpca`)
+  --cluster_var=<x>  cluster variable for splitting differential expression results
+  --group_var=<x>    group variable (such as `orig.ident`) for differential expression comparisons
+  --genes_csv=<x>    CSV file with `gene` and `group` columns (plots will be organized by group)
+  -h, --help         show this screen
 " -> doc
 
 
@@ -110,6 +119,9 @@ create_seurat_obj_qc = function(seurat_obj) {
       ) +
       scale_y_continuous(labels = comma) +
       vln_theme
+    dist_unfilt_nft_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_unfilt_nct_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_unfilt_pmt_plot$layers[[2]]$aes_params$alpha = 0.1
     dist_unfilt_plot = plot_grid(dist_unfilt_nft_plot, dist_unfilt_nct_plot, dist_unfilt_pmt_plot, ncol = 3)
     ggsave("qc.distribution.unfiltered.png", plot = dist_unfilt_plot, width = 10, height = 6, units = "in")
   })
@@ -151,14 +163,14 @@ create_seurat_obj_qc = function(seurat_obj) {
   s_obj@meta.data %>%
     rownames_to_column("cell") %>% as_tibble() %>%
     mutate(sample_name = orig.ident) %>%
-    write_csv("metadata.unfiltered.csv")
+    write_csv("metadata.unfiltered.csv.gz")
 
   return(s_obj)
 
 }
 
 # filter data by number of genes and mitochondrial percentage
-filter_data = function(seurat_obj, min_umis = 1000, min_genes = NULL, max_genes = NULL, max_mt = 10) {
+filter_data = function(seurat_obj, min_umis = NULL, min_genes = NULL, max_genes = NULL, max_mt = 10) {
 
   s_obj = seurat_obj
 
@@ -175,22 +187,26 @@ filter_data = function(seurat_obj, min_umis = 1000, min_genes = NULL, max_genes 
   write(glue("unfiltered median num UMIs: {median(s_obj$num_UMIs)}"), file = "create.log", append = TRUE)
 
   # convert arguments to integers (command line arguments end up as characters)
+  min_umis = as.numeric(min_umis)
   min_genes = as.numeric(min_genes)
   max_genes = as.numeric(max_genes)
   max_mt = as.numeric(max_mt)
 
   # default cutoffs (gene numbers rounded to nearest 10)
   # as.numeric() converts NULLs to 0 length numerics, so can't use is.null()
+  if (!length(min_umis)) min_umis = 1000
   if (!length(min_genes)) min_genes = s_obj$num_genes %>% quantile(0.02, names = FALSE) %>% round(-1)
   if (!length(max_genes)) max_genes = s_obj$num_genes %>% quantile(0.98, names = FALSE) %>% round(-1)
   if (!length(max_mt)) max_mt = 10
 
+  message(glue("min UMIs cutoff: {min_umis}"))
   message(glue("min genes cutoff: {min_genes}"))
   message(glue("max genes cutoff: {max_genes}"))
   message(glue("max mitochondrial percentage cutoff: {max_mt}"))
   message(" ")
 
   # log the cutoffs to file
+  write(glue("min UMIs cutoff: {min_umis}"), file = "create.log", append = TRUE)
   write(glue("min genes cutoff: {min_genes}"), file = "create.log", append = TRUE)
   write(glue("max genes cutoff: {max_genes}"), file = "create.log", append = TRUE)
   write(glue("max mitochondrial percentage cutoff: {max_mt}"), file = "create.log", append = TRUE)
@@ -198,15 +214,11 @@ filter_data = function(seurat_obj, min_umis = 1000, min_genes = NULL, max_genes 
   message(glue("imported cells: {ncol(s_obj)}"))
   message(glue("imported genes: {nrow(s_obj)}"))
 
-  # set a minimum UMIs cutoff
-  # min_umis = 0
-  # if (nrow(s_obj) > 1000) min_umis = 1000
-
   # filter
   cells_subset =
     seurat_obj@meta.data %>%
     rownames_to_column("cell") %>%
-    filter(nCount_RNA > min_umis & nFeature_RNA > min_genes & nFeature_RNA < max_genes & pct_mito < max_mt) %>%
+    filter(num_UMIs >= min_umis & num_genes >= min_genes & num_genes <= max_genes & pct_mito <= max_mt) %>%
     pull(cell)
   s_obj = subset(s_obj, cells = cells_subset)
 
@@ -249,6 +261,9 @@ filter_data = function(seurat_obj, min_umis = 1000, min_genes = NULL, max_genes 
       ) +
       scale_y_continuous(labels = comma) +
       vln_theme
+    dist_filt_nft_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_filt_nct_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_filt_pmt_plot$layers[[2]]$aes_params$alpha = 0.1
     dist_filt_plot = plot_grid(dist_filt_nft_plot, dist_filt_nct_plot, dist_filt_pmt_plot, ncol = 3)
     ggsave("qc.distribution.filtered.png", plot = dist_filt_plot, width = 10, height = 6, units = "in")
   })
@@ -430,39 +445,68 @@ plot_adt_qc = function(seurat_obj) {
   adt_counts_summary = rowSums(counts_raw) %>% enframe(name = "ADT", value = "total_counts")
   adt_counts_summary$mean_counts = rowMeans(counts_raw) %>% round(1)
   adt_counts_summary$median_counts = matrixStats::rowMedians(counts_raw)
-  adt_counts_summary$q05_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.05)
-  adt_counts_summary$q95_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.95)
+  adt_counts_summary$q01_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.01) %>% round(1)
+  adt_counts_summary$q05_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.05) %>% round(1)
+  adt_counts_summary$q95_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.95) %>% round(1)
+  adt_counts_summary$q99_counts = matrixStats::rowQuantiles(counts_raw, probs = 0.99) %>% round(1)
   write_csv(adt_counts_summary, "qc.adt.counts.csv")
 
 }
 
 # add hashtag oligo (HTO) data to a Seurat object
 # add_hto_assay = function(seurat_obj, sample_name, sample_dir) {
-split_adt_hto_assay = function(seurat_obj) {
+split_adt_hto_assay = function(seurat_obj, method = c("HTODemux", "MULTIseqDemux")) {
+
+  method = match.arg(method)
 
   # check that the input object already has UMAP computed
   if (is.null(seurat_obj@reductions$umap)) { stop("UMAP not computed yet") }
+
+
+  # plot ADT metrics (repeated here in case the names were manually modified for demultiplexing)
+  plot_adt_qc(seurat_obj = seurat_obj)
+  
+  # reset orig.ident if demultiplexing has already been performed
+  if (n_distinct(seurat_obj@meta.data$orig.ident) > 1) {
+    if ("hash.ID" %in% colnames(seurat_obj@meta.data)) {
+      if ("library" %in% colnames(seurat_obj@meta.data)) {
+        seurat_obj@meta.data$orig.ident = seurat_obj@meta.data$library
+      } else {
+        stop("orig.ident has multiple values but no library column found")
+      }
+    } else {
+      stop("orig.ident has multiple values but no hash.ID column found")
+    }
+  }
 
   message("\n\n ========== import hashtag oligos (HTOs) ========== \n\n")
 
   # message("loading HTO matrix for sample: ", sample_name)
   sample_name = seurat_obj@meta.data$orig.ident %>% as.character() %>% unique()
 
-  # check if sample dir is valid
-  # if (!dir.exists(sample_dir)) { stop(glue("dir {sample_dir} does not exist")) }
-  # if (!file.exists(glue("{sample_dir}/matrix.mtx.gz"))) { stop(glue("dir does not contain matrix.mtx.gz")) }
-
-  # attempt to split ADTs matrix into ADTs and HTOs
+  # get a list of all ADTs and/or HTOs
   adt_hto_features = rownames(seurat_obj[["ADT"]])
-  adt_features = adt_hto_features %>% str_subset("^CD|IgG|ADT") %>% unique() %>% sort()
-  # if there are no features that fit ADT criteria, assume they are all HTOs
-  if (length(adt_features) > 0) {
-    # hto_features = setdiff(adt_hto_features, adt_features)
-    hto_features = adt_hto_features %>% str_subset("HTO") %>% unique() %>% sort()
-  } else {
-    hto_features = adt_hto_features
+  message("all antibody capture features: ", str_c(adt_hto_features, collapse = ", "))
+
+  # check if ADTs and HTOs are explicitly labeled
+  adt_features = adt_hto_features %>% str_subset("ADT") %>% unique() %>% sort()
+  hto_features = adt_hto_features %>% str_subset("HTO") %>% unique() %>% sort()
+
+  # if all ADTs and HTOs are not explicitly labeled
+  if (length(c(adt_features, hto_features)) < length(adt_hto_features)) {
+    # if some HTOs are detected, assume the rest are ADTs
+    if (length(hto_features) > 1) {
+      adt_features = setdiff(adt_hto_features, hto_features)
+    }
+    # if some ADTs are detected, assume the rest are HTOs
+    if (length(adt_features) > 10) {
+      hto_features = setdiff(adt_hto_features, adt_features)
+    }
+    # if still no ADTs or HTOs detected, assume all are HTOs
+    if (length(c(adt_features, hto_features)) == 0) {
+      hto_features = adt_hto_features
+    }
   }
-  
 
   message("detected ADTs: ", str_c(adt_features, collapse = ", "))
   message("detected HTOs: ", str_c(hto_features, collapse = ", "))
@@ -483,12 +527,12 @@ split_adt_hto_assay = function(seurat_obj) {
   #   hto_mat = hto_mat[1:length(rownames(hto_mat))-1, ]
   # }
 
-  message(glue("HTO library {sample_name} unfiltered cells: {ncol(hto_mat)}"))
-  message(glue("HTO library {sample_name} unfiltered HTOs: {nrow(hto_mat)}"))
+  message(glue("HTO library {sample_name} cells: {ncol(hto_mat)}"))
+  message(glue("HTO library {sample_name} HTOs: {nrow(hto_mat)}"))
 
   # log to file
-  write(glue("HTO library {sample_name} unfiltered cells: {ncol(hto_mat)}"), file = "create.log", append = TRUE)
-  write(glue("HTO library {sample_name} unfiltered HTOs: {nrow(hto_mat)}"), file = "create.log", append = TRUE)
+  write(glue("HTO library {sample_name} cells: {ncol(hto_mat)}"), file = "create.log", append = TRUE)
+  write(glue("HTO library {sample_name} HTOs: {nrow(hto_mat)}"), file = "create.log", append = TRUE)
 
   # clean up hashtag matrix to match the RNA data
   # rownames(hto_mat) = str_sub(rownames(hto_mat), 1, -17)
@@ -509,54 +553,90 @@ split_adt_hto_assay = function(seurat_obj) {
 
   # log the detailed unfiltered HTO stats to file
   hto_col_sums = colSums(hto_mat)
-  write(glue("unfiltered min HTO reads: {min(hto_col_sums)}"), file = "create.log", append = TRUE)
-  write(glue("unfiltered max HTO reads: {max(hto_col_sums)}"), file = "create.log", append = TRUE)
-  write(glue("unfiltered mean HTO reads: {round(mean(hto_col_sums), 3)}"), file = "create.log", append = TRUE)
-  write(glue("unfiltered median HTO reads: {median(hto_col_sums)}"), file = "create.log", append = TRUE)
+  # write(glue("unfiltered min HTO reads: {min(hto_col_sums)}"), file = "create.log", append = TRUE)
+  # write(glue("unfiltered max HTO reads: {max(hto_col_sums)}"), file = "create.log", append = TRUE)
+  # write(glue("unfiltered mean HTO reads: {round(mean(hto_col_sums), 3)}"), file = "create.log", append = TRUE)
+  # write(glue("unfiltered median HTO reads: {median(hto_col_sums)}"), file = "create.log", append = TRUE)
+  write(glue("min HTO reads: {min(hto_col_sums)}"), file = "create.log", append = TRUE)
+  write(glue("max HTO reads: {max(hto_col_sums)}"), file = "create.log", append = TRUE)
+  write(glue("mean HTO reads: {round(mean(hto_col_sums), 3)}"), file = "create.log", append = TRUE)
+  write(glue("median HTO reads: {median(hto_col_sums)}"), file = "create.log", append = TRUE)
 
   # compute the deviation from the median of each cell (constant is 1.48 for normal distribution)
-  hto_col_sums = log1p(hto_col_sums)
-  hto_col_mads = (hto_col_sums - median(hto_col_sums)) / mad(hto_col_sums, constant = 1)
+  # hto_col_sums = log1p(hto_col_sums)
+  # hto_col_mads = (hto_col_sums - median(hto_col_sums)) / mad(hto_col_sums, constant = 1)
 
   # remove outlier cells based on total HTO counts
-  hto_outliers = hto_col_mads > 3
-  hto_outliers = names(hto_outliers[hto_outliers == TRUE])
-  seurat_obj = subset(seurat_obj, cells = hto_outliers, invert = TRUE)
-  hto_mat = hto_mat[, colnames(seurat_obj)]
+  # hto_outliers = hto_col_mads > 3
+  # hto_outliers = names(hto_outliers[hto_outliers == TRUE])
+  # seurat_obj = subset(seurat_obj, cells = hto_outliers, invert = TRUE)
+  # hto_mat = hto_mat[, colnames(seurat_obj)]
 
-  message(glue("HTO library {sample_name} filtered cells: {ncol(hto_mat)}"))
-  message(glue("HTO library {sample_name} filtered HTOs: {nrow(hto_mat)}"))
+  # message(glue("HTO library {sample_name} filtered cells: {ncol(hto_mat)}"))
+  # message(glue("HTO library {sample_name} filtered HTOs: {nrow(hto_mat)}"))
 
-  write(glue("HTO library {sample_name} filtered cells: {ncol(hto_mat)}"), file = "create.log", append = TRUE)
-  write(glue("HTO library {sample_name} filtered HTOs: {nrow(hto_mat)}"), file = "create.log", append = TRUE)
+  # write(glue("HTO library {sample_name} filtered cells: {ncol(hto_mat)}"), file = "create.log", append = TRUE)
+  # write(glue("HTO library {sample_name} filtered HTOs: {nrow(hto_mat)}"), file = "create.log", append = TRUE)
 
   # log the detailed filtered HTO stats to file
-  hto_col_sums = colSums(hto_mat)
-  write(glue("filtered min HTO reads: {min(hto_col_sums)}"), file = "create.log", append = TRUE)
-  write(glue("filtered max HTO reads: {max(hto_col_sums)}"), file = "create.log", append = TRUE)
-  write(glue("filtered mean HTO reads: {round(mean(hto_col_sums), 3)}"), file = "create.log", append = TRUE)
-  write(glue("filtered median HTO reads: {median(hto_col_sums)}"), file = "create.log", append = TRUE)
+  # hto_col_sums = colSums(hto_mat)
+  # write(glue("filtered min HTO reads: {min(hto_col_sums)}"), file = "create.log", append = TRUE)
+  # write(glue("filtered max HTO reads: {max(hto_col_sums)}"), file = "create.log", append = TRUE)
+  # write(glue("filtered mean HTO reads: {round(mean(hto_col_sums), 3)}"), file = "create.log", append = TRUE)
+  # write(glue("filtered median HTO reads: {median(hto_col_sums)}"), file = "create.log", append = TRUE)
 
   # log the new RNA stats to file
-  write(glue("filtered mean num genes: {round(mean(seurat_obj$num_genes), 3)}"), file = "create.log", append = TRUE)
-  write(glue("filtered median num genes: {median(seurat_obj$num_genes)}"), file = "create.log", append = TRUE)
+  # write(glue("filtered mean num genes: {round(mean(seurat_obj$num_genes), 3)}"), file = "create.log", append = TRUE)
+  # write(glue("filtered median num genes: {median(seurat_obj$num_genes)}"), file = "create.log", append = TRUE)
 
-  # add HTO data as a new assay independent from RNA
+  # normalize ADT data again since some outlier cells were removed
+  # seurat_obj = NormalizeData(seurat_obj, assay = "ADT", normalization.method = "CLR")
+  # seurat_obj = ScaleData(seurat_obj, assay = "ADT")
+
+  # add HTO data as a new assay independent from RNA or ADT
   seurat_obj[["HTO"]] = CreateAssayObject(counts = hto_mat)
 
-  # normalize HTO data using centered log-ratio (CLR) transformation
+  # normalize HTO data
   seurat_obj = NormalizeData(seurat_obj, assay = "HTO", normalization.method = "CLR")
 
-  # assign single cells back to their sample origins
-  # seurat_obj = HTODemux(seurat_obj, assay = "HTO", kfunc = "kmeans", positive.quantile = 0.999)
-  seurat_obj = HTODemux(seurat_obj, assay = "HTO", kfunc = "kmeans")
+  # perform hashtag demultiplexing
+  if (method == "HTODemux") {
+
+    # seurat_obj = HTODemux(seurat_obj, assay = "HTO", kfunc = "kmeans", positive.quantile = 0.999)
+    seurat_obj = HTODemux(seurat_obj, assay = "HTO", kfunc = "kmeans")
+
+    # set hash.ID and reorder factors alphabetically
+    seurat_obj@meta.data$hash.ID = fct_relevel(seurat_obj@meta.data$hash.ID, sort)
+    seurat_obj@meta.data$HTODemux.ID = seurat_obj@meta.data$hash.ID
+
+    # set hash.class and reorder factors alphabetically
+    seurat_obj@meta.data$hash.class = fct_relevel(seurat_obj@meta.data$HTO_classification.global, sort)
+
+  } else if (method == "MULTIseqDemux") {
+
+    # MULTIseqDemux generates only "MULTI_ID" and "MULTI_classification"
+    seurat_obj = MULTIseqDemux(seurat_obj, assay = "HTO", autoThresh = TRUE)
+
+    # set hash.ID and reorder factors alphabetically
+    seurat_obj@meta.data$MULTI_ID = fct_relevel(seurat_obj@meta.data$MULTI_ID, sort)
+    seurat_obj@meta.data$hash.ID = seurat_obj@meta.data$MULTI_ID
+    seurat_obj@meta.data$MULTIseqDemux.ID = seurat_obj@meta.data$MULTI_ID
+
+    # set hash.class and reorder factors alphabetically (MULTI_ID and MULTI_classification do not have a "Singlet" class)
+    seurat_obj@meta.data$hash.class = as.character(seurat_obj@meta.data$MULTI_ID)
+    seurat_obj@meta.data[!seurat_obj@meta.data$hash.class %in% c("Doublet", "Negative"), "hash.class"] = "Singlet"
+    seurat_obj@meta.data$hash.class = fct_relevel(seurat_obj@meta.data$hash.class, sort)
+
+  } else {
+    stop("method must be HTODemux or MULTIseqDemux")
+  }
 
   # plot HTO metrics
-  plot_hto_qc(seurat_obj = seurat_obj)
+  plot_hto_qc(seurat_obj = seurat_obj, method = method)
 
   # save HTO stats
   seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = "hash.ID")
-  calculate_cluster_stats(seurat_obj = seurat_obj, label = "hto")
+  calculate_cluster_stats(seurat_obj = seurat_obj, label = glue("hto.{method}"))
 
   # update metadata, setting the hashtag as the sample name
   seurat_obj@meta.data$library = factor(seurat_obj@meta.data$orig.ident)
@@ -569,101 +649,109 @@ split_adt_hto_assay = function(seurat_obj) {
 }
 
 # plot HTO metrics
-plot_hto_qc = function(seurat_obj) {
+plot_hto_qc = function(seurat_obj, method = c("HTODemux", "MULTIseqDemux")) {
+
+  method = match.arg(method)
 
   # normalized HTO signal combined with metadata table
   hto_tbl = GetAssayData(seurat_obj, assay = "HTO") %>% t()
+  outlier_cells = rownames(hto_tbl)[matrixStats::rowMaxs(hto_tbl) > quantile(hto_tbl, 0.99)]
   hto_tbl = hto_tbl[, sort(colnames(hto_tbl))] %>% as_tibble(rownames = "cell")
-  id_tbl = seurat_obj@meta.data %>% as_tibble(rownames = "cell") %>% select(cell, hash.ID, HTO_classification.global)
+  # id_tbl = seurat_obj@meta.data %>% as_tibble(rownames = "cell") %>% select(cell, hash.ID, HTO_classification.global)
+  id_tbl = seurat_obj@meta.data %>% as_tibble(rownames = "cell") %>% select(cell, hash.ID, hash.class)
   hto_tbl = full_join(hto_tbl, id_tbl, by = "cell")
   hto_tbl
 
   # HTO color scheme
-  colors_hto_names = c(levels(hto_tbl$HTO_classification.global), levels(hto_tbl$hash.ID)) %>% unique()
+  colors_hto_names = c(levels(hto_tbl$hash.class), levels(hto_tbl$hash.ID)) %>% unique()
   colors_hto = colors_clusters[1:length(colors_hto_names)]
   names(colors_hto) = colors_hto_names
 
   # visualize pairs of HTO signals
   hto_facet_plot =
-    ggplot(sample_frac(hto_tbl), aes(x = .panel_x, y = .panel_y, fill = hash.ID, color = hash.ID)) +
+    hto_tbl %>%
+    filter(!cell %in% outlier_cells) %>%
+    sample_frac() %>%
+    ggplot(aes(x = .panel_x, y = .panel_y, fill = hash.ID, color = hash.ID)) +
     geom_point(shape = 16, size = 0.2) +
     geom_autodensity(color = NA, fill = "gray20") +
     geom_density2d(color = "black", alpha = 0.5) +
     scale_color_manual(values = colors_hto) +
     scale_fill_manual(values = colors_hto) +
-    facet_matrix(vars(-cell, -hash.ID, -HTO_classification.global), layer.diag = 2, layer.upper = 3) +
+    facet_matrix(vars(-cell, -hash.ID, -hash.class), layer.diag = 2, layer.upper = 3) +
     guides(color = guide_legend(override.aes = list(size = 5))) +
     theme(plot.background = element_rect(fill = "white"), aspect.ratio = 1, legend.title = element_blank(), strip.background = element_blank())
-  save_plot(filename = "qc.hto.correlation.png", plot = hto_facet_plot, base_height = 8, base_width = 10)
+  save_plot(filename = glue("qc.hto.correlation.{method}.png"), plot = hto_facet_plot, base_height = 8, base_width = 10)
   Sys.sleep(1)
-  save_plot(filename = "qc.hto.correlation.pdf", plot = hto_facet_plot, base_height = 8, base_width = 10)
+  save_plot(filename = glue("qc.hto.correlation.{method}.pdf"), plot = hto_facet_plot, base_height = 8, base_width = 10)
   Sys.sleep(1)
 
   # number of UMIs for singlets, doublets and negative cells
   hto_umi_plot =
-    VlnPlot(seurat_obj, features = "num_UMIs", group.by = "HTO_classification.global", pt.size = 0.1) +
+    VlnPlot(seurat_obj, features = "num_UMIs", group.by = "hash.class", pt.size = 0.1) +
     theme(plot.background = element_rect(fill = "white"), axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
     scale_fill_manual(values = colors_hto) +
     scale_y_continuous(labels = comma)
-  save_plot("qc.hto.umis.png", plot = hto_umi_plot, base_height = 6, base_width = 6)
+  save_plot(glue("qc.hto.umis.{method}.png"), plot = hto_umi_plot, base_height = 6, base_width = 6)
   Sys.sleep(1)
 
   # number of genes for singlets, doublets and negative cells
   hto_gene_plot =
-    VlnPlot(seurat_obj, features = "num_genes", group.by = "HTO_classification.global", pt.size = 0.1) +
+    VlnPlot(seurat_obj, features = "num_genes", group.by = "hash.class", pt.size = 0.1) +
     theme(plot.background = element_rect(fill = "white"), axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
     scale_fill_manual(values = colors_hto) +
     scale_y_continuous(labels = comma)
-  save_plot("qc.hto.genes.png", plot = hto_gene_plot, base_height = 6, base_width = 6)
+  save_plot(glue("qc.hto.genes.{method}.png"), plot = hto_gene_plot, base_height = 6, base_width = 6)
   Sys.sleep(1)
 
   # number of genes for singlets, doublets and negative cells
   hto_mito_plot =
-    VlnPlot(seurat_obj, features = "pct_mito", group.by = "HTO_classification.global", pt.size = 0.1) +
+    VlnPlot(seurat_obj, features = "pct_mito", group.by = "hash.class", pt.size = 0.1) +
     theme(plot.background = element_rect(fill = "white"), axis.title = element_blank(), plot.title = element_text(hjust = 0.5)) +
     scale_fill_manual(values = colors_hto) +
     scale_y_continuous(labels = comma)
-  save_plot("qc.hto.mito.png", plot = hto_mito_plot, base_height = 6, base_width = 6)
+  save_plot(glue("qc.hto.mito.{method}.png"), plot = hto_mito_plot, base_height = 6, base_width = 6)
   Sys.sleep(1)
 
-  group_var = "HTO_classification.global"
+  group_var = "hash.class"
   seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = group_var)
   plot_umap =
     DimPlot(
       seurat_obj, reduction = "umap",
-      pt.size = get_dr_point_size(seurat_obj), cols = colors_hto, shuffle = TRUE, raster = FALSE
+      pt.size = get_dr_point_size(seurat_obj), cols = colors_hto, na.value = "grey90", shuffle = TRUE, raster = FALSE
     ) +
     theme(
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  save_plot(glue("dr.umap.{group_var}.png"), plot = plot_umap, base_height = 6, base_width = 8)
+  save_plot(glue("dr.umap.{group_var}.{method}.png"), plot = plot_umap, base_height = 6, base_width = 8)
   Sys.sleep(1)
-  save_plot(glue("dr.umap.{group_var}.pdf"), plot = plot_umap, base_height = 6, base_width = 8)
-  Sys.sleep(1)
+  # save_plot(glue("dr.umap.{group_var}.{method}.pdf"), plot = plot_umap, base_height = 6, base_width = 8)
+  # Sys.sleep(1)
 
   group_var = "hash.ID"
   seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = group_var)
   plot_umap =
     DimPlot(
       seurat_obj, reduction = "umap",
-      pt.size = get_dr_point_size(seurat_obj), cols = colors_hto, shuffle = TRUE, raster = FALSE
+      pt.size = get_dr_point_size(seurat_obj), cols = colors_hto, na.value = "grey90", shuffle = TRUE, raster = FALSE
     ) +
     theme(
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  save_plot(glue("dr.umap.{group_var}.png"), plot = plot_umap, base_height = 6, base_width = 8)
+  save_plot(glue("dr.umap.{group_var}.{method}.png"), plot = plot_umap, base_height = 6, base_width = 8)
   Sys.sleep(1)
-  save_plot(glue("dr.umap.{group_var}.pdf"), plot = plot_umap, base_height = 6, base_width = 8)
-  Sys.sleep(1)
+  # save_plot(glue("dr.umap.{group_var}.{method}.pdf"), plot = plot_umap, base_height = 6, base_width = 8)
+  # Sys.sleep(1)
 
   if (file.exists("Rplots.pdf")) file.remove("Rplots.pdf")
 
 }
 
 # split Seurat object (by sample by default)
-split_seurat_obj = function(seurat_obj, original_wd, split_var = "orig.ident") {
+# to perform clustering, specify the number of dimensions for clustering
+split_seurat_obj = function(seurat_obj, original_wd, split_var = "orig.ident", dr_num_dim = 0, dr_num_neighbors = 30) {
 
   # set identity to the column used for splitting
   s_obj = seurat_obj
@@ -694,10 +782,14 @@ split_seurat_obj = function(seurat_obj, original_wd, split_var = "orig.ident") {
         dir.create(split_dir)
         setwd(split_dir)
         write(glue("subset {s} cells: {ncol(split_obj)}"), file = "create.log", append = TRUE)
-        split_obj = calculate_variance(seurat_obj = split_obj, jackstraw_max_cells = 100)
+        split_obj = calculate_variance(seurat_obj = split_obj)
         split_obj = scooter::set_identity(seurat_obj = split_obj, identity_column = "orig.ident")
-        saveRDS(split_obj, file = "seurat_obj.rds")
         calculate_cluster_stats(split_obj, label = "sample")
+        # determine clusters
+        if (dr_num_dim > 0) {
+          split_obj = calculate_clusters(split_obj, num_dim = dr_num_dim, num_neighbors = dr_num_neighbors)
+        }
+        saveRDS(split_obj, file = "seurat_obj.rds")
       }
     }
 
@@ -784,10 +876,13 @@ combine_seurat_obj = function(original_wd, sample_analysis_dirs) {
   # print gene/cell minimum cutoffs
   min_cells = Matrix::rowSums(GetAssayData(merged_obj, assay = "RNA", slot = "counts") > 0) %>% min()
   min_genes = Matrix::colSums(GetAssayData(merged_obj, assay = "RNA", slot = "counts") > 0) %>% min()
+  min_umis = Matrix::colSums(GetAssayData(merged_obj, assay = "RNA", slot = "counts")) %>% min()
   message(glue("min cells per gene: {min_cells}"))
   write(glue("min cells per gene: {min_cells}"), file = "create.log", append = TRUE)
   message(glue("min genes per cell: {min_genes}"))
   write(glue("min genes per cell: {min_genes}"), file = "create.log", append = TRUE)
+  message(glue("min UMIs per cell: {min_umis}"))
+  write(glue("min UMIs per cell: {min_umis}"), file = "create.log", append = TRUE)
 
   # check that the full counts table is small enough to fit into an R matrix (max around 100k x 21k)
   num_matrix_elements = GetAssayData(merged_obj, assay = "RNA", slot = "counts") %>% length()
@@ -809,6 +904,12 @@ combine_seurat_obj = function(original_wd, sample_analysis_dirs) {
   sample_names = merged_obj$orig.ident %>% as.character() %>% sort() %>% unique()
   colors_samples_named = colors_samples[1:length(sample_names)]
   names(colors_samples_named) = sample_names
+
+  num_samples = length(sample_names)
+  plot_width = 12
+  if (num_samples > 15) { plot_width = 15 }
+  if (num_samples > 30) { plot_width = 20 }
+  if (num_samples > 50) { plot_width = 30 }
 
   vln_theme =
     theme(
@@ -841,8 +942,11 @@ combine_seurat_obj = function(original_wd, sample_analysis_dirs) {
       ) +
       scale_y_continuous(labels = comma) +
       vln_theme
+    dist_nft_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_nct_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_pmt_plot$layers[[2]]$aes_params$alpha = 0.1
     dist_plot = plot_grid(dist_nft_plot, dist_nct_plot, dist_pmt_plot, ncol = 3)
-    ggsave("qc.distribution.png", plot = dist_plot, width = 20, height = 6, units = "in")
+    ggsave("qc.distribution.png", plot = dist_plot, width = plot_width, height = 6, units = "in")
   })
   Sys.sleep(1)
 
@@ -851,59 +955,57 @@ combine_seurat_obj = function(original_wd, sample_analysis_dirs) {
 }
 
 # integrate multiple Seurat objects
-integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_reduction = "cca") {
+integrate_seurat_obj = function(seurat_obj, num_dim, int_reduction = "cca", batch_var = "orig.ident") {
 
   # check if the inputs seems reasonable
-  if (length(sample_analysis_dirs) < 2) stop("must have at least 2 samples to merge")
   num_dim = as.integer(num_dim)
   if (num_dim < 5) { stop("too few dims: ", num_dim) }
   if (num_dim > 50) { stop("too many dims: ", num_dim) }
+  if (!int_reduction %in% c("cca", "rpca")) {
+    stop(glue("integration reduction type {int_reduction} is not valid"))
+  }
 
   message("\n\n ========== integrate samples ========== \n\n")
 
-  seurat_obj_list = list()
+  # print object stats
+  message(glue("object cells: {ncol(seurat_obj)}"))
+  write(glue("object cells: {ncol(seurat_obj)}"), file = "create.log", append = TRUE)
+  message(glue("object genes: {nrow(seurat_obj)}"))
+  write(glue("object genes: {nrow(seurat_obj)}"), file = "create.log", append = TRUE)
+  message(" ")
+
+  # clean up metadata
+  seurat_obj@assays$RNA@var.features = vector()
+  seurat_obj@assays$RNA@scale.data = matrix()
+  seurat_obj@reductions = list()
+  seurat_obj@meta.data = seurat_obj@meta.data %>% select(-starts_with("snn_res."))
+  seurat_obj@meta.data = seurat_obj@meta.data %>% select(-starts_with("res."))
+
+  # split object by batch
+  seurat_obj_list = Seurat::SplitObject(seurat_obj, split.by = batch_var)
+  rm(seurat_obj)
+
+  # identify variable features for each dataset independently
+  seurat_obj_list = lapply(seurat_obj_list, FUN = function(x) {
+      x = FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+  })
+
   var_genes_list = list()
-  exp_genes = c()
-  for (i in 1:length(sample_analysis_dirs)) {
+  for (i in 1:length(seurat_obj_list)) {
 
-    sample_analysis_dir = sample_analysis_dirs[i]
-    sample_analysis_dir = glue("{original_wd}/{sample_analysis_dir}")
-    sample_seurat_rds = glue("{sample_analysis_dir}/seurat_obj.rds")
+    batch_name = seurat_obj_list[[i]]@meta.data[, batch_var] %>% as.character() %>% sort() %>% unique()
+    if (length(batch_name) > 1) { stop("batch name error") }
 
-    # check if analysis dir is valid
-    if (!dir.exists(sample_analysis_dir)) stop(glue("dir {sample_analysis_dir} does not exist"))
-    # check if seurat object exists
-    if (!file.exists(sample_seurat_rds)) stop(glue("seurat object rds {sample_seurat_rds} does not exist"))
+    # print single batch stats
+    message(glue("batch {batch_name} cells: {ncol(seurat_obj_list[[i]])}"))
+    write(glue("batch {batch_name} cells: {ncol(seurat_obj_list[[i]])}"), file = "create.log", append = TRUE)
+    message(" ")
 
-    # load seurat object
-    seurat_obj_list[[i]] = readRDS(sample_seurat_rds)
-    sample_name = seurat_obj_list[[i]]$orig.ident %>% as.character() %>% sort()
-    sample_name = sample_name[1]
-
-    # clean up object
-    seurat_obj_list[[i]]@assays$RNA@scale.data = matrix()
-    seurat_obj_list[[i]]@reductions = list()
-    seurat_obj_list[[i]]@meta.data = seurat_obj_list[[i]]@meta.data %>% select(-starts_with("snn_res."))
-    seurat_obj_list[[i]]@meta.data = seurat_obj_list[[i]]@meta.data %>% select(-starts_with("res."))
-
-    # save expressed genes keeping only genes present in all the datasets (for genes to integrate in IntegrateData)
-    if (length(exp_genes) > 0) {
-      exp_genes = intersect(exp_genes, rownames(seurat_obj_list[[i]])) %>% sort()
-    } else {
-      exp_genes = rownames(seurat_obj_list[[i]])
-    }
+    # identify variable features
+    seurat_obj_list[[i]] = FindVariableFeatures(seurat_obj_list[[i]], selection.method = "vst", nfeatures = 2000, verbose = FALSE)
 
     # save variable genes
-    var_genes_list[[sample_name]] = VariableFeatures(seurat_obj_list[[i]])
-
-    # print single sample sample stats
-    message(glue("sample {sample_name} dir: {basename(sample_analysis_dir)}"))
-    write(glue("sample {sample_name} dir: {basename(sample_analysis_dir)}"), file = "create.log", append = TRUE)
-    message(glue("sample {sample_name} cells: {ncol(seurat_obj_list[[i]])}"))
-    write(glue("sample {sample_name} cells: {ncol(seurat_obj_list[[i]])}"), file = "create.log", append = TRUE)
-    message(glue("sample {sample_name} genes: {nrow(seurat_obj_list[[i]])}"))
-    write(glue("sample {sample_name} genes: {nrow(seurat_obj_list[[i]])}"), file = "create.log", append = TRUE)
-    message(" ")
+    var_genes_list[[batch_name]] = VariableFeatures(seurat_obj_list[[i]])
 
   }
 
@@ -925,12 +1027,14 @@ integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_
     print(upset_plot)
   dev.off()
 
+  message("\n\n ========== Seurat::SelectIntegrationFeatures() ========== \n\n")
+
+  # select features that are repeatedly variable across datasets for integration
+  int_features = SelectIntegrationFeatures(object.list = seurat_obj_list)
+  message(glue("integration features: {length(int_features)}"))
+
   # RPCA workflow requires users to run PCA on each dataset prior to integration
   if (int_reduction == "rpca") {
-    message("\n\n ========== Seurat::SelectIntegrationFeatures() ========== \n\n")
-    # select features that are repeatedly variable across datasets for integration run PCA on each dataset
-    int_features = SelectIntegrationFeatures(object.list = seurat_obj_list)
-    message(glue("integration features: {length(int_features)}"))
     seurat_obj_list =
       lapply(seurat_obj_list, FUN = function(x) {
         x = ScaleData(x, features = int_features, vars.to.regress = c("num_UMIs", "pct_mito"), verbose = FALSE)
@@ -940,15 +1044,14 @@ integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_
 
   message("\n\n ========== Seurat::FindIntegrationAnchors() ========== \n\n")
 
-  # find the integration anchors
   if (int_reduction == "cca") {
-    anchors = FindIntegrationAnchors(object.list = seurat_obj_list, anchor.features = 2000,
+    anchors = FindIntegrationAnchors(object.list = seurat_obj_list, anchor.features = int_features,
       reduction = int_reduction, dims = 1:num_dim)
   } else if (int_reduction == "rpca") {
     # k.anchor: how many neighbors (k) to use when picking anchors (default: 5)
     # "You can increase the strength of alignment by increasing the k.anchor parameter."
     # "Increasing this parameter to 20 will assist in aligning these populations."
-    anchors = FindIntegrationAnchors(object.list = seurat_obj_list, anchor.features = 2000,
+    anchors = FindIntegrationAnchors(object.list = seurat_obj_list, anchor.features = int_features,
       reduction = int_reduction, dims = 1:num_dim, k.anchor = 10)
   } else {
     stop("unknown reduction")
@@ -966,37 +1069,24 @@ integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_
   DefaultAssay(integrated_obj) = "integrated"
 
   # print integrated sample stats
-  message(glue("integrated unfiltered cells: {ncol(integrated_obj)}"))
-  write(glue("integrated unfiltered cells: {ncol(integrated_obj)}"), file = "create.log", append = TRUE)
-  message(glue("integrated unfiltered genes: {nrow(integrated_obj)}"))
-  write(glue("integrated unfiltered genes: {nrow(integrated_obj)}"), file = "create.log", append = TRUE)
-
-  # filter poorly expressed genes (detected in less than 10 cells)
-  filtered_genes = Matrix::rowSums(GetAssayData(integrated_obj, assay = "RNA", slot = "counts") > 0)
-  min_cells = 10
-  if (ncol(integrated_obj) > 50000) { min_cells = ncol(integrated_obj) * 0.001 }
-  filtered_genes = filtered_genes[filtered_genes >= min_cells] %>% names() %>% sort()
-  # keep all HTO and ADT features if present
-  if ("HTO" %in% names(integrated_obj@assays)) { filtered_genes = c(filtered_genes, rownames(integrated_obj@assays$HTO)) }
-  if ("ADT" %in% names(integrated_obj@assays)) { filtered_genes = c(filtered_genes, rownames(integrated_obj@assays$ADT)) }
-  integrated_obj = subset(integrated_obj, features = filtered_genes)
-
-  # encode sample name as factor (also sets alphabetical sample order)
-  integrated_obj@meta.data$orig.ident = factor(integrated_obj@meta.data$orig.ident)
-
-  # print integrated sample stats
   message(glue("integrated cells: {ncol(integrated_obj)}"))
   write(glue("integrated cells: {ncol(integrated_obj)}"), file = "create.log", append = TRUE)
   message(glue("integrated genes: {nrow(GetAssayData(integrated_obj, assay = 'RNA'))}"))
   write(glue("integrated genes: {nrow(GetAssayData(integrated_obj, assay = 'RNA'))}"), file = "create.log", append = TRUE)
 
+  # encode batch name as factor (also sets alphabetical sample order)
+  integrated_obj@meta.data[, batch_var] = factor(integrated_obj@meta.data[, batch_var])
+
   # print gene/cell minumum cutoffs
   min_cells = Matrix::rowSums(GetAssayData(integrated_obj, assay = "RNA", slot = "counts") > 0) %>% min()
   min_genes = Matrix::colSums(GetAssayData(integrated_obj, assay = "RNA", slot = "counts") > 0) %>% min()
+  min_umis = Matrix::colSums(GetAssayData(integrated_obj, assay = "RNA", slot = "counts")) %>% min()
   message(glue("min cells per gene: {min_cells}"))
   write(glue("min cells per gene: {min_cells}"), file = "create.log", append = TRUE)
   message(glue("min genes per cell: {min_genes}"))
   write(glue("min genes per cell: {min_genes}"), file = "create.log", append = TRUE)
+  message(glue("min UMIs per cell: {min_umis}"))
+  write(glue("min UMIs per cell: {min_umis}"), file = "create.log", append = TRUE)
 
   # check that the full counts table is small enough to fit into an R matrix (max around 100k x 21k)
   num_matrix_elements = GetAssayData(integrated_obj, assay = "RNA", slot = "counts") %>% length()
@@ -1013,6 +1103,12 @@ integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_
     fwrite(counts_norm, file = "counts.normalized.csv.gz", sep = ",", nThread = 4)
 
   }
+
+  num_samples = length(levels(integrated_obj$orig.ident))
+  plot_width = 12
+  if (num_samples > 15) { plot_width = 15 }
+  if (num_samples > 30) { plot_width = 20 }
+  if (num_samples > 50) { plot_width = 30 }
 
   vln_theme =
     theme(
@@ -1045,8 +1141,11 @@ integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_
       ) +
       scale_y_continuous(labels = comma) +
       vln_theme
+    dist_nft_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_nct_plot$layers[[2]]$aes_params$alpha = 0.1
+    dist_pmt_plot$layers[[2]]$aes_params$alpha = 0.1
     dist_plot = plot_grid(dist_nft_plot, dist_nct_plot, dist_pmt_plot, ncol = 3)
-    ggsave("qc.distribution.png", plot = dist_plot, width = 20, height = 6, units = "in")
+    ggsave("qc.distribution.png", plot = dist_plot, width = plot_width, height = 6, units = "in")
   })
   Sys.sleep(1)
 
@@ -1058,9 +1157,7 @@ integrate_seurat_obj = function(original_wd, sample_analysis_dirs, num_dim, int_
 # PC selection approaches:
 # - PCHeatmap - more supervised, exploring PCs to determine relevant sources of heterogeneity
 # - PCElbowPlot - heuristic that is commonly used and can be calculated instantly
-# - JackStrawPlot - implements a statistical test based on a random null model, but is time-consuming
-# jackStraw procedure is very slow, so skip for large projects (>10,000 cells)
-calculate_variance = function(seurat_obj, jackstraw_max_cells = 10000) {
+calculate_variance = function(seurat_obj) {
 
   s_obj = seurat_obj
 
@@ -1081,6 +1178,11 @@ calculate_variance = function(seurat_obj, jackstraw_max_cells = 10000) {
 
   message("\n\n ========== Seurat::ScaleData() ========== \n\n")
 
+  # ScaleData() throws a future error for larger datasets ("Error: MultisessionFuture")
+  if (ncol(s_obj) > 100000) {
+    plan(sequential)
+  }
+
   # regress out unwanted sources of variation
   # regressing uninteresting sources of variation can improve dimensionality reduction and clustering
   # could include technical noise, batch effects, biological sources of variation (cell cycle stage)
@@ -1099,7 +1201,7 @@ calculate_variance = function(seurat_obj, jackstraw_max_cells = 10000) {
   # PCA calculation stored in object[["pca"]]
   s_obj = RunPCA(s_obj, assay = "RNA", features = VariableFeatures(s_obj), npcs = num_pcs, verbose = FALSE)
 
-  # plot the output of PCA analysis (shuffle cells so any one group does not appear overrepresented due to ordering)
+  # plot the output of PCA analysis
   pca_plot =
     DimPlot(
       s_obj, group.by = "orig.ident", reduction = "pca",
@@ -1109,11 +1211,11 @@ calculate_variance = function(seurat_obj, jackstraw_max_cells = 10000) {
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  ggsave("variance.pca.png", plot = pca_plot, width = 8, height = 6, units = "in")
+  ggsave("variance.pca.png", plot = pca_plot, width = 10, height = 6, units = "in")
 
   message("\n\n ========== Seurat::DimHeatmap() ========== \n\n")
 
-  # PCHeatmap (former) allows for easy exploration of the primary sources of heterogeneity in a dataset
+  # PCHeatmap allows for exploration of the primary sources of heterogeneity in a dataset
   if (num_pcs > 15) {
     png("variance.pca.heatmap.png", res = 300, width = 10, height = 16, units = "in")
       DimHeatmap(s_obj, reduction = "pca", dims = 1:15, nfeatures = 20, cells = 250, fast = TRUE)
@@ -1125,26 +1227,6 @@ calculate_variance = function(seurat_obj, jackstraw_max_cells = 10000) {
   # a more ad hoc method for determining PCs to use, draw cutoff where there is a clear elbow in the graph
   elbow_plot = ElbowPlot(s_obj, reduction = "pca", ndims = num_pcs)
   ggsave("variance.pca.elbow.png", plot = elbow_plot, width = 8, height = 5, units = "in")
-
-  # resampling test inspired by the jackStraw procedure - very slow, so skip for large projects (>10,000 cells)
-  if (ncol(s_obj) < jackstraw_max_cells) {
-
-    message("\n\n ========== Seurat::JackStraw() ========== \n\n")
-
-    # determine statistical significance of PCA scores
-    s_obj = JackStraw(s_obj, assay = "RNA", reduction = "pca", dims = num_pcs, verbose = FALSE)
-
-    # compute Jackstraw scores significance
-    s_obj = ScoreJackStraw(s_obj, reduction = "pca", dims = 1:num_pcs, do.plot = FALSE)
-
-    # plot the results of the JackStraw analysis for PCA significance
-    # significant PCs will show a strong enrichment of genes with low p-values (solid curve above the dashed line)
-    jackstraw_plot =
-      JackStrawPlot(s_obj, reduction = "pca", dims = 1:num_pcs) +
-      guides(col = guide_legend(ncol = 2))
-    ggsave("variance.pca.jackstraw.png", plot = jackstraw_plot, width = 12, height = 6, units = "in")
-
-  }
 
   return(s_obj)
 
@@ -1159,6 +1241,12 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
   num_dim = as.integer(num_dim)
   if (num_dim < 5) { stop("too few dims: ", num_dim) }
   if (num_dim > 50) { stop("too many dims: ", num_dim) }
+
+  num_samples = length(levels(s_obj$orig.ident))
+  plot_width = 12
+  if (num_samples > 15) { plot_width = 15 }
+  if (num_samples > 30) { plot_width = 20 }
+  if (num_samples > 50) { plot_width = 30 }
 
   message("\n\n ========== Seurat::ScaleData() ========== \n\n")
 
@@ -1180,7 +1268,7 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  ggsave("variance.pca.png", plot = pca_plot, width = 10, height = 6, units = "in")
+  ggsave("variance.pca.png", plot = pca_plot, width = plot_width, height = 6, units = "in")
 
   message("\n\n ========== Seurat::RunTSNE() ========== \n\n")
 
@@ -1199,9 +1287,9 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  ggsave(glue("dr.tsne.{num_dim}.sample.png"), plot = plot_tsne, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.tsne.{num_dim}.sample.png"), plot = plot_tsne, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
-  ggsave(glue("dr.tsne.{num_dim}.sample.pdf"), plot = plot_tsne, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.tsne.{num_dim}.sample.pdf"), plot = plot_tsne, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
 
   message("\n\n ========== Seurat::RunUMAP() ========== \n\n")
@@ -1217,9 +1305,9 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  ggsave(glue("dr.umap.{num_dim}.sample.png"), plot = plot_umap, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.umap.{num_dim}.sample.png"), plot = plot_umap, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
-  ggsave(glue("dr.umap.{num_dim}.sample.pdf"), plot = plot_umap, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.umap.{num_dim}.sample.pdf"), plot = plot_umap, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
 
   save_metadata(seurat_obj = s_obj)
@@ -1232,11 +1320,17 @@ calculate_variance_integrated = function(seurat_obj, num_dim, num_neighbors = 30
 # specify neighbors for UMAP and FindNeighbors (default is 30 in Seurat 2 and 3 pre-release)
 calculate_clusters = function(seurat_obj, num_dim, num_neighbors = 30) {
 
+  s_obj = seurat_obj
+
   # check if number of dimensions seems reasonable
   if (num_dim < 5) { stop("too few dims: ", num_dim) }
   if (num_dim > 50) { stop("too many dims: ", num_dim) }
 
-  s_obj = seurat_obj
+  num_samples = length(levels(s_obj$orig.ident))
+  plot_width = 12
+  if (num_samples > 15) { plot_width = 15 }
+  if (num_samples > 30) { plot_width = 20 }
+  if (num_samples > 50) { plot_width = 30 }
 
   message("\n\n ========== Seurat::RunTSNE() ========== \n\n")
 
@@ -1255,9 +1349,9 @@ calculate_clusters = function(seurat_obj, num_dim, num_neighbors = 30) {
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  ggsave(glue("dr.tsne.{num_dim}.sample.png"), plot = plot_tsne, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.tsne.{num_dim}.sample.png"), plot = plot_tsne, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
-  ggsave(glue("dr.tsne.{num_dim}.sample.pdf"), plot = plot_tsne, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.tsne.{num_dim}.sample.pdf"), plot = plot_tsne, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
 
   message("\n\n ========== Seurat::RunUMAP() ========== \n\n")
@@ -1273,9 +1367,9 @@ calculate_clusters = function(seurat_obj, num_dim, num_neighbors = 30) {
       plot.background = element_rect(fill = "white"), aspect.ratio = 1,
       axis.ticks = element_blank(), axis.text = element_blank()
     )
-  ggsave(glue("dr.umap.{num_dim}.sample.png"), plot = plot_umap, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.umap.{num_dim}.sample.png"), plot = plot_umap, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
-  ggsave(glue("dr.umap.{num_dim}.sample.pdf"), plot = plot_umap, width = 10, height = 6, units = "in")
+  ggsave(glue("dr.umap.{num_dim}.sample.pdf"), plot = plot_umap, width = plot_width, height = 6, units = "in")
   Sys.sleep(1)
 
   message("\n\n ========== Seurat::FindNeighbors() ========== \n\n")
@@ -1291,6 +1385,11 @@ calculate_clusters = function(seurat_obj, num_dim, num_neighbors = 30) {
 
   message("\n\n ========== Seurat::FindClusters() ========== \n\n")
 
+  # FindClusters() throws a future error for larger datasets ("Error: MultisessionFuture")
+  if (ncol(s_obj) > 100000) {
+    plan(sequential)
+  }
+
   message("initial metadata fields: ", str_c(colnames(s_obj@meta.data), collapse = ", "))
 
   # resolutions for graph-based clustering
@@ -1298,8 +1397,10 @@ calculate_clusters = function(seurat_obj, num_dim, num_neighbors = 30) {
   res_range = seq(0.1, 2.0, 0.1)
   if (ncol(s_obj) > 10000) res_range = c(res_range, 3, 5, 7, 9)
 
-  # algorithm: 1 = original Louvain; 2 = Louvain with multilevel refinement; 3 = SLM
   # identify clusters of cells by SNN modularity optimization based clustering algorithm
+  # algorithm: 1 = Louvain; 2 = Louvain multilevel refinement; 3 = SLM; 4 = Leiden
+  # for leiden, method = "igraph" to avoid casting large data to a dense matrix
+  # leiden seems to fail for larger datasets
   s_obj = FindClusters(s_obj, algorithm = 3, resolution = res_range, verbose = FALSE)
 
   # simplify clustering column names to match previous style (just "res")
@@ -1385,7 +1486,7 @@ save_metadata = function(seurat_obj) {
   umap_tbl = s_obj[["umap"]]@cell.embeddings %>% round(3) %>% as.data.frame() %>% rownames_to_column("cell")
   metadata_tbl = metadata_tbl %>% full_join(tsne_tbl, by = "cell") %>% full_join(umap_tbl, by = "cell")
   metadata_tbl = metadata_tbl %>% arrange(cell)
-  write_csv(metadata_tbl, "metadata.csv")
+  write_csv(metadata_tbl, "metadata.csv.gz")
 
 }
 
@@ -1409,7 +1510,7 @@ plot_clusters = function(seurat_obj, resolution, filename_base) {
     plot_tsne =
       DimPlot(
         s_obj, reduction = "tsne",
-        pt.size = get_dr_point_size(s_obj), cols = colors_clusters, shuffle = TRUE, raster = FALSE
+        pt.size = get_dr_point_size(s_obj), cols = colors_clusters, shuffle = TRUE, na.value = "grey90", raster = FALSE
       ) +
       theme(
         plot.background = element_rect(fill = "white"), aspect.ratio = 1,
@@ -1423,7 +1524,7 @@ plot_clusters = function(seurat_obj, resolution, filename_base) {
     plot_umap =
       DimPlot(
         s_obj, reduction = "umap",
-        pt.size = get_dr_point_size(s_obj), cols = colors_clusters, shuffle = TRUE, raster = FALSE
+        pt.size = get_dr_point_size(s_obj), cols = colors_clusters, shuffle = TRUE, na.value = "grey90", raster = FALSE
       ) +
       theme(
         plot.background = element_rect(fill = "white"), aspect.ratio = 1,
@@ -1501,16 +1602,31 @@ plot_dr_umap_genes = function(seurat_obj, genes_csv) {
   # import genes table and check that the "gene" and "group" columns exist
   if (!file.exists(genes_csv)) { stop(glue("genes table {genes_csv} does not exist")) }
   genes_tbl = read_csv(genes_csv, col_types = cols())
+  genes_tbl = distinct(genes_tbl)
   if (!is.element("gene", colnames(genes_tbl))) { stop("gene table column names must include 'gene'") }
   if (!is.element("group", colnames(genes_tbl))) { stop("gene table column names must include 'group'") }
 
   # switch to RNA assay
   DefaultAssay(seurat_obj) = "RNA"
+  all_genes = rownames(seurat_obj[["RNA"]])
+
+  # use ADT assay if it has a better overlap with the given genes
+  if ("ADT" %in% Assays(seurat_obj)) {
+    rna_matches = intersect(unique(genes_tbl$gene), rownames(seurat_obj[["RNA"]]))
+    adt_matches = intersect(unique(genes_tbl$gene), rownames(seurat_obj[["ADT"]]))
+    all_genes = c(all_genes, rownames(seurat_obj[["ADT"]]))
+    if (length(adt_matches) > length(rna_matches)) {
+      if (length(rna_matches) > 0) {
+        message("\n RNA assay detectable genes: ", str_c(sort(rna_matches), collapse = ", "))
+        message("\n ADT assay detectable genes: ", str_c(sort(adt_matches), collapse = ", "))
+      }
+      DefaultAssay(seurat_obj) = "ADT"
+    }
+  }
 
   # check for detected genes
-  genes_tbl = distinct(genes_tbl)
-  missing_genes = setdiff(genes_tbl$gene, rownames(seurat_obj))
-  genes_tbl = genes_tbl %>% filter(gene %in% rownames(seurat_obj))
+  missing_genes = setdiff(genes_tbl$gene, all_genes)
+  genes_tbl = genes_tbl %>% filter(gene %in% all_genes)
   message("\n gene groups: ", str_c(unique(genes_tbl$group), collapse = ", "))
   message("\n detectable genes: ", str_c(genes_tbl$gene, collapse = ", "))
   message("\n missing genes: ", str_c(missing_genes, collapse = ", "))
@@ -1518,9 +1634,10 @@ plot_dr_umap_genes = function(seurat_obj, genes_csv) {
   Sys.sleep(1)
 
   # plot settings
-  DefaultAssay(seurat_obj) = "RNA"
   dr_point_size = get_dr_point_size(seurat_obj)
   gradient_colors = colorRampPalette(c("#d9cfcb", "#d49070", "#ca5528", "#b72600", "#981000", "#730000"))(100)
+  set.seed(99)
+  shuffled_cells = sample(colnames(seurat_obj))
 
   # plot each gene in a separate directory based on group
   for (gene_group in unique(genes_tbl$group)) {
@@ -1531,7 +1648,7 @@ plot_dr_umap_genes = function(seurat_obj, genes_csv) {
       gene_umap =
         FeaturePlot(
           seurat_obj, features = g, reduction = "umap",
-          cells = sample(colnames(seurat_obj)), pt.size = dr_point_size, cols = gradient_colors, raster = FALSE
+          cells = shuffled_cells, pt.size = dr_point_size, cols = gradient_colors, raster = FALSE
         ) +
         labs(title = g) +
         theme(
@@ -1544,6 +1661,53 @@ plot_dr_umap_genes = function(seurat_obj, genes_csv) {
       # save_plot(glue("{plot_dir}/dr.umap.gene.{g}.pdf"), plot = gene_umap, base_height = 6.5, base_width = 7)
       # Sys.sleep(1)
     }
+  }
+
+}
+
+# plot clusters (or other metadata) overlaid on a UMAP
+plot_dr_umap_clusters = function(seurat_obj, cluster_var, color_scheme = scooter::get_color_scheme("clusters")) {
+
+  # split a comma-separated string
+  cluster_vars = unlist(strsplit(cluster_var, ",", fixed = TRUE))
+
+  # check that the input object already has UMAP computed
+  if (is.null(seurat_obj@reductions$umap)) { stop("UMAP not computed yet") }
+
+  # plot settings
+  dr_point_size = get_dr_point_size(seurat_obj)
+  set.seed(99)
+  shuffled_cells = sample(colnames(seurat_obj))
+
+  # plot each
+  for (c_var in cluster_vars) {
+
+    # check that the metadata column exists
+    message("")
+    seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, c_var)
+    grouping_label = scooter::check_identity_column(seurat_obj, c_var)
+    grouping_label = gsub("\\.", "", grouping_label)
+    message(grouping_label, " : ", str_c(levels(seurat_obj), collapse = ", "))
+    
+    # increase plot width if more clusters
+    num_clusters = Idents(seurat_obj) %>% as.character() %>% n_distinct()
+    plot_width = 12
+    if (num_clusters > 15) { plot_width = 15 }
+    if (num_clusters > 30) { plot_width = 20 }
+    if (num_clusters > 50) { plot_width = 30 }
+
+    cluster_umap =
+      DimPlot(
+        seurat_obj, reduction = "umap",
+        cells = shuffled_cells, pt.size = dr_point_size, cols = color_scheme, na.value = "grey90", raster = FALSE
+      ) +
+      theme(
+        plot.background = element_rect(fill = "white"),
+        aspect.ratio = 1, plot.title = element_text(hjust = 0.5),
+        axis.ticks = element_blank(), axis.text = element_blank()
+      )
+    save_plot(glue("dr.umap.{grouping_label}.png"), plot = cluster_umap, base_height = 6, base_width = plot_width)
+    Sys.sleep(1)
   }
 
 }
@@ -1564,7 +1728,7 @@ calculate_cluster_stats = function(seurat_obj, label) {
     umap_tbl = seurat_obj[["umap"]]@cell.embeddings %>% round(3) %>% as.data.frame() %>% rownames_to_column("cell")
     metadata_tbl = metadata_tbl %>% full_join(tsne_tbl, by = "cell") %>% full_join(umap_tbl, by = "cell")
     metadata_tbl = metadata_tbl %>% arrange(cell)
-    write_csv(metadata_tbl, glue("metadata.{label}.csv"))
+    write_csv(metadata_tbl, glue("metadata.{label}.csv.gz"))
   }
   Sys.sleep(1)
 
@@ -1886,12 +2050,25 @@ plot_cluster_markers_heatmap = function(seurat_obj, markers_tbl, num_genes, file
 options(width = 120)
 # print warnings as they occur
 options(warn = 1)
+# disable scientific notation
+options(scipen = 999)
 # default type for the bitmap devices such as png (should default to "cairo")
 options(bitmapType = "cairo")
 
 # retrieve the command-line arguments
-suppressPackageStartupMessages(library(docopt))
-opts = docopt(doc)
+library(docopt)
+# opts = docopt(doc)
+opts = NULL
+tryCatch({
+  opts = docopt::docopt(doc)
+}, error = function(err) {
+  msg = conditionMessage(err)
+  if (!grepl("Usage:", msg, fixed = TRUE)) {
+    warn(msg)
+  }
+  message(doc)
+  quit(status = 1)
+})
 
 # show docopt options
 # print(opts)
@@ -1901,12 +2078,16 @@ load_libraries()
 
 # set number of cores for parallel package (will use all available cores by default)
 options(mc.cores = 4)
-# evaluate Seurat R expressions asynchronously when possible (such as ScaleData) using future package
-plan("multiprocess", workers = 4)
-# increase the limit of the data to be shuttled between the processes from default 500MB to 50GB
-options(future.globals.maxSize = 50e9)
+# increase the maximum amount of data that is passed to a future process from 500MB to 75GB (1GB = 1024^3)
+options(future.globals.maxSize = 75 * 1024^3)
 # disable future seed warning (introduced in future 1.19.0, should be fixed in Seurat 4)
 options(future.rng.onMisuse = "ignore")
+options(future.seed = TRUE)
+# access the parallel version of functions in Seurat using the future package
+# NormalizeData(), ScaleData(), FindMarkers(), FindIntegrationAnchors(), FindClusters()
+# "multiprocess" is replaced with "multisession" and "multicore" in future 1.20.0 but results in error
+# "multiprocess" is the same as "sequential" starting with future 1.31.0
+plan(multisession, workers = 4)
 
 # global settings
 colors_samples = scooter::get_color_scheme("samples")
@@ -1935,12 +2116,17 @@ if (!is.null(opts$genes_csv)) {
   }
 }
 
-# create analysis directory if starting new analysis or exit if analysis already exists
+# create a new directory for a new analysis or exit if one already exists
 if (opts$create || opts$combine || opts$integrate) {
 
   if (opts$create) analysis_step = "create"
   if (opts$combine) analysis_step = "combine"
-  if (opts$integrate) analysis_step = "integrate"
+  if (opts$integrate) {
+    analysis_step = "integrate"
+    seurat_obj_rds = glue("{out_dir}/seurat_obj.rds")
+    seurat_obj_rds = normalizePath(seurat_obj_rds)
+    out_dir = glue("{out_dir}-batch-adj-{opts$reduction}-dim{opts$num_dim}")
+  }
   message(glue("\n\n ========== started analysis step {analysis_step} for {out_dir} ========== \n\n"))
 
   if (dir.exists(out_dir)) {
@@ -1980,14 +2166,14 @@ if (opts$create) {
   # add ADT data to seurat object
   if ("Antibody Capture" %in% names(counts_mat)) {
     seurat_obj = scooter::add_seurat_assay(seurat_obj, assay = "ADT", counts_matrix = counts_mat[["Antibody Capture"]])
-    add_adt_assay_qc(seurat_obj, sample_name = opts$sample_name)
+    seurat_obj = add_adt_assay_qc(seurat_obj, sample_name = opts$sample_name)
   }
 
   # filter by number of genes and mitochondrial genes percentage (optional parameters)
-  seurat_obj = filter_data(seurat_obj, min_genes = opts$min_genes, max_genes = opts$max_genes, max_mt = opts$mt)
+  seurat_obj = filter_data(seurat_obj, min_umis = opts$min_umis, min_genes = opts$min_genes, max_genes = opts$max_genes, max_mt = opts$mt)
 
   # calculate various variance metrics
-  seurat_obj = calculate_variance(seurat_obj, jackstraw_max_cells = 1000)
+  seurat_obj = calculate_variance(seurat_obj)
 
   saveRDS(seurat_obj, file = "seurat_obj.rds")
 
@@ -2010,35 +2196,34 @@ if (opts$create) {
 
 } else if (opts$integrate) {
 
+  # log to file
+  write(glue("analysis: {out_dir}"), file = "create.log", append = TRUE)
   write(glue("seurat version: {packageVersion('Seurat')}"), file = "create.log", append = TRUE)
+  write(glue("scooter version: {packageVersion('scooter')}"), file = "create.log", append = TRUE)
+  write(glue("batch variable: {opts$batch_var}"), file = "create.log", append = TRUE)
   write(glue("integration reduction: {opts$reduction}"), file = "create.log", append = TRUE)
+  write(glue("dimensions: {opts$num_dim}"), file = "create.log", append = TRUE)
+
+  message("loading seurat_obj")
+  seurat_obj = readRDS(seurat_obj_rds)
 
   # run integration
-  if (opts$reduction %in% c("cca", "rpca")) {
-    seurat_obj = integrate_seurat_obj(original_wd, sample_analysis_dirs = opts$batch_analysis_dir, num_dim = opts$num_dim, int_reduction = opts$reduction)
-  } else {
-     stop(glue("integration reduction type {opts$reduction} is not valid"))
-  }
-
+  seurat_obj = integrate_seurat_obj(seurat_obj, num_dim = opts$num_dim, int_reduction = opts$reduction, batch_var = opts$batch_var)
   seurat_obj = calculate_variance_integrated(seurat_obj, num_dim = opts$num_dim)
 
   saveRDS(seurat_obj, file = "seurat_obj.rds")
 
   # save sample stats
   calculate_cluster_stats(seurat_obj, label = "sample")
-
+  
 } else {
 
-  # all commands besides "create", "combine", and "integrate" start with an existing seurat object
+  # all commands besides "create", "combine", and "integrate" start with an existing object
   if (file.exists("seurat_obj.rds")) {
-
     message("loading seurat_obj")
     seurat_obj = readRDS("seurat_obj.rds")
-
   } else {
-
-    stop("seurat obj does not already exist (run 'create' step first)")
-
+    stop("seurat obj does not already exist (run `create` or `combine` step first)")
   }
 
   if (opts$cluster) {
@@ -2058,12 +2243,12 @@ if (opts$create) {
     message(glue("\n\n ========== started analysis step {analysis_step} for {out_dir} ========== \n\n"))
 
     # add HTO data
-    seurat_obj = split_adt_hto_assay(seurat_obj)
+    seurat_obj = split_adt_hto_assay(seurat_obj, method = "MULTIseqDemux")
     seurat_obj@meta.data$library_hash = str_c(seurat_obj@meta.data$library, "-", seurat_obj@meta.data$hash.ID)
     saveRDS(seurat_obj, file = "seurat_obj.rds")
 
     # split singlets by HTO sample
-    Idents(seurat_obj) = "HTO_classification.global"
+    Idents(seurat_obj) = "hash.class"
     seurat_obj = subset(seurat_obj, idents = "Singlet")
     split_seurat_obj(seurat_obj, original_wd = original_wd, split_var = "library_hash")
 
@@ -2076,7 +2261,16 @@ if (opts$create) {
       analysis_step = "plot umap"
       message(glue("\n\n ========== started analysis step {analysis_step} for {out_dir} ========== \n\n"))
 
-      plot_dr_umap_genes(seurat_obj = seurat_obj, genes_csv = opts$genes_csv)
+      if (!is.null(opts$genes_csv)) {
+
+        plot_dr_umap_genes(seurat_obj = seurat_obj, genes_csv = opts$genes_csv)
+
+      }
+      if (!is.null(opts$cluster_var)) {
+
+        plot_dr_umap_clusters(seurat_obj = seurat_obj, cluster_var = opts$cluster_var)
+
+      }
 
     } else {
 
@@ -2089,10 +2283,10 @@ if (opts$create) {
   if (opts$identify || opts$de) {
 
     # set resolution in the seurat object
-    seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = opts$resolution)
+    seurat_obj = scooter::set_identity(seurat_obj = seurat_obj, identity_column = opts$cluster_var)
 
     # use a grouping-specific sub-directory for all output
-    grouping_label = scooter::check_identity_column(seurat_obj, opts$resolution)
+    grouping_label = scooter::check_identity_column(seurat_obj, opts$cluster_var)
     grouping_label = gsub("\\.", "", grouping_label)
     num_clusters = Idents(seurat_obj) %>% as.character() %>% n_distinct()
     clust_label = glue("clust{num_clusters}")
@@ -2105,13 +2299,16 @@ if (opts$create) {
       analysis_step = "identify"
       message(glue("\n\n ========== started analysis step {analysis_step} for {out_dir} ========== \n\n"))
 
-      # create tSNE plot (should already exist in the main directory)
+      # create UMAP/tSNE plot (should already exist in the main directory)
       dr_filename = glue("dr.{grouping_label}.{clust_label}")
-      seurat_obj = plot_clusters(seurat_obj, resolution = opts$resolution, filename_base = dr_filename)
+      seurat_obj = plot_clusters(seurat_obj, resolution = opts$cluster_var, filename_base = dr_filename)
 
       # cluster stat tables (number of cells and average expression)
       calculate_cluster_stats(seurat_obj, label = clust_label)
       calculate_cluster_expression(seurat_obj, label = clust_label)
+
+      # ignore NA clusters
+      seurat_obj = subset(seurat_obj, cells = which(!is.na(Idents(seurat_obj))))
 
       # calculate and plot standard cluster markers
       # calculate_cluster_markers(seurat_obj, label = clust_label, test = "roc")
@@ -2135,7 +2332,7 @@ if (opts$create) {
 
         # calculate_cluster_de_genes(seurat_obj, label = clust_label, test = "wilcox", group_var = opts$group_var)
         # calculate_cluster_de_genes(seurat_obj, label = clust_label, test = "MAST", group_var = opts$group_var)
-        de_tbl = differential_expression_per_cluster(seurat_obj, cluster_column = opts$resolution, group_column = opts$group_var, test = "wilcox")
+        de_tbl = differential_expression_per_cluster(seurat_obj, cluster_column = opts$cluster_var, group_column = opts$group_var, test = "wilcox")
 
     }
 
