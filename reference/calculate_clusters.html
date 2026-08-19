@@ -40,15 +40,7 @@ identifies clusters over a range of resolutions.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calculate_clusters</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
-<span>  <span class="va">num_dim</span>,</span>
-<span>  num_neighbors <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  res <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  algorithm <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  log_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calculate_clusters</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'Seurat'</span></span>
 <span><span class="fu">calculate_clusters</span><span class="op">(</span></span>
@@ -73,6 +65,25 @@ identifies clusters over a range of resolutions.</p>
 <dd><p>A matrix of cell embeddings (cells as rows) or a Seurat object.</p></dd>
 
 
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Arguments passed to the individual methods.</p></dd>
+
+
+<dt id="arg-assay">assay<a class="anchor" aria-label="anchor" href="#arg-assay"></a></dt>
+<dd><p>Assay logged as the one this clustering run is over (Seurat
+method). Purely for the log message - clustering itself runs on
+<code>Embeddings(x, reduction = reduction)</code>, not on assay data, so nothing here
+reads it back off the object. No default: <code>DefaultAssay(x)</code> is mutable
+state that need not match the assay <code>reduction</code> actually came from, so the
+caller states it explicitly rather than have the log silently report the
+wrong one.</p></dd>
+
+
+<dt id="arg-reduction">reduction<a class="anchor" aria-label="anchor" href="#arg-reduction"></a></dt>
+<dd><p>Reduction to take the cell embeddings from (Seurat method).
+No default - always state it explicitly.</p></dd>
+
+
 <dt id="arg-num-dim">num_dim<a class="anchor" aria-label="anchor" href="#arg-num-dim"></a></dt>
 <dd><p>Number of dimensions to use.</p></dd>
 
@@ -95,25 +106,6 @@ multilevel refinement, 3 = SLM, 4 = Leiden (the default). See
 
 <dt id="arg-log-file">log_file<a class="anchor" aria-label="anchor" href="#arg-log-file"></a></dt>
 <dd><p>Filename for the log file.</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Arguments passed to the individual methods.</p></dd>
-
-
-<dt id="arg-assay">assay<a class="anchor" aria-label="anchor" href="#arg-assay"></a></dt>
-<dd><p>Assay logged as the one this clustering run is over (Seurat
-method). Purely for the log message - clustering itself runs on
-<code>Embeddings(x, reduction = reduction)</code>, not on assay data, so nothing here
-reads it back off the object. No default: <code>DefaultAssay(x)</code> is mutable
-state that need not match the assay <code>reduction</code> actually came from, so the
-caller states it explicitly rather than have the log silently report the
-wrong one.</p></dd>
-
-
-<dt id="arg-reduction">reduction<a class="anchor" aria-label="anchor" href="#arg-reduction"></a></dt>
-<dd><p>Reduction to take the cell embeddings from (Seurat method).
-No default - always state it explicitly.</p></dd>
 
 
 <dt id="arg-max-clusters">max_clusters<a class="anchor" aria-label="anchor" href="#arg-max-clusters"></a></dt>
