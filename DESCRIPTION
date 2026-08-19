@@ -6,9 +6,9 @@ Authors@R: c(
     person("Anna", "Yeaton", , "ahyeaton@gmail.com", role = "aut")
   )
 Description: Streamlined scRNA-Seq analysis pipeline.
-License: MIT + file LICENCE
+License: MIT + file LICENSE
 Depends:
-    R (>= 4.1),
+    R (>= 4.2),
     Seurat (>= 5.3.1)
 Imports:
     cowplot,
@@ -42,6 +42,6 @@ Suggests:
     roxygen2,
     testthat
 biocViews:
+Config/roxygen2/version: 8.1.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.1.0

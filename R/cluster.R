@@ -180,15 +180,7 @@ cluster_seurat_object <- function(
 #'   object with the cluster assignments added to its metadata (Seurat method).
 #'
 #' @export
-calculate_clusters <- function(
-  x,
-  num_dim,
-  num_neighbors = 20,
-  res = NULL,
-  algorithm = 4,
-  log_file = NULL,
-  ...
-) {
+calculate_clusters <- function(x, ...) {
   UseMethod("calculate_clusters")
 }
 

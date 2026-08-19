@@ -5,15 +5,7 @@
 \alias{calculate_clusters.Seurat}
 \title{Identify clusters of cells by graph-based clustering.}
 \usage{
-calculate_clusters(
-  x,
-  num_dim,
-  num_neighbors = 20,
-  res = NULL,
-  algorithm = 4,
-  log_file = NULL,
-  ...
-)
+calculate_clusters(x, ...)
 
 \method{calculate_clusters}{Seurat}(
   x,
@@ -31,6 +23,19 @@ calculate_clusters(
 \arguments{
 \item{x}{A matrix of cell embeddings (cells as rows) or a Seurat object.}
 
+\item{...}{Arguments passed to the individual methods.}
+
+\item{assay}{Assay logged as the one this clustering run is over (Seurat
+method). Purely for the log message - clustering itself runs on
+\code{Embeddings(x, reduction = reduction)}, not on assay data, so nothing here
+reads it back off the object. No default: \code{DefaultAssay(x)} is mutable
+state that need not match the assay \code{reduction} actually came from, so the
+caller states it explicitly rather than have the log silently report the
+wrong one.}
+
+\item{reduction}{Reduction to take the cell embeddings from (Seurat method).
+No default - always state it explicitly.}
+
 \item{num_dim}{Number of dimensions to use.}
 
 \item{num_neighbors}{Number of neighbors (\code{k.param}) used to build the SNN
@@ -44,19 +49,6 @@ multilevel refinement, 3 = SLM, 4 = Leiden (the default). See
 \code{Seurat::FindClusters()}.}
 
 \item{log_file}{Filename for the log file.}
-
-\item{...}{Arguments passed to the individual methods.}
-
-\item{assay}{Assay logged as the one this clustering run is over (Seurat
-method). Purely for the log message - clustering itself runs on
-\code{Embeddings(x, reduction = reduction)}, not on assay data, so nothing here
-reads it back off the object. No default: \code{DefaultAssay(x)} is mutable
-state that need not match the assay \code{reduction} actually came from, so the
-caller states it explicitly rather than have the log silently report the
-wrong one.}
-
-\item{reduction}{Reduction to take the cell embeddings from (Seurat method).
-No default - always state it explicitly.}
 
 \item{max_clusters}{Drop resolutions yielding this many clusters or more.
 Defaults to the length of the cluster color scheme, since resolutions that
