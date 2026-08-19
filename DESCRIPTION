@@ -8,7 +8,7 @@ Authors@R: c(
 Description: Streamlined scRNA-Seq analysis pipeline.
 License: MIT + file LICENSE
 Depends:
-    R (>= 4.2),
+    R (>= 4.4),
     Seurat (>= 5.3.1)
 Imports:
     cowplot,
