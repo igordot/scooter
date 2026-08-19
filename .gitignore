@@ -73,6 +73,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+### Claude Code ###
+.claude/settings.local.json
+
 ### Linux ###
 *~
 # temporary files which can be created if a process still has a handle open of a deleted file

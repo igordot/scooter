@@ -4,10 +4,10 @@
 \alias{add_seurat_assay}
 \title{Add assay to Seurat object.}
 \usage{
-add_seurat_assay(seurat_obj, assay, counts_matrix, log_file = NULL)
+add_seurat_assay(x, assay, counts_matrix, log_file = NULL)
 }
 \arguments{
-\item{seurat_obj}{Seurat object.}
+\item{x}{Seurat object.}
 
 \item{assay}{Seurat assay to add the matrix to.}
 
@@ -16,7 +16,8 @@ add_seurat_assay(seurat_obj, assay, counts_matrix, log_file = NULL)
 \item{log_file}{Filename for the log file.}
 }
 \value{
-Seurat object of cells found in both the existing object and new data.
+Seurat object of cells found in both the existing object and new
+data.
 }
 \description{
 Add assay to Seurat object.

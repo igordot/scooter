@@ -5,7 +5,7 @@
 \title{Calculate differentially expressed genes within each subpopulation/cluster}
 \usage{
 differential_expression_per_cluster(
-  seurat_obj,
+  x,
   cluster_column,
   group_column,
   test = "wilcox",
@@ -15,11 +15,12 @@ differential_expression_per_cluster(
 )
 }
 \arguments{
-\item{seurat_obj}{Gene expression data.}
+\item{x}{A Seurat object.}
 
 \item{cluster_column}{Metadata column specifying the groups to split by.}
 
-\item{group_column}{Metadata column specifying the groups for differential expressin within each split.}
+\item{group_column}{Metadata column specifying the groups for differential
+expressin within each split.}
 
 \item{test}{Statistical method to use.}
 

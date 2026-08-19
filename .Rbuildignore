@@ -1,10 +1,14 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^data-raw$
-^cran-comments\.md$
 ^LICENSE\.md$
-^\.travis\.yml$
+^data-raw$
 ^\.github$
+^[.]?air[.]toml$
+^\.vscode$
+^cran-comments\.md$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^CLAUDE\.md$
+^\.claude$
+^\.remember$

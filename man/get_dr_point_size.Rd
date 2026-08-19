@@ -2,16 +2,19 @@
 % Please edit documentation in R/plots-dr.R
 \name{get_dr_point_size}
 \alias{get_dr_point_size}
-\title{Determine the point size for reduced dimensions scatter plots (smaller for larger datasets).}
+\title{Determine the point size for reduced dimensions scatter plots (smaller for
+larger datasets).}
 \usage{
-get_dr_point_size(num_cells)
+get_dr_point_size(x)
 }
 \arguments{
-\item{num_cells}{Number of cells (points on the plot) or a Seurat object.}
+\item{x}{Number of cells (points on the plot), a Seurat object, or a data
+frame with one row per cell.}
 }
 \value{
 Numeric point size.
 }
 \description{
-Determine the point size for reduced dimensions scatter plots (smaller for larger datasets).
+Determine the point size for reduced dimensions scatter plots (smaller for
+larger datasets).
 }

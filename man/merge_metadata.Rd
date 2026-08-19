@@ -4,14 +4,13 @@
 \alias{merge_metadata}
 \title{Function to merge two metadata tables together.}
 \usage{
-merge_metadata(metadata1, metadata2, log_file = NULL)
+merge_metadata(x, y, log_file = NULL)
 }
 \arguments{
-\item{metadata1}{A Seurat object or a tibble containing metadata with
-either a column called "cell" with cell IDs or rownames with cell IDs.}
+\item{x}{A Seurat object or tibble with cell IDs (a \code{cell} column, or as
+rownames).}
 
-\item{metadata2}{A tibble containing metadata with
-either a column called "cell" with cell IDs or rownames with cell IDs.}
+\item{y}{A tibble with cell IDs (a \code{cell} column, or as rownames).}
 
 \item{log_file}{A log filename.}
 }
@@ -19,5 +18,7 @@ either a column called "cell" with cell IDs or rownames with cell IDs.}
 A metadata file merged on cell identifiers.
 }
 \description{
-Function to merge two metadata tables together.
+\code{x} and \code{y} must not share column names other than \code{cell} - \code{stop()}s if
+they do, rather than letting \code{left_join()} silently rename the collision to
+\verb{<col>.x}/\verb{<col>.y}.
 }

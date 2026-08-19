@@ -4,12 +4,13 @@
 \alias{set_identity}
 \title{Set identity of the Seurat object.}
 \usage{
-set_identity(seurat_obj, identity_column)
+set_identity(x, identity_column)
 }
 \arguments{
-\item{seurat_obj}{A Seurat object.}
+\item{x}{A Seurat object.}
 
-\item{identity_column}{The name of the identity column to pull from object metadata.}
+\item{identity_column}{The name of the identity column to pull from object
+metadata.}
 }
 \value{
 A Seurat object with an updated identity set.

@@ -13,5 +13,6 @@ get_color_scheme(type = "clusters")
 A vector of colors.
 }
 \description{
-Determine the color scheme. Can be specified for samples or clusters to avoid confusion.
+Determine the color scheme. Can be specified for samples or clusters to
+avoid confusion.
 }

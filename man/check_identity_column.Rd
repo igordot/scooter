@@ -4,15 +4,17 @@
 \alias{check_identity_column}
 \title{Check identity of the Seurat object.}
 \usage{
-check_identity_column(seurat_obj, identity_column)
+check_identity_column(x, identity_column)
 }
 \arguments{
-\item{seurat_obj}{A Seurat object.}
+\item{x}{A Seurat object.}
 
-\item{identity_column}{The name of the identity column to pull from object metadata.}
+\item{identity_column}{The name of the identity column to pull from object
+metadata.}
 }
 \value{
-The name of the identity column, potentially corrected if resolution.
+The name of the identity column, potentially corrected if
+resolution.
 }
 \description{
 Check identity of the Seurat object.

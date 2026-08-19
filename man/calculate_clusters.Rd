@@ -2,33 +2,78 @@
 % Please edit documentation in R/cluster.R
 \name{calculate_clusters}
 \alias{calculate_clusters}
-\title{Run dimensionality reduction, pca, tse, and umap}
+\alias{calculate_clusters.Seurat}
+\title{Identify clusters of cells by graph-based clustering.}
 \usage{
 calculate_clusters(
-  pcs,
+  x,
   num_dim,
-  log_file,
-  num_neighbors = 30,
+  num_neighbors = 20,
   res = NULL,
-  algorithm = 3
+  algorithm = 4,
+  log_file = NULL,
+  ...
+)
+
+\method{calculate_clusters}{Seurat}(
+  x,
+  assay,
+  reduction,
+  num_dim,
+  num_neighbors = 20,
+  res = NULL,
+  algorithm = 4,
+  log_file = NULL,
+  max_clusters = length(get_color_scheme("clusters")),
+  ...
 )
 }
 \arguments{
-\item{pcs}{Data.}
+\item{x}{A matrix of cell embeddings (cells as rows) or a Seurat object.}
 
-\item{num_dim}{Number of PCs to use for tsne and umap.}
+\item{num_dim}{Number of dimensions to use.}
 
-\item{log_file}{log file.}
+\item{num_neighbors}{Number of neighbors (\code{k.param}) used to build the SNN
+graph.}
 
-\item{num_neighbors}{Number of neighbors to use for umap.}
+\item{res}{Clustering resolution(s). If \code{NULL}, a range of resolutions is
+used.}
 
-\item{res}{Resolution}
+\item{algorithm}{Clustering algorithm: 1 = Louvain, 2 = Louvain with
+multilevel refinement, 3 = SLM, 4 = Leiden (the default). See
+\code{Seurat::FindClusters()}.}
 
-\item{algorithm}{See Seurat::FindClusters()}
+\item{log_file}{Filename for the log file.}
+
+\item{...}{Arguments passed to the individual methods.}
+
+\item{assay}{Assay logged as the one this clustering run is over (Seurat
+method). Purely for the log message - clustering itself runs on
+\code{Embeddings(x, reduction = reduction)}, not on assay data, so nothing here
+reads it back off the object. No default: \code{DefaultAssay(x)} is mutable
+state that need not match the assay \code{reduction} actually came from, so the
+caller states it explicitly rather than have the log silently report the
+wrong one.}
+
+\item{reduction}{Reduction to take the cell embeddings from (Seurat method).
+No default - always state it explicitly.}
+
+\item{max_clusters}{Drop resolutions yielding this many clusters or more.
+Defaults to the length of the cluster color scheme, since resolutions that
+exceed it cannot be plotted (Seurat method).}
 }
 \value{
-.
+Cluster assignments as a data frame (default method) or the Seurat
+object with the cluster assignments added to its metadata (Seurat method).
 }
 \description{
-Run dimensionality reduction, pca, tse, and umap
+Builds a shared nearest neighbor (SNN) graph from reduced dimensions and
+identifies clusters over a range of resolutions.
+}
+\details{
+For a Seurat object, the cluster assignments are added to the object
+metadata as \verb{res.<resolution>} columns, the labels are converted to the
+\code{C01}, \code{C02}, ... convention (1-based, zero-padded, and \code{C}-prefixed to
+block downstream numeric coercion), and resolutions that do not yield any
+new clusters are dropped.
 }

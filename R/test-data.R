@@ -17,5 +17,3 @@ get_test_counts_matrix <- function() {
   )
   as.matrix(pbmc_raw)
 }
-
-

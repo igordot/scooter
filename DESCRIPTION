@@ -1,41 +1,47 @@
 Package: scooter
 Title: Streamlined scRNA-Seq Analysis Pipeline
-Version: 0.0.0.9004
+Version: 0.0.0.9005
 Authors@R: c(
-    person("Igor", "Dolgalev", email = "igor.dolgalev@nyumc.org", role = c("cre", "aut")), 
-    person("Anna", "Yeaton", email = "ahyeaton@gmail.com", role = "aut"))
+    person("Igor", "Dolgalev", , "igor.dolgalev@nyumc.org", role = c("cre", "aut")),
+    person("Anna", "Yeaton", , "ahyeaton@gmail.com", role = "aut")
+  )
 Description: Streamlined scRNA-Seq analysis pipeline.
 License: MIT + file LICENCE
-Encoding: UTF-8
-LazyData: true
-biocViews:
-Depends: 
-    R (>= 4.1)
-Imports: 
+Depends:
+    R (>= 4.1),
+    Seurat (>= 5.3.1)
+Imports:
     cowplot,
     data.table,
     dplyr,
+    eulerr,
+    future,
     ggplot2,
     ggsci,
     glue,
     irlba,
-    magrittr,
+    lifecycle,
     Matrix,
     matrixStats,
     methods,
+    pheatmap,
     purrr,
+    qs2,
     RColorBrewer,
     readr,
     rlang (>= 1.0.0),
     Rtsne,
-    sctransform,
-    Seurat (>= 4.0.2),
-    SeuratObject,
+    scales,
+    SeuratObject (>= 5.0.0),
     stringr,
     tibble,
     tidyr,
-    uwot
-Suggests: 
+    UpSetR,
+    uwot (>= 0.2.1)
+Suggests:
     roxygen2,
     testthat
-RoxygenNote: 7.2.1
+biocViews:
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.1.0

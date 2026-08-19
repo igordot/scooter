@@ -5,7 +5,7 @@
 \title{Function to extract data from Seurat object.}
 \usage{
 as_data_frame_seurat(
-  seurat_obj,
+  x,
   assay = NULL,
   slot = NULL,
   features = NULL,
@@ -14,7 +14,7 @@ as_data_frame_seurat(
 )
 }
 \arguments{
-\item{seurat_obj}{A Seurat object.}
+\item{x}{A Seurat object.}
 
 \item{assay}{Assay such as RNA.}
 
