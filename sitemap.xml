@@ -1,120 +1,67 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://igordot.github.io/scooter/404.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/index.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/add_seurat_assay.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/as_data_frame_seurat.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/calc_clust_averages.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/calculate_clusters.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/calculate_mito_pct.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/calculate_variance.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/check_identity_column.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/create_color_vect.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/create_seurat_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/differential_expression_global.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/differential_expression_paired.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/differential_expression_per_cluster.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/filter_data.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/geneset_score.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/get_color_scheme.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/get_dr_point_size.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/get_test_counts_matrix.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/import_mtx.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/load_sample_counts_matrix.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/log_normalize_data.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/merge_metadata.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/normalize_data.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/pipe.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/plot_distribution.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/run_dr.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/run_pca.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/run_tsne.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/run_umap.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/save_seurat_counts_matrix.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/sctransform_data.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/set_identity.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/tidyeval.html</loc>
-  </url>
-  <url>
-    <loc>https://igordot.github.io/scooter/reference/write_message.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://igordot.github.io/scooter/404.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/LICENSE-text.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/LICENSE.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/authors.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/index.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/add_gene_class_percent.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/add_seurat_assay.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/as_data_frame_seurat.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/calculate_cluster_expression.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/calculate_cluster_markers.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/calculate_cluster_stats.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/calculate_clusters.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/calculate_mito_pct.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/check_identity_column.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/cluster_seurat_object.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/create_color_vect.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/create_seurat_obj.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/create_seurat_object.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/differential_expression_per_cluster.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/dr_plot_width.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/filter_cells.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/filter_data.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/geneset_score.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/get_color_scheme.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/get_dr_point_size.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/get_test_counts_matrix.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/import_mtx.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/index.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/initialize_seurat_object.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/integrate_layers.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/integrate_seurat_object.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/load_sample_counts_matrix.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/merge_metadata.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/merge_seurat_objects.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/normalize_counts.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/normalize_data.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_cluster_markers_heatmap.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_cluster_markers_top.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_clusters.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_distribution.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_dr_feature.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_dr_group.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_dr_umap_clusters.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_metrics_correlations.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_metrics_distribution.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_var_genes_euler.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/plot_var_genes_upset.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/profile_object_size.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/read_counts_file.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/resolve_seurat_object.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/run_dr.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/run_pca.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/run_tsne.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/run_umap.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/save_counts.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/save_dr_plot.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/save_metadata.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/save_seurat_counts_matrix.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/scooter-package.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/set_identity.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/split_layers_by_batch.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/transfer_labels.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/variable_features_by_batch.html</loc></url>
+<url><loc>https://igordot.github.io/scooter/reference/write_message.html</loc></url>
 </urlset>
+
