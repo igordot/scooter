@@ -291,6 +291,18 @@ metrics_color_scheme <- function(x, features, group_by, color_scheme = NULL) {
     )
   }
 
+  na_features <- features[vapply(
+    features,
+    function(feature) anyNA(x@meta.data[[feature]]),
+    logical(1)
+  )]
+  if (length(na_features)) {
+    stop(
+      "metadata columns have NA values: ",
+      paste(na_features, collapse = ", ")
+    )
+  }
+
   if (!is.null(color_scheme)) {
     return(color_scheme)
   }
