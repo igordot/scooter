@@ -15,6 +15,7 @@ create_seurat_object(
   min_counts = NULL,
   max_counts = NULL,
   max_mt = 10,
+  min_cells = 100,
   normalization_method = "log",
   num_variable_genes = 3000,
   num_pcs = 50,
@@ -36,8 +37,11 @@ create_seurat_object(
 - num_mads, min_genes, max_genes, min_counts, max_counts, max_mt:
 
   Quality cutoffs, passed to
-  [`filter_cells()`](https://igordot.github.io/scooter/reference/filter_cells.md)
-  — see there for how the outlier stage and the fixed cutoffs combine.
+  [`filter_cells()`](https://igordot.github.io/scooter/reference/filter_cells.md).
+
+- min_cells:
+
+  Minimum number of cells that must survive filtering.
 
 - normalization_method:
 
@@ -57,7 +61,8 @@ create_seurat_object(
 - num_dim:
 
   Number of dimensions for the first-pass tSNE/UMAP, capped at
-  `num_pcs`.
+  `num_pcs`. `NULL` or a length-zero vector falls back to the default,
+  same as omitting it.
 
 - log_file:
 

@@ -49,6 +49,7 @@ for clustering, in one call.</p>
 <span>  min_counts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_counts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_mt <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  min_cells <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  normalization_method <span class="op">=</span> <span class="st">"log"</span>,</span>
 <span>  num_variable_genes <span class="op">=</span> <span class="fl">3000</span>,</span>
 <span>  num_pcs <span class="op">=</span> <span class="fl">50</span>,</span>
@@ -71,8 +72,11 @@ for clustering, in one call.</p>
 
 <dt id="arg-num-mads-min-genes-max-genes-min-counts-max-counts-max-mt">num_mads, min_genes, max_genes, min_counts, max_counts, max_mt<a class="anchor" aria-label="anchor" href="#arg-num-mads-min-genes-max-genes-min-counts-max-counts-max-mt"></a></dt>
 <dd><p>Quality
-cutoffs, passed to <code><a href="filter_cells.html">filter_cells()</a></code> — see there for how the outlier stage
-and the fixed cutoffs combine.</p></dd>
+cutoffs, passed to <code><a href="filter_cells.html">filter_cells()</a></code>.</p></dd>
+
+
+<dt id="arg-min-cells">min_cells<a class="anchor" aria-label="anchor" href="#arg-min-cells"></a></dt>
+<dd><p>Minimum number of cells that must survive filtering.</p></dd>
 
 
 <dt id="arg-normalization-method">normalization_method<a class="anchor" aria-label="anchor" href="#arg-normalization-method"></a></dt>
@@ -91,7 +95,8 @@ the object is too small to support that many.</p></dd>
 
 <dt id="arg-num-dim">num_dim<a class="anchor" aria-label="anchor" href="#arg-num-dim"></a></dt>
 <dd><p>Number of dimensions for the first-pass tSNE/UMAP, capped at
-<code>num_pcs</code>.</p></dd>
+<code>num_pcs</code>. <code>NULL</code> or a length-zero vector falls back to the default,
+same as omitting it.</p></dd>
 
 
 <dt id="arg-log-file">log_file<a class="anchor" aria-label="anchor" href="#arg-log-file"></a></dt>
