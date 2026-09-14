@@ -13,6 +13,7 @@ create_seurat_object(
   min_counts = NULL,
   max_counts = NULL,
   max_mt = 10,
+  min_cells = 100,
   normalization_method = "log",
   num_variable_genes = 3000,
   num_pcs = 50,
@@ -26,8 +27,9 @@ create_seurat_object(
 \item{sample_name}{Sample/library name, used as the cell ID prefix.}
 
 \item{num_mads, min_genes, max_genes, min_counts, max_counts, max_mt}{Quality
-cutoffs, passed to \code{\link[=filter_cells]{filter_cells()}} — see there for how the outlier stage
-and the fixed cutoffs combine.}
+cutoffs, passed to \code{\link[=filter_cells]{filter_cells()}}.}
+
+\item{min_cells}{Minimum number of cells that must survive filtering.}
 
 \item{normalization_method}{Normalization method, passed to
 \code{\link[=normalize_counts]{normalize_counts()}} (as its own \code{method} argument): "log" or "sct".}
@@ -38,7 +40,8 @@ and the fixed cutoffs combine.}
 the object is too small to support that many.}
 
 \item{num_dim}{Number of dimensions for the first-pass tSNE/UMAP, capped at
-\code{num_pcs}.}
+\code{num_pcs}. \code{NULL} or a length-zero vector falls back to the default,
+same as omitting it.}
 
 \item{log_file}{Filename for the log file.}
 }

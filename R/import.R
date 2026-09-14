@@ -54,12 +54,14 @@ read_counts_file <- function(path, sample_name, log_file = NULL) {
       recursive = TRUE
     )
 
-    # matrix.mtx file should be in filtered_feature (cellranger count) or
-    # sample_feature (cellranger multi) directory
-    mtx_paths <- str_subset(
+    # prefer a cellranger-style filtered dir, else fall back to any match
+    filtered_mtx_paths <- str_subset(
       mtx_paths,
       "filtered_gene_bc_mat|filtered_feature_bc_mat|sample_feature_bc_mat"
     )
+    if (length(filtered_mtx_paths) > 0) {
+      mtx_paths <- filtered_mtx_paths
+    }
 
     if (length(mtx_paths) > 0) {
       data_dir <- dirname(mtx_paths[1])
@@ -69,7 +71,7 @@ read_counts_file <- function(path, sample_name, log_file = NULL) {
 
       counts_matrix <- import_mtx(data_dir)
     } else {
-      # no filtered_feature_bc_matrix-style mtx dir - fall back to an h5 counts
+      # no matrix.mtx file anywhere under path - fall back to an h5 counts
       # matrix
       h5_paths <- list.files(
         path = path,

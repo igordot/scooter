@@ -37,15 +37,16 @@
 #' @param path Path to a 10x directory or a flat counts file.
 #' @param sample_name Sample/library name, used as the cell ID prefix.
 #' @param num_mads,min_genes,max_genes,min_counts,max_counts,max_mt Quality
-#'   cutoffs, passed to [filter_cells()] — see there for how the outlier stage
-#'   and the fixed cutoffs combine.
+#'   cutoffs, passed to [filter_cells()].
+#' @param min_cells Minimum number of cells that must survive filtering.
 #' @param normalization_method Normalization method, passed to
 #'   [normalize_counts()] (as its own `method` argument): "log" or "sct".
 #' @param num_variable_genes Number of variable features.
 #' @param num_pcs Principal components to compute. Reduced automatically when
 #'   the object is too small to support that many.
 #' @param num_dim Number of dimensions for the first-pass tSNE/UMAP, capped at
-#'   `num_pcs`.
+#'   `num_pcs`. `NULL` or a length-zero vector falls back to the default,
+#'   same as omitting it.
 #' @param log_file Filename for the log file.
 #'
 #' @return A Seurat object with normalized data, variable features, scaled
@@ -65,12 +66,18 @@ create_seurat_object <- function(
   min_counts = NULL,
   max_counts = NULL,
   max_mt = 10,
+  min_cells = 100,
   normalization_method = "log",
   num_variable_genes = 3000,
   num_pcs = 50,
   num_dim = 30,
   log_file = NULL
 ) {
+  # length-zero num_dim falls back to the default, not silently to num_pcs
+  if (!length(num_dim)) {
+    num_dim <- 30
+  }
+
   counts_list <- read_counts_file(
     path = path,
     sample_name = sample_name,
@@ -111,6 +118,7 @@ create_seurat_object <- function(
     min_counts = min_counts,
     max_counts = max_counts,
     max_mt = max_mt,
+    min_cells = min_cells,
     log_file = log_file
   )
 

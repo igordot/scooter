@@ -34,6 +34,43 @@ test_that("read_counts_file can read in tsv Antibody Capture file", {
   )
 })
 
+test_that("read_counts_file accepts non-Cell-Ranger matrix dir names", {
+  # e.g. pipseeker's "filtered_matrix/sensitivity_5"
+  custom_dir <- file.path(tempdir(), "pipseeker-out", "filtered_matrix")
+  dir.create(custom_dir, recursive = TRUE, showWarnings = FALSE)
+  fixture_dir <- system.file(
+    "extdata",
+    "outs/filtered_feature_bc_matrix",
+    package = "scooter"
+  )
+  file.copy(list.files(fixture_dir, full.names = TRUE), custom_dir)
+
+  counts <- read_counts_file(sample_name = "test", path = custom_dir)
+  expect_true("Gene Expression" %in% names(counts))
+})
+
+test_that("read_counts_file prefers a Cell-Ranger filtered dir if present", {
+  base_dir <- file.path(tempdir(), "cellranger-style-outs")
+  filtered_dir <- file.path(base_dir, "filtered_feature_bc_matrix")
+  other_dir <- file.path(base_dir, "some_other_matrix")
+  dir.create(filtered_dir, recursive = TRUE, showWarnings = FALSE)
+  dir.create(other_dir, recursive = TRUE, showWarnings = FALSE)
+
+  fixture_dir <- system.file(
+    "extdata",
+    "outs/filtered_feature_bc_matrix",
+    package = "scooter"
+  )
+  file.copy(list.files(fixture_dir, full.names = TRUE), filtered_dir)
+  # invalid matrix - picking this dir instead would error out
+  file.create(file.path(other_dir, "matrix.mtx.gz"))
+  file.create(file.path(other_dir, "features.tsv.gz"))
+  file.create(file.path(other_dir, "barcodes.tsv.gz"))
+
+  counts <- read_counts_file(sample_name = "test", path = base_dir)
+  expect_true("Gene Expression" %in% names(counts))
+})
+
 test_that("scooter will error is there is no valid path", {
   expect_error(read_counts_file(
     sample_name = "test",
@@ -384,6 +421,12 @@ test_that("filter_cells stops when too few cells survive filtering", {
     "below the minimum of 1000 required to proceed"
   )
 
+  # min_cells arrives as a string from the CLI, same as the other cutoffs
+  expect_error(
+    filter_cells(pbmc_obj, log_file = NULL, max_mt = 100, min_cells = "1000"),
+    "below the minimum of 1000 required to proceed"
+  )
+
   # min_cells = NULL is an explicit opt-out
   kept <- filter_cells(
     pbmc_obj,
@@ -585,6 +628,50 @@ test_that("create_seurat_object goes from a sample path to a clusterable object"
     ),
     "Seurat"
   )
+})
+
+test_that("create_seurat_object defaults min_cells stricter than filter_cells()", {
+  expect_equal(formals(create_seurat_object)$min_cells, 100)
+
+  # 176 cells clear filter_cells()'s own default (50) but not this one (1000)
+  expect_error(
+    create_seurat_object(
+      sample_name = "test",
+      path = system.file("extdata", "", package = "scooter"),
+      min_genes = 1,
+      min_counts = 1,
+      max_mt = 10,
+      min_cells = 1000
+    ),
+    "below the minimum of 1000 required to proceed"
+  )
+
+  # lowering it is how small test or pilot data still goes through
+  s_obj <- suppressWarnings(create_seurat_object(
+    sample_name = "test",
+    path = system.file("extdata", "", package = "scooter"),
+    min_genes = 1,
+    min_counts = 1,
+    max_mt = 10,
+    min_cells = 1,
+    num_pcs = 10
+  ))
+  expect_s4_class(s_obj, "Seurat")
+})
+
+test_that("create_seurat_object treats num_dim = NULL like an omitted argument", {
+  # num_pcs stays at its default (50) so a wrong fallback value is visible
+  s_obj <- suppressWarnings(create_seurat_object(
+    sample_name = "test",
+    path = system.file("extdata", "", package = "scooter"),
+    min_genes = 1,
+    min_counts = 1,
+    max_mt = 10,
+    num_dim = NULL
+  ))
+
+  expect_equal(ncol(SeuratObject::Embeddings(s_obj, "pca")), 50)
+  expect_length(Command(s_obj, command = "RunTSNE", value = "dims"), 30)
 })
 
 test_that("create_seurat_object runs PCA on the SCT assay for normalization_method = 'sct'", {

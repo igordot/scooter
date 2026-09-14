@@ -1037,7 +1037,8 @@ if (opts$create) {
   #   - filter, normalize, and select variable features
   #   - compute PCA and a first-pass tSNE/UMAP
   #   - write every diagnostic plot for those steps
-  create_args <- list(
+  # create_seurat_object() applies its own default when num_dim is length-zero
+  seurat_obj <- scooter::create_seurat_object(
     sample_name = opts$sample_name,
     path = opts$sample_dir,
     num_mads = opts$num_mads,
@@ -1046,15 +1047,10 @@ if (opts$create) {
     min_counts = opts$min_counts,
     max_counts = opts$max_counts,
     max_mt = opts$mt,
+    num_dim = as.integer(opts$num_dim),
     normalization_method = "log",
     log_file = "create.log"
   )
-  # omitted rather than passed as an explicit NULL, so create_seurat_object()'s
-  # own num_dim default applies instead of hand-copying it here
-  if (!is.null(opts$num_dim)) {
-    create_args$num_dim <- as.integer(opts$num_dim)
-  }
-  seurat_obj <- do.call(scooter::create_seurat_object, create_args)
 
   # ADT normalization has no package-level home yet: scooter::create_seurat_object() only attaches
   # the assay (via scooter::add_seurat_assay()), it does not normalize it

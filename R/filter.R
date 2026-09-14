@@ -79,6 +79,7 @@ filter_cells.default <- function(
   min_counts <- as.numeric(min_counts)
   max_counts <- as.numeric(max_counts)
   max_mt <- as.numeric(max_mt)
+  min_cells <- as.numeric(min_cells)
 
   # glue() on a zero-length value returns character(0), swallowing the whole
   # message
