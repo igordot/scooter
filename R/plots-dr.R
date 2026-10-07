@@ -120,6 +120,14 @@ plot_dr_group <- function(
   if (is.null(color_scheme)) {
     color_scheme <- get_color_scheme("clusters")
   }
+  groups <- if (is.null(group_by)) Idents(x) else x[[group_by]][[1]]
+  num_groups <- n_distinct(groups, na.rm = TRUE)
+  if (num_groups > length(color_scheme)) {
+    warning(glue(
+      "not plotting {num_groups} groups: only {length(color_scheme)} colors"
+    ))
+    return(invisible(NULL))
+  }
   if (is.null(pt_size)) {
     pt_size <- get_dr_point_size(x)
   }
