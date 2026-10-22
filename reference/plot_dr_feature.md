@@ -16,7 +16,9 @@ plot_dr_feature(
   reduction = "umap",
   cells = NULL,
   color_scheme = NULL,
-  pt_size = NULL
+  pt_size = NULL,
+  file_prefix = NULL,
+  file_format = c("png", "pdf")
 )
 ```
 
@@ -52,6 +54,14 @@ plot_dr_feature(
 - pt_size:
 
   (optional) Point size. Defaults to `get_dr_point_size(x)`.
+
+- file_prefix:
+
+  (optional) Path to save to.
+
+- file_format:
+
+  File formats to write when `file_prefix` is given.
 
 ## Value
 
