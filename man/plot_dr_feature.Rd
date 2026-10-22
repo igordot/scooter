@@ -11,7 +11,9 @@ plot_dr_feature(
   reduction = "umap",
   cells = NULL,
   color_scheme = NULL,
-  pt_size = NULL
+  pt_size = NULL,
+  file_prefix = NULL,
+  file_format = c("png", "pdf")
 )
 }
 \arguments{
@@ -33,6 +35,10 @@ single cell/group dominates due to plot order.}
 expression gradient.}
 
 \item{pt_size}{(optional) Point size. Defaults to \code{get_dr_point_size(x)}.}
+
+\item{file_prefix}{(optional) Path to save to.}
+
+\item{file_format}{File formats to write when \code{file_prefix} is given.}
 }
 \value{
 A ggplot object.

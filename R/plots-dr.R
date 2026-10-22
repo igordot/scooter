@@ -18,6 +18,8 @@
 #' @param color_scheme (optional) Vector of colors for the low-to-high
 #'   expression gradient.
 #' @param pt_size (optional) Point size. Defaults to `get_dr_point_size(x)`.
+#' @param file_prefix (optional) Path to save to.
+#' @param file_format File formats to write when `file_prefix` is given.
 #'
 #' @return A ggplot object.
 #'
@@ -39,7 +41,9 @@ plot_dr_feature <- function(
   reduction = "umap",
   cells = NULL,
   color_scheme = NULL,
-  pt_size = NULL
+  pt_size = NULL,
+  file_prefix = NULL,
+  file_format = c("png", "pdf")
 ) {
   if (is.null(cells)) {
     cells <- sample(colnames(x))
@@ -70,7 +74,9 @@ plot_dr_feature <- function(
   # FeaturePlot() always attaches its own color scale, so replacing it with
   # color_scheme (see the "cols" quirk note above) always triggers ggplot2's
   # scale-collision message
-  suppressMessages(feat_plot + scale_color_gradientn(colors = color_scheme)) +
+  plot_obj <- suppressMessages(
+    feat_plot + scale_color_gradientn(colors = color_scheme)
+  ) +
     labs(title = feature) +
     theme(
       plot.background = element_rect(fill = "white"),
@@ -79,6 +85,12 @@ plot_dr_feature <- function(
       axis.ticks = element_blank(),
       axis.text = element_blank()
     )
+
+  if (!is.null(file_prefix)) {
+    save_dr_plot(plot_obj, file_prefix = file_prefix, file_format = file_format)
+  }
+
+  plot_obj
 }
 
 #' Scatter plot of a reduction, colored by a grouping variable.
