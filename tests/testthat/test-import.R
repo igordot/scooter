@@ -737,6 +737,7 @@ test_that("create_seurat_object errors when there is no gene expression data", {
 
 test_that("read_counts_file can read in h5ad files", {
   skip_if_not_installed("anndataR")
+  skip_if_not_installed("rhdf5")
   # AnnData stores cells by genes
   dense <- matrix(c(1, 0, 2, 0, 3, 0, 0, 4, 5, 6, 0, 7), nrow = 4, byrow = TRUE)
   cells <- c("AAA-1", "CCC-1", "GGG-1", "TTT-1")
@@ -809,6 +810,7 @@ test_that("read_counts_file gives a clear error for a missing h5ad path", {
 
 test_that("read_counts_file reads an h5ad X that has NaN values", {
   skip_if_not_installed("anndataR")
+  skip_if_not_installed("rhdf5")
   x <- Matrix::Matrix(matrix(c(1, NaN, 2, 0, 3, 4), nrow = 2), sparse = TRUE)
   dimnames(x) <- list(c("c1", "c2"), c("g1", "g2", "g3"))
   path <- tempfile(fileext = ".h5ad")
@@ -818,6 +820,7 @@ test_that("read_counts_file reads an h5ad X that has NaN values", {
 
 test_that("read_counts_file splits h5ad features by feature_types", {
   skip_if_not_installed("anndataR")
+  skip_if_not_installed("rhdf5")
   x <- Matrix::Matrix(matrix(1:6, nrow = 2), sparse = TRUE)
   dimnames(x) <- list(c("c1", "c2"), c("g1", "g2", "a1"))
   var <- data.frame(

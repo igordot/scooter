@@ -172,7 +172,7 @@ import_h5 <- function(path, log_file = NULL) {
 #' @keywords internal
 #' @noRd
 import_h5ad <- function(path, log_file = NULL) {
-  check_installed("anndataR", reason = "to read h5ad files.")
+  check_installed(c("anndataR", "rhdf5"), reason = "to read h5ad files.")
   adata <- anndataR::read_h5ad(path, as = "InMemoryAnnData")
 
   x_name <- if ("counts" %in% names(adata$layers)) "layers/counts" else "X"
