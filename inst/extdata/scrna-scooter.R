@@ -21,7 +21,7 @@ Usage:
   scrna-scooter.R create <analysis_dir> --sample_name=<x> --path=<x> [--num_mads=<n> --min_genes=<n> --max_genes=<n> --min_counts=<n> --max_counts=<n> --mt=<n> --num_dim=<n>]
   scrna-scooter.R cluster <analysis_dir> --num_dim=<n> --reduction=<cluster_reduction>
   scrna-scooter.R identify <analysis_dir> --cluster_var=<x>
-  scrna-scooter.R merge <analysis_dir> <sample_analysis_dir>...
+  scrna-scooter.R merge <analysis_dir> <sample_analysis_dir>... [--num_dim=<n>]
   scrna-scooter.R integrate <analysis_dir> --batch_var=<x> --reduction=<x> [--num_dim=<n>]
   scrna-scooter.R de <analysis_dir> --cluster_var=<x> --group_var=<x>
   scrna-scooter.R hto <analysis_dir>
@@ -38,9 +38,9 @@ Create options:
   --max_counts=<n>   cutoff for maximum number of counts per cell
   --mt=<n>           cutoff for maximum percentage of mitochondrial reads per cell [default: 10]
 
-Create/cluster/integrate options:
+Create/cluster/merge/integrate options:
   --num_dim=<n>      number of dimensions to use; cluster: required; create: defaults to 30 if
-                     omitted; integrate: defaults to 50 if omitted
+                     omitted; merge/integrate: defaults to 50 if omitted
   --reduction=<x>    for integrate: integration method (`cca`, `rpca`, or `harmony`); for
                      cluster: reduction to cluster on (`pca`, or `cca`/`rpca`/`harmony` after
                      integrate)
@@ -1097,7 +1097,10 @@ if (opts$create) {
     assay = "RNA",
     var_features = TRUE
   )
-  num_dim <- min(50, num_pcs)
+  num_dim <- min(
+    if (is.null(opts$num_dim)) 50 else as.integer(opts$num_dim),
+    num_pcs
+  )
   seurat_obj <- scooter::run_tsne(
     seurat_obj,
     reduction = "pca",
