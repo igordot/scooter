@@ -13,7 +13,9 @@ read_counts_file(path, sample_name, log_file = NULL)
 
 - path:
 
-  Path to directory containing 10x matrix, or path to a text file.
+  Path to a matrix directory, or to a matrix.mtx.gz, text, h5, or h5ad
+  file. Next to a matrix.mtx.gz file, the features and barcodes files
+  must have the same prefix.
 
 - sample_name:
 

@@ -5,7 +5,7 @@ Read in 10x Genomics Cell Ranger Matrix Market format data.
 ## Usage
 
 ``` r
-import_mtx(data_path, gene_column = 2, log_file = NULL)
+import_mtx(data_path, gene_column = 2, prefix = "", log_file = NULL)
 ```
 
 ## Arguments
@@ -17,6 +17,10 @@ import_mtx(data_path, gene_column = 2, log_file = NULL)
 - gene_column:
 
   The column with the gene names.
+
+- prefix:
+
+  File name prefix of the matrix, features, and barcodes files.
 
 - log_file:
 
