@@ -141,3 +141,30 @@ test_that("the QC plot functions save themselves when given a file", {
   plot_metrics_correlations(test_data, file = file.path(out, "corr.png"))
   expect_true(file.exists(file.path(out, "corr.png")))
 })
+
+test_that("plot_dr_group() warns and skips with more groups than colors", {
+  num_cells <- 250
+  counts <- matrix(
+    rpois(20 * num_cells, 1),
+    nrow = 20,
+    dimnames = list(paste0("g", 1:20), paste0("c", 1:num_cells))
+  )
+  test_data <- CreateSeuratObject(Matrix::Matrix(counts, sparse = TRUE))
+  test_data[["umap"]] <- CreateDimReducObject(
+    embeddings = matrix(
+      rnorm(2 * num_cells),
+      ncol = 2,
+      dimnames = list(colnames(test_data), c("UMAP_1", "UMAP_2"))
+    ),
+    key = "UMAP_",
+    assay = "RNA"
+  )
+  test_data$many <- paste0("group", 1:num_cells)
+
+  expect_gt(num_cells, length(get_color_scheme("clusters")))
+  expect_warning(
+    plot_obj <- plot_dr_group(test_data, group_by = "many"),
+    "not plotting"
+  )
+  expect_null(plot_obj)
+})
