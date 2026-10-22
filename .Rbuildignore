@@ -9,6 +9,7 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^AGENTS\.md$
 ^CLAUDE\.md$
 ^\.claude$
 ^\.remember$
