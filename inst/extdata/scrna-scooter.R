@@ -2,7 +2,7 @@
 
 "
 Command-line pipeline for analysis of single cell RNA-seq data using Seurat (version >=5.3.1).
-The input is Cell Ranger output directory with filtered feature-barcode matrices in MEX or HDF5 format.
+The input is a directory with a feature-barcode matrix or a text/mtx/h5/h5ad file.
 
 Basic steps:
   create - import counts, filter cells by QC metrics, normalize, and compute an initial PCA/tSNE/UMAP
@@ -18,7 +18,7 @@ Advanced steps:
   plot umap - generate gene expression overlaid on a UMAP based on a table of genes and groups
 
 Usage:
-  scrna-scooter.R create <analysis_dir> --sample_name=<x> --sample_dir=<x> [--num_mads=<n> --min_genes=<n> --max_genes=<n> --min_counts=<n> --max_counts=<n> --mt=<n> --num_dim=<n>]
+  scrna-scooter.R create <analysis_dir> --sample_name=<x> --path=<x> [--num_mads=<n> --min_genes=<n> --max_genes=<n> --min_counts=<n> --max_counts=<n> --mt=<n> --num_dim=<n>]
   scrna-scooter.R cluster <analysis_dir> --num_dim=<n> --reduction=<cluster_reduction>
   scrna-scooter.R identify <analysis_dir> --cluster_var=<x>
   scrna-scooter.R merge <analysis_dir> <sample_analysis_dir>...
@@ -30,7 +30,7 @@ Usage:
 
 Create options:
   --sample_name=<x>  sample/library name that will be used for plots and tables
-  --sample_dir=<x>   path to the feature-barcode matrix directory for the specific sample/library
+  --path=<x>         path to the feature-barcode matrix directory or to a text/mtx/h5/h5ad file for the specific sample/library
   --num_mads=<n>     median absolute deviations for outlier removal, applied first [default: 3]
   --min_genes=<n>    cutoff for minimum number of genes per cell [default: 500]
   --max_genes=<n>    cutoff for maximum number of genes per cell
@@ -969,11 +969,11 @@ out_dir <- opts$analysis_dir
 original_wd <- getwd()
 
 # check input files convert to canonical form in case they are relative
-if (!is.null(opts$sample_dir)) {
-  if (dir.exists(opts$sample_dir)) {
-    opts$sample_dir <- normalizePath(opts$sample_dir)
+if (!is.null(opts$path)) {
+  if (file.exists(opts$path)) {
+    opts$path <- normalizePath(opts$path)
   } else {
-    stop(glue("sample dir {opts$sample_dir} does not exist"))
+    stop(glue("path {opts$path} does not exist"))
   }
 }
 if (!is.null(opts$genes_csv)) {
@@ -1040,7 +1040,7 @@ if (opts$create) {
   # create_seurat_object() applies its own default when num_dim is length-zero
   seurat_obj <- scooter::create_seurat_object(
     sample_name = opts$sample_name,
-    path = opts$sample_dir,
+    path = opts$path,
     num_mads = opts$num_mads,
     min_genes = opts$min_genes,
     max_genes = opts$max_genes,

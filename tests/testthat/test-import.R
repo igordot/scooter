@@ -49,6 +49,37 @@ test_that("read_counts_file accepts non-Cell-Ranger matrix dir names", {
   expect_true("Gene Expression" %in% names(counts))
 })
 
+test_that("read_counts_file can read a prefixed matrix.mtx.gz file path", {
+  # one dir with "<sample>.matrix.mtx.gz" style files for many samples
+  fixture_dir <- system.file(
+    "extdata",
+    "outs/filtered_feature_bc_matrix",
+    package = "scooter"
+  )
+  shared_dir <- file.path(tempdir(), "shared-out")
+  dir.create(shared_dir, showWarnings = FALSE)
+  fixture_files <- list.files(fixture_dir)
+  file.copy(
+    file.path(fixture_dir, fixture_files),
+    file.path(shared_dir, paste0("s1.filtered.", fixture_files))
+  )
+
+  counts <- read_counts_file(
+    sample_name = "test",
+    path = file.path(shared_dir, "s1.filtered.matrix.mtx.gz")
+  )
+  expect_identical(
+    counts,
+    read_counts_file(sample_name = "test", path = fixture_dir)
+  )
+
+  # the directory alone is ambiguous, so the error names the files to pass
+  expect_error(
+    read_counts_file(sample_name = "test", path = shared_dir),
+    "s1.filtered.matrix.mtx.gz"
+  )
+})
+
 test_that("read_counts_file prefers a Cell-Ranger filtered dir if present", {
   base_dir <- file.path(tempdir(), "cellranger-style-outs")
   filtered_dir <- file.path(base_dir, "filtered_feature_bc_matrix")
@@ -702,4 +733,102 @@ test_that("create_seurat_object errors when there is no gene expression data", {
     ),
     "no gene expression data"
   )
+})
+
+test_that("read_counts_file can read in h5ad files", {
+  skip_if_not_installed("anndataR")
+  # AnnData stores cells by genes
+  dense <- matrix(c(1, 0, 2, 0, 3, 0, 0, 4, 5, 6, 0, 7), nrow = 4, byrow = TRUE)
+  cells <- c("AAA-1", "CCC-1", "GGG-1", "TTT-1")
+  genes <- c("g1", "g2", "g3")
+  dimnames(dense) <- list(cells, genes)
+  expected <- unname(t(dense))
+  check_counts <- function(adata) {
+    path <- tempfile(fileext = ".h5ad")
+    anndataR::write_h5ad(adata, path)
+    mat <- read_counts_file(path = path, sample_name = "s1")[[
+      "Gene Expression"
+    ]]
+    expect_equal(rownames(mat), genes)
+    expect_equal(colnames(mat), paste0("s1:", c("AAA", "CCC", "GGG", "TTT")))
+    mat
+  }
+
+  # sparse and dense X
+  expect_equal(
+    unname(as.matrix(check_counts(anndataR::AnnData(
+      X = Matrix::Matrix(dense, sparse = TRUE)
+    )))),
+    expected
+  )
+  expect_equal(
+    unname(as.matrix(check_counts(anndataR::AnnData(X = dense)))),
+    expected
+  )
+
+  # layers/counts wins over a normalized X
+  mat <- check_counts(anndataR::AnnData(
+    X = Matrix::Matrix(dense / 2, sparse = TRUE),
+    layers = list(counts = Matrix::Matrix(dense, sparse = TRUE))
+  ))
+  expect_equal(unname(as.matrix(mat)), expected)
+})
+
+test_that("read_counts_file can read a Cell Ranger h5 file path directly", {
+  skip_if_not_installed("hdf5r")
+  # 3 genes x 4 cells, CSC genes-by-cells
+  dense <- matrix(c(1, 0, 2, 0, 3, 0, 0, 4, 5, 6, 0, 7), nrow = 3)
+  csc <- methods::as(Matrix::Matrix(dense, sparse = TRUE), "generalMatrix")
+  path <- tempfile(fileext = ".h5")
+  h5 <- hdf5r::H5File$new(path, mode = "w")
+  grp <- h5$create_group("matrix")
+  grp[["data"]] <- csc@x
+  grp[["indices"]] <- csc@i
+  grp[["indptr"]] <- csc@p
+  grp[["shape"]] <- dim(dense)
+  grp[["barcodes"]] <- c("AAA-1", "CCC-1", "GGG-1", "TTT-1")
+  feat <- grp$create_group("features")
+  feat[["id"]] <- c("id1", "id2", "id3")
+  feat[["name"]] <- c("g1", "g2", "g3")
+  feat[["feature_type"]] <- rep("Gene Expression", 3)
+  h5$close_all()
+
+  counts <- read_counts_file(path = path, sample_name = "s1")
+  mat <- counts[["Gene Expression"]]
+  expect_equal(rownames(mat), c("g1", "g2", "g3"))
+  expect_equal(colnames(mat), paste0("s1:", c("AAA", "CCC", "GGG", "TTT")))
+  expect_equal(unname(as.matrix(mat)), dense)
+})
+
+test_that("read_counts_file gives a clear error for a missing h5ad path", {
+  expect_error(
+    read_counts_file(path = tempfile(fileext = ".h5ad"), sample_name = "s1"),
+    "is not a file and is not a directory"
+  )
+})
+
+test_that("read_counts_file reads an h5ad X that has NaN values", {
+  skip_if_not_installed("anndataR")
+  x <- Matrix::Matrix(matrix(c(1, NaN, 2, 0, 3, 4), nrow = 2), sparse = TRUE)
+  dimnames(x) <- list(c("c1", "c2"), c("g1", "g2", "g3"))
+  path <- tempfile(fileext = ".h5ad")
+  anndataR::write_h5ad(anndataR::AnnData(X = x), path)
+  expect_no_error(read_counts_file(path = path, sample_name = "s1"))
+})
+
+test_that("read_counts_file splits h5ad features by feature_types", {
+  skip_if_not_installed("anndataR")
+  x <- Matrix::Matrix(matrix(1:6, nrow = 2), sparse = TRUE)
+  dimnames(x) <- list(c("c1", "c2"), c("g1", "g2", "a1"))
+  var <- data.frame(
+    feature_types = c("Gene Expression", "Gene Expression", "Antibody Capture"),
+    row.names = c("g1", "g2", "a1")
+  )
+  path <- tempfile(fileext = ".h5ad")
+  anndataR::write_h5ad(anndataR::AnnData(X = x, var = var), path)
+  counts <- read_counts_file(path = path, sample_name = "s1")
+  expect_setequal(names(counts), c("Gene Expression", "Antibody Capture"))
+  expect_equal(rownames(counts[["Gene Expression"]]), c("g1", "g2"))
+  expect_equal(rownames(counts[["Antibody Capture"]]), "a1")
+  expect_equal(colnames(counts[["Antibody Capture"]]), c("s1:c1", "s1:c2"))
 })

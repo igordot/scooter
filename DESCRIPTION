@@ -39,6 +39,8 @@ Imports:
     UpSetR,
     uwot (>= 0.2.1)
 Suggests:
+    anndataR,
+    hdf5r,
     roxygen2,
     testthat
 biocViews:

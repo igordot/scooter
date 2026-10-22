@@ -1,7 +1,9 @@
 #' Read in Gene Expression and Antibody Capture data from a 10x Genomics Cell
 #' Ranger sparse matrix or from a text file.
 #'
-#' @param path Path to directory containing 10x matrix, or path to a text file.
+#' @param path Path to a matrix directory, or to a matrix.mtx.gz, text, h5, or
+#'   h5ad file. Next to a matrix.mtx.gz file, the features and barcodes files
+#'   must have the same prefix.
 #' @param sample_name A character that will be used as a prefix for all cell
 #'   names.
 #' @param log_file Filename for the log file.
@@ -13,7 +15,25 @@
 #' @importFrom data.table fread
 #' @export
 read_counts_file <- function(path, sample_name, log_file = NULL) {
-  if (file.exists(path) && !dir.exists(path)) {
+  if (
+    str_detect(path, stringr::regex("\\.h5ad$", ignore_case = TRUE)) &&
+      file.exists(path)
+  ) {
+    counts_matrix <- import_h5ad(path, log_file = log_file)
+  } else if (
+    str_detect(path, stringr::regex("\\.h5$", ignore_case = TRUE)) &&
+      file.exists(path)
+  ) {
+    counts_matrix <- import_h5(path, log_file = log_file)
+  } else if (str_detect(path, "matrix\\.mtx\\.gz$") && file.exists(path)) {
+    write_message(glue("counts matrix mtx: {path}"), log_file)
+    prefix <- stringr::str_remove(basename(path), "matrix\\.mtx\\.gz$")
+    counts_matrix <- import_mtx(
+      dirname(path),
+      prefix = prefix,
+      log_file = log_file
+    )
+  } else if (file.exists(path) && !dir.exists(path)) {
     counts_df <- fread(path, stringsAsFactors = FALSE, data.table = FALSE)
     # data.table doesn't read in rownames assuming first column is the
     # gene/feature names
@@ -24,16 +44,6 @@ read_counts_file <- function(path, sample_name, log_file = NULL) {
     if (any(unmapped)) {
       counts_df <- counts_df[!unmapped, ]
     }
-
-    # if the cell names all have -1 at the end, remove the -1
-    cell_names <- colnames(counts_df)
-    if (all(str_detect(string = cell_names, pattern = "\\-1$"))) {
-      cell_names <- as.vector(as.character(sapply(
-        X = cell_names,
-        function(x) stringr::str_sub(x, end = (nchar(x) - 2))
-      )))
-    }
-    colnames(counts_df) <- cell_names
 
     # determine data type based on number of features
     if (nrow(counts_df) < 1000) {
@@ -65,6 +75,15 @@ read_counts_file <- function(path, sample_name, log_file = NULL) {
 
     if (length(mtx_paths) > 0) {
       data_dir <- dirname(mtx_paths[1])
+
+      # a dir can hold prefixed files for many samples
+      if (!file.exists(file.path(data_dir, "matrix.mtx.gz"))) {
+        stop(glue(
+          "{data_dir} has no plain matrix.mtx.gz file. ",
+          "Pass one of these files as the path:\n",
+          "{str_c(mtx_paths[dirname(mtx_paths) == data_dir], collapse = '\n')}"
+        ))
+      }
 
       message_str <- glue("counts dir: {data_dir}")
       write_message(message_str, log_file)
@@ -98,27 +117,94 @@ read_counts_file <- function(path, sample_name, log_file = NULL) {
         stop(glue("{path} does not contain matrix.mtx or an h5 file"))
       }
 
-      message_str <- glue("counts matrix h5: {h5_paths}")
-      write_message(message_str, log_file)
-
-      counts_matrix <- Read10X_h5(h5_paths)
-      if (!is.list(counts_matrix)) {
-        counts_matrix <- list("Gene Expression" = counts_matrix)
-      }
+      counts_matrix <- import_h5(h5_paths, log_file = log_file)
     }
   }
 
-  # rename the column(cell) names by adding a sample name prefix to every
-  # barcode
+  # strip the Cell Ranger "-1" suffix if every barcode has it, then add the sample prefix
   counts_out <- list()
-  for (i in 1:length(counts_matrix)) {
+  for (i in seq_along(counts_matrix)) {
     current_mat <- counts_matrix[[i]]
-    colnames(current_mat) <- str_c(sample_name, ":", colnames(current_mat))
+    cell_names <- colnames(current_mat)
+    if (all(str_detect(cell_names, "-1$"))) {
+      cell_names <- stringr::str_remove(cell_names, "-1$")
+    }
+    colnames(current_mat) <- str_c(sample_name, ":", cell_names)
     counts_out[[i]] <- current_mat
   }
   names(counts_out) <- names(counts_matrix)
 
   return(counts_out)
+}
+
+#' Read the counts from a Cell Ranger HDF5 file.
+#'
+#' @param path Path to an `.h5` file.
+#' @param log_file Filename for the log file.
+#'
+#' @return Named list of matrices, as from [read_counts_file()].
+#'
+#' @keywords internal
+#' @noRd
+import_h5 <- function(path, log_file = NULL) {
+  write_message(glue("counts matrix h5: {path}"), log_file)
+
+  counts_matrix <- Read10X_h5(path)
+  if (!is.list(counts_matrix)) {
+    counts_matrix <- list("Gene Expression" = counts_matrix)
+  }
+
+  counts_matrix
+}
+
+#' Read the counts from an AnnData (h5ad) file.
+#'
+#' Uses `layers/counts` if it exists, else `X`. A warning flags non-integer
+#' values, because `X` often holds normalized data. A `feature_types` column in
+#' `var` splits the features by type, as Cell Ranger does.
+#'
+#' @param path Path to an `.h5ad` file.
+#' @param log_file Filename for the log file.
+#'
+#' @return Named list of genes-by-cells sparse matrices, one per feature type.
+#'   Without `feature_types`, the list holds one "Gene Expression" matrix.
+#'
+#' @keywords internal
+#' @noRd
+import_h5ad <- function(path, log_file = NULL) {
+  check_installed("anndataR", reason = "to read h5ad files.")
+  adata <- anndataR::read_h5ad(path, as = "InMemoryAnnData")
+
+  x_name <- if ("counts" %in% names(adata$layers)) "layers/counts" else "X"
+  write_message(glue("h5ad matrix: {x_name}"), log_file)
+  x <- if (x_name == "X") adata$X else adata$layers[["counts"]]
+  if (is.null(x)) {
+    stop(glue(
+      "anndataR could not read {x_name} from {path} (see the warnings above)"
+    ))
+  }
+
+  # AnnData stores cells by genes
+  counts_mat <- Matrix::t(methods::as(x, "CsparseMatrix"))
+  rownames(counts_mat) <- make.unique(adata$var_names)
+  colnames(counts_mat) <- adata$obs_names
+
+  if (any(counts_mat@x != round(counts_mat@x), na.rm = TRUE)) {
+    warning(glue("{x_name} in {path} has non-integer values (not raw counts?)"))
+  }
+
+  if (!"feature_types" %in% colnames(adata$var)) {
+    return(list("Gene Expression" = counts_mat))
+  }
+  feature_types <- as.character(adata$var$feature_types)
+  write_message(
+    glue("h5ad feature types: {str_c(unique(feature_types), collapse = ', ')}"),
+    log_file
+  )
+  lapply(
+    split(seq_along(feature_types), feature_types),
+    \(idx) counts_mat[idx, , drop = FALSE]
+  )
 }
 
 #' Create a new Seurat object from a matrix.
@@ -251,6 +337,7 @@ add_seurat_assay <- function(x, assay, counts_matrix, log_file = NULL) {
 #'
 #' @param data_path Path to directory that holds the files output from 10x.
 #' @param gene_column The column with the gene names.
+#' @param prefix File name prefix of the matrix, features, and barcodes files.
 #' @param log_file Filename for the log file.
 #'
 #' @return Named list of matrices. One matrix for each data type as specified
@@ -261,9 +348,13 @@ add_seurat_assay <- function(x, assay, counts_matrix, log_file = NULL) {
 #' @importFrom Matrix readMM t
 #' @importFrom stringr str_detect str_sub
 #' @export
-import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
-  # Heavily sourced from Seurat caveat the name of the files have to be
-  # features.tsv.gz, matrix.mtx.gz, barcodes.tsv.gz
+import_mtx <- function(
+  data_path,
+  gene_column = 2,
+  prefix = "",
+  log_file = NULL
+) {
+  # adapted from Seurat::Read10X(); prefix starts all three file names
 
   # check if the directory exists
   if (!dir.exists(paths = data_path)) {
@@ -271,18 +362,21 @@ import_mtx <- function(data_path, gene_column = 2, log_file = NULL) {
   }
 
   feature_names <- read.delim(
-    file = file.path(data_path, "features.tsv.gz"),
+    file = file.path(data_path, str_c(prefix, "features.tsv.gz")),
     header = FALSE,
     stringsAsFactors = FALSE
   )
 
-  data <- readMM(file = file.path(data_path, "matrix.mtx.gz"))
+  data <- readMM(file = file.path(data_path, str_c(prefix, "matrix.mtx.gz")))
 
   # set the rownames to unique gene names
   rownames(data) <- make.unique(feature_names[, gene_column])
 
   # read in cell barcodes
-  cell_names <- readLines(file.path(data_path, "barcodes.tsv.gz"))
+  cell_names <- readLines(file.path(
+    data_path,
+    str_c(prefix, "barcodes.tsv.gz")
+  ))
 
   # if the cell names all have -1 at the end, remove the -1
   if (all(str_detect(string = cell_names, pattern = "\\-1$"))) {

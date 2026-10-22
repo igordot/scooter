@@ -8,7 +8,9 @@ Ranger sparse matrix or from a text file.}
 read_counts_file(path, sample_name, log_file = NULL)
 }
 \arguments{
-\item{path}{Path to directory containing 10x matrix, or path to a text file.}
+\item{path}{Path to a matrix directory, or to a matrix.mtx.gz, text, h5, or
+h5ad file. Next to a matrix.mtx.gz file, the features and barcodes files
+must have the same prefix.}
 
 \item{sample_name}{A character that will be used as a prefix for all cell
 names.}

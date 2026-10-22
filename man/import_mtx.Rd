@@ -4,12 +4,14 @@
 \alias{import_mtx}
 \title{Read in 10x Genomics Cell Ranger Matrix Market format data.}
 \usage{
-import_mtx(data_path, gene_column = 2, log_file = NULL)
+import_mtx(data_path, gene_column = 2, prefix = "", log_file = NULL)
 }
 \arguments{
 \item{data_path}{Path to directory that holds the files output from 10x.}
 
 \item{gene_column}{The column with the gene names.}
+
+\item{prefix}{File name prefix of the matrix, features, and barcodes files.}
 
 \item{log_file}{Filename for the log file.}
 }
