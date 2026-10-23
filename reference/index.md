@@ -7,6 +7,8 @@
   object.
 - [`add_seurat_assay()`](https://igordot.github.io/scooter/reference/add_seurat_assay.md)
   : Add assay to Seurat object.
+- [`annotate_pan_human_azimuth()`](https://igordot.github.io/scooter/reference/annotate_pan_human_azimuth.md)
+  : Annotate with Pan-human Azimuth
 - [`as_data_frame_seurat()`](https://igordot.github.io/scooter/reference/as_data_frame_seurat.md)
   : Function to extract data from Seurat object.
 - [`calculate_cluster_expression()`](https://igordot.github.io/scooter/reference/calculate_cluster_expression.md)
