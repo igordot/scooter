@@ -168,3 +168,33 @@ test_that("plot_dr_group() warns and skips with more groups than colors", {
   )
   expect_null(plot_obj)
 })
+
+test_that("plot_distribution builds one violin per group", {
+  test_data <- SeuratObject::pbmc_small
+  plot_obj <- plot_distribution(
+    test_data,
+    features = "nCount_RNA",
+    grouping = "groups"
+  )
+  # ggplot_build() evaluates the aes() mappings
+  violin_data <- ggplot2::ggplot_build(plot_obj)$data[[2]]
+  expect_equal(length(unique(violin_data$group)), 2)
+})
+
+test_that("plot_density_diff builds a density ratio plot", {
+  test_data <- SeuratObject::pbmc_small
+  metadata_tbl <- as_data_frame_seurat(test_data, reduction = "tsne")
+  # get_density_diff_table() reads the panel names from a "stage" column
+  metadata_tbl$stage <- metadata_tbl$groups
+  plot_obj <- plot_density_diff(
+    metadata_tbl,
+    x_var = "tSNE_1",
+    y_var = "tSNE_2",
+    split_var = "stage",
+    num_bins = 5,
+    group_pos = "g1",
+    group_neg = "g2"
+  )
+  expect_true("density_ratio" %in% colnames(plot_obj$data))
+  expect_no_error(ggplot2::ggplot_build(plot_obj))
+})

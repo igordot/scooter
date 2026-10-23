@@ -31,7 +31,7 @@ plot_distribution.default <- function(
     tidyr::gather(key = "var", value = "val", -grouping)
 
   plot_dist <-
-    ggplot(dist_tbl, aes(x = !!sym(grouping), y = val)) +
+    ggplot(dist_tbl, aes(x = !!sym(grouping), y = .data$val)) +
     cowplot::theme_cowplot() +
     geom_jitter(size = 1, color = "black", alpha = 0.1, width = 0.3) +
     geom_violin(aes(fill = !!sym(grouping))) +
@@ -352,7 +352,7 @@ plot_cluster_markers_top <- function(
   cluster_avg_exp_long <- cluster_avg_exp |>
     as.data.frame() |>
     rownames_to_column("gene") |>
-    gather(cluster, avg_exp, -gene)
+    gather("cluster", "avg_exp", -"gene")
 
   # bar plots - a named color scheme keeps names and colors in the proper order
   clust_names <- levels(x)
@@ -360,7 +360,7 @@ plot_cluster_markers_top <- function(
   names(color_scheme_named) <- clust_names
   barplot_plot <- ggplot(
     cluster_avg_exp_long,
-    aes(x = cluster, y = avg_exp, fill = cluster)
+    aes(x = .data$cluster, y = .data$avg_exp, fill = .data$cluster)
   ) +
     geom_col(color = "black") +
     theme(
@@ -404,19 +404,19 @@ plot_cluster_markers_heatmap <- function(
 ) {
   # adjust pairwise clusters to match the standard format
   if ("log2FC_min" %in% colnames(markers_tbl)) {
-    markers_tbl <- markers_tbl |> mutate(log2FC = log2FC_min)
+    markers_tbl <- markers_tbl |> mutate(log2FC = .data$log2FC_min)
   }
 
   # keep only the top cluster for each gene so each gene appears once
-  markers_tbl <- markers_tbl |> filter(log2FC > 0)
+  markers_tbl <- markers_tbl |> filter(.data$log2FC > 0)
   markers_tbl <- markers_tbl |>
-    group_by(gene) |>
-    top_n(1, log2FC) |>
+    group_by(.data$gene) |>
+    top_n(1, .data$log2FC) |>
     slice(1) |>
     ungroup()
 
   num_clusters <- Idents(x) |> as.character() |> n_distinct()
-  marker_genes <- markers_tbl |> pull(gene) |> unique() |> sort()
+  marker_genes <- markers_tbl |> pull("gene") |> unique() |> sort()
   cluster_avg_exp <- AverageExpression(
     x,
     assays = "RNA",
@@ -434,10 +434,11 @@ plot_cluster_markers_heatmap <- function(
     hm_base <- glue("{filename_base}-heatmap-top{ng}")
 
     markers_top_tbl <- markers_tbl |>
-      group_by(cluster) |>
-      top_n(ng, log2FC) |>
+      group_by(.data$cluster) |>
+      top_n(ng, .data$log2FC) |>
       ungroup()
-    markers_top_tbl <- markers_top_tbl |> arrange(cluster, -log2FC)
+    markers_top_tbl <- markers_top_tbl |>
+      arrange(.data$cluster, -.data$log2FC)
 
     # generate the scaled expression matrix and save the text version
     hm_mat <- cluster_avg_exp[markers_top_tbl$gene, ]

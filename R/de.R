@@ -95,25 +95,29 @@ differential_expression_per_cluster <- function(
             de_test = test
           ) |>
           dplyr::select(
-            cluster,
-            group1,
-            group2,
-            de_test,
-            gene,
-            log2FC,
-            p_val,
-            p_val_adj
+            "cluster",
+            "group1",
+            "group2",
+            "de_test",
+            "gene",
+            "log2FC",
+            "p_val",
+            "p_val_adj"
           ) |>
           dplyr::mutate(
-            log2FC = round(log2FC, 5),
-            p_val = if_else(p_val < 0.00001, p_val, round(p_val, 5)),
+            log2FC = round(.data$log2FC, 5),
+            p_val = if_else(
+              .data$p_val < 0.00001,
+              .data$p_val,
+              round(.data$p_val, 5)
+            ),
             p_val_adj = if_else(
-              p_val_adj < 0.00001,
-              p_val_adj,
-              round(p_val_adj, 5)
+              .data$p_val_adj < 0.00001,
+              .data$p_val_adj,
+              round(.data$p_val_adj, 5)
             )
           ) |>
-          dplyr::arrange(p_val_adj, p_val)
+          dplyr::arrange(.data$p_val_adj, .data$p_val)
 
         message(glue("{comparison_label} num genes: {nrow(de_genes)}"))
 
@@ -137,15 +141,16 @@ differential_expression_per_cluster <- function(
       de_all_genes_tbl,
       glue("{de_dir}/de-{cluster_column}-{group_column}-{test}-all.csv")
     )
-    de_sig_genes_tbl <- de_all_genes_tbl |> dplyr::filter(p_val_adj < 0.05)
+    de_sig_genes_tbl <- de_all_genes_tbl |>
+      dplyr::filter(.data$p_val_adj < 0.05)
     write_csv(
       de_sig_genes_tbl,
       glue("{de_dir}/de-{cluster_column}-{group_column}-{test}-sig.csv")
     )
     de_top_genes_tbl <- de_all_genes_tbl |>
-      dplyr::group_by(cluster, group1, group2) |>
-      dplyr::slice_min(p_val_adj, n = 100) |>
-      dplyr::slice_min(p_val, n = 100)
+      dplyr::group_by(.data$cluster, .data$group1, .data$group2) |>
+      dplyr::slice_min(.data$p_val_adj, n = 100) |>
+      dplyr::slice_min(.data$p_val, n = 100)
     write_csv(
       de_top_genes_tbl,
       glue("{de_dir}/de-{cluster_column}-{group_column}-{test}-top100.csv")

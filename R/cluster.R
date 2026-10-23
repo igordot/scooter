@@ -379,12 +379,12 @@ calculate_cluster_stats <- function(x, label) {
   metadata_tbl <- as_tibble(x@meta.data, rownames = "cell")
   metadata_tbl <- select(
     metadata_tbl,
-    cell,
-    total_counts,
-    detected_genes,
-    pct_mito,
-    sample_name = orig.ident,
-    cluster
+    "cell",
+    "total_counts",
+    "detected_genes",
+    "pct_mito",
+    sample_name = "orig.ident",
+    "cluster"
   )
   if (!is.null(x@reductions$tsne)) {
     tsne_tbl <- x[["tsne"]]@cell.embeddings |>
@@ -398,7 +398,7 @@ calculate_cluster_stats <- function(x, label) {
     metadata_tbl <- metadata_tbl |>
       full_join(tsne_tbl, by = "cell") |>
       full_join(umap_tbl, by = "cell")
-    metadata_tbl <- metadata_tbl |> arrange(cell)
+    metadata_tbl <- metadata_tbl |> arrange(.data$cell)
     write_csv(metadata_tbl, glue("metadata-{label}.csv.gz"))
   }
   Sys.sleep(1)
@@ -406,25 +406,26 @@ calculate_cluster_stats <- function(x, label) {
   # get number of cells split by cluster and by sample (orig.ident)
   summary_cluster_sample <-
     metadata_tbl |>
-    select(cluster, sample_name) |>
+    select("cluster", "sample_name") |>
     mutate(num_cells_total = n()) |>
-    group_by(sample_name) |>
+    group_by(.data$sample_name) |>
     mutate(num_cells_sample = n()) |>
-    group_by(cluster) |>
+    group_by(.data$cluster) |>
     mutate(num_cells_cluster = n()) |>
-    group_by(cluster, sample_name) |>
+    group_by(.data$cluster, .data$sample_name) |>
     mutate(num_cells_cluster_sample = n()) |>
     ungroup() |>
     distinct() |>
     mutate(
-      pct_cells_cluster = num_cells_cluster / num_cells_total,
-      pct_cells_cluster_sample = num_cells_cluster_sample / num_cells_sample
+      pct_cells_cluster = .data$num_cells_cluster / .data$num_cells_total,
+      pct_cells_cluster_sample = .data$num_cells_cluster_sample /
+        .data$num_cells_sample
     ) |>
     mutate(
-      pct_cells_cluster = round(pct_cells_cluster * 100, 1),
-      pct_cells_cluster_sample = round(pct_cells_cluster_sample * 100, 1)
+      pct_cells_cluster = round(.data$pct_cells_cluster * 100, 1),
+      pct_cells_cluster_sample = round(.data$pct_cells_cluster_sample * 100, 1)
     ) |>
-    arrange(cluster, sample_name)
+    arrange(.data$cluster, .data$sample_name)
 
   # get number of cells split by cluster (ignore samples)
   summary_cluster <- summary_cluster_sample |>
@@ -466,7 +467,7 @@ calculate_cluster_expression <- function(x, label) {
     round(3) |>
     as.data.frame() |>
     rownames_to_column("gene") |>
-    arrange(gene)
+    arrange(.data$gene)
   write_csv(cluster_avg_exp, glue("expression-mean-{label}.csv"))
   Sys.sleep(1)
 
@@ -484,7 +485,7 @@ calculate_cluster_expression <- function(x, label) {
       round(3) |>
       as.data.frame() |>
       rownames_to_column("gene") |>
-      arrange(gene)
+      arrange(.data$gene)
     write_csv(sample_avg_exp, glue("expression-mean-{label}-per-sample.csv"))
     Sys.sleep(1)
   }
@@ -556,30 +557,30 @@ calculate_cluster_markers <- function(x, label, test, pairwise = FALSE) {
     if (test == "roc") {
       all_markers <-
         all_markers |>
-        select(cluster, gene, log2FC = avg_diff, myAUC, power) |>
-        filter(power > 0.3) |>
+        select("cluster", "gene", log2FC = "avg_diff", "myAUC", "power") |>
+        filter(.data$power > 0.3) |>
         mutate(
-          log2FC = round(log2FC, 5),
-          myAUC = round(myAUC, 5),
-          power = round(power, 5)
+          log2FC = round(.data$log2FC, 5),
+          myAUC = round(.data$myAUC, 5),
+          power = round(.data$power, 5)
         ) |>
-        arrange(cluster, -power)
-      top_markers <- all_markers |> filter(log2FC > 0)
+        arrange(.data$cluster, -.data$power)
+      top_markers <- all_markers |> filter(.data$log2FC > 0)
       top_markers <- top_markers |>
-        group_by(cluster) |>
-        top_n(50, power) |>
+        group_by(.data$cluster) |>
+        top_n(50, .data$power) |>
         ungroup()
     } else {
       all_markers <-
         all_markers |>
-        select(cluster, gene, log2FC, p_val, p_val_adj) |>
-        filter(p_val_adj < 0.001) |>
-        mutate(log2FC = round(log2FC, 5)) |>
-        arrange(cluster, p_val_adj, p_val)
-      top_markers <- all_markers |> filter(log2FC > 0)
+        select("cluster", "gene", "log2FC", "p_val", "p_val_adj") |>
+        filter(.data$p_val_adj < 0.001) |>
+        mutate(log2FC = round(.data$log2FC, 5)) |>
+        arrange(.data$cluster, .data$p_val_adj, .data$p_val)
+      top_markers <- all_markers |> filter(.data$log2FC > 0)
       top_markers <- top_markers |>
-        group_by(cluster) |>
-        top_n(50, log2FC) |>
+        group_by(.data$cluster) |>
+        top_n(50, .data$log2FC) |>
         ungroup()
     }
   } else {
@@ -631,8 +632,8 @@ calculate_cluster_markers <- function(x, label, test, pairwise = FALSE) {
           rownames_to_column("gene") |>
           mutate(cluster = cluster1) |>
           mutate(cluster2 = cluster2) |>
-          filter(p_val_adj < 0.01) |>
-          mutate(log2FC = round(log2FC, 5)) |>
+          filter(.data$p_val_adj < 0.01) |>
+          mutate(log2FC = round(.data$log2FC, 5)) |>
           select(one_of(colnames(unfiltered_markers)))
 
         unfiltered_markers <- bind_rows(unfiltered_markers, cur_markers)
@@ -646,30 +647,29 @@ calculate_cluster_markers <- function(x, label, test, pairwise = FALSE) {
     unfiltered_markers <-
       unfiltered_markers |>
       distinct() |>
-      add_count(cluster, gene) |>
-      rename(cluster_gene_n = n) |>
-      arrange(cluster, gene, cluster2)
+      add_count(.data$cluster, .data$gene, name = "cluster_gene_n") |>
+      arrange(.data$cluster, .data$gene, .data$cluster2)
 
     # filter for genes that are significant compared to all other clusters
     all_markers <-
       unfiltered_markers |>
-      filter(cluster_gene_n == (length(clusters) - 1)) |>
-      select(-cluster_gene_n)
+      filter(.data$cluster_gene_n == (length(clusters) - 1)) |>
+      select(-"cluster_gene_n")
 
     # extract the lowest and highest fold changes and p-values
     all_markers <-
       all_markers |>
-      group_by(cluster, gene) |>
+      group_by(.data$cluster, .data$gene) |>
       summarize_at(
         c("log2FC", "p_val", "p_val_adj"),
         list(min = min, max = max)
       ) |>
       ungroup() |>
-      arrange(cluster, -log2FC_min)
+      arrange(.data$cluster, -.data$log2FC_min)
 
     top_markers <- all_markers |>
-      group_by(cluster) |>
-      top_n(50, log2FC_min) |>
+      group_by(.data$cluster) |>
+      top_n(50, .data$log2FC_min) |>
       ungroup()
   }
 
@@ -708,10 +708,10 @@ calculate_cluster_markers <- function(x, label, test, pairwise = FALSE) {
     filename_cluster_base <- glue(
       "{markers_dir}/markers-{label}-{cluster_name}-{test}"
     )
-    cluster_markers <- top_markers |> filter(cluster == cluster_name)
+    cluster_markers <- top_markers |> filter(.data$cluster == cluster_name)
     if (nrow(cluster_markers) > 9) {
       Sys.sleep(1)
-      top_cluster_markers <- cluster_markers |> head(12) |> pull(gene)
+      top_cluster_markers <- cluster_markers |> head(12) |> pull("gene")
       plot_cluster_markers_top(
         x,
         genes = top_cluster_markers,

@@ -12,9 +12,8 @@
 geneset_score <- function(module_tbl, counts_raw, min_cpm = 0, limit_pct = 1) {
   # perform the cell type enrichment calculation based on rescaled values
 
-  module_list <- module_tbl |>
-    filter(gene %in% rownames(counts_raw)) |>
-    with(split(gene, celltype))
+  module_tbl <- filter(module_tbl, .data$gene %in% rownames(counts_raw))
+  module_list <- split(module_tbl$gene, module_tbl$celltype)
 
   if (!is(counts_raw, "matrix")) {
     stop("expression matrix is not a matrix")
@@ -53,7 +52,7 @@ geneset_score <- function(module_tbl, counts_raw, min_cpm = 0, limit_pct = 1) {
   }
 
   celltype_scores_tbl <- celltype_scores_tbl |>
-    spread(celltype, score) |>
+    spread("celltype", "score") |>
     rename_at(vars(-contains("cell")), list(~ paste0(., ".score")))
 
   return(celltype_scores_tbl)

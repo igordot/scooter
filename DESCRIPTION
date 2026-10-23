@@ -46,7 +46,8 @@ Suggests:
     hdf5r,
     rhdf5,
     roxygen2,
-    testthat
+    testthat,
+    withr
 Remotes: 
     satijalab/AzimuthAPI
 biocViews:

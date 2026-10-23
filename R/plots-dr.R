@@ -309,7 +309,7 @@ plot_density_split <- function(
   # ran into some issues with merging split geom_hex
   ggplot(metadata_tbl, aes(x = !!sym(x_var), y = !!sym(y_var))) +
     # geom_hex(aes(fill = stat(ndensity)), bins = num_bins) +
-    stat_bin_2d(aes(fill = stat(ndensity)), bins = num_bins) +
+    stat_bin_2d(aes(fill = after_stat(.data$ndensity)), bins = num_bins) +
     theme(
       aspect.ratio = 1,
       axis.ticks = element_blank(),
@@ -378,12 +378,12 @@ plot_density_diff <- function(
 
   density_pos_tbl <-
     density_tbl |>
-    filter(stage == group_pos) |>
-    select(x, y, cells_pos = count, density_pos = density)
+    filter(.data$stage == group_pos) |>
+    select("x", "y", cells_pos = "count", density_pos = "density")
   density_neg_tbl <-
     density_tbl |>
-    filter(stage == group_neg) |>
-    select(x, y, cells_neg = count, density_neg = density)
+    filter(.data$stage == group_neg) |>
+    select("x", "y", cells_neg = "count", density_neg = "density")
   density_split_tbl <- full_join(
     density_pos_tbl,
     density_neg_tbl,
@@ -391,40 +391,44 @@ plot_density_diff <- function(
   )
   density_split_tbl[is.na(density_split_tbl)] <- min_density
   density_split_tbl <- density_split_tbl |>
-    mutate(density_diff = density_pos - density_neg)
+    mutate(density_diff = .data$density_pos - .data$density_neg)
   density_split_tbl <- density_split_tbl |>
-    mutate(density_ratio = log(density_pos / density_neg))
+    mutate(density_ratio = log(.data$density_pos / .data$density_neg))
 
-  min_density_diff <- density_split_tbl |> pull(density_diff) |> quantile(0.01)
-  max_density_diff <- density_split_tbl |> pull(density_diff) |> quantile(0.99)
+  min_density_diff <- density_split_tbl |>
+    pull("density_diff") |>
+    quantile(0.01)
+  max_density_diff <- density_split_tbl |>
+    pull("density_diff") |>
+    quantile(0.99)
   min_density_ratio <- density_split_tbl |>
-    pull(density_ratio) |>
+    pull("density_ratio") |>
     quantile(0.01)
   max_density_ratio <- density_split_tbl |>
-    pull(density_ratio) |>
+    pull("density_ratio") |>
     quantile(0.99)
 
   density_split_tbl <-
     density_split_tbl |>
     mutate(
-      cells = cells_pos + cells_neg,
-      log_density = log(density_pos + density_neg),
+      cells = .data$cells_pos + .data$cells_neg,
+      log_density = log(.data$density_pos + .data$density_neg),
       density_ratio = if_else(
-        density_ratio < min_density_ratio,
+        .data$density_ratio < min_density_ratio,
         min_density_ratio,
-        density_ratio
+        .data$density_ratio
       ),
       density_ratio = if_else(
-        density_ratio > max_density_ratio,
+        .data$density_ratio > max_density_ratio,
         max_density_ratio,
-        density_ratio
+        .data$density_ratio
       )
     ) |>
-    filter(cells > 0)
+    filter(.data$cells > 0)
 
-  ggplot(density_split_tbl, aes(x = x, y = y)) +
+  ggplot(density_split_tbl, aes(x = .data$x, y = .data$y)) +
     # geom_tile(aes(fill = density_ratio)) +
-    geom_raster(aes(fill = density_ratio), interpolate = interpolate) +
+    geom_raster(aes(fill = .data$density_ratio), interpolate = interpolate) +
     theme(
       aspect.ratio = 1,
       axis.ticks = element_blank(),
