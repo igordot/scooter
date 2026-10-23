@@ -123,7 +123,7 @@ plot_dr_group <- function(
   group_by = NULL,
   color_scheme = NULL,
   pt_size = NULL,
-  na_value = "grey50",
+  na_value = "grey90",
   file_prefix = NULL,
   file_format = c("png", "pdf"),
   width = NULL,

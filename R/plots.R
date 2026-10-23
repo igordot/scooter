@@ -523,7 +523,6 @@ plot_clusters <- function(
         x,
         reduction = reduction,
         color_scheme = color_scheme,
-        na_value = "grey90",
         file_prefix = glue("{filename_base}-{reduction}")
       )
     }

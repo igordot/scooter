@@ -140,7 +140,6 @@ cluster_seurat_object <- function(
         x,
         reduction = reduction,
         color_scheme = cluster_colors,
-        na_value = "grey90",
         file_prefix = glue("{file_base}-{reduction}")
       )
     }
