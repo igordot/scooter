@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster.R
 \name{calculate_cluster_expression}
 \alias{calculate_cluster_expression}
-\title{Per-cluster average expression (non-log space).}
+\title{Per-cluster average expression (non-log space) and summed raw counts.}
 \usage{
 calculate_cluster_expression(x, label)
 }
@@ -15,6 +15,8 @@ calculate_cluster_expression(x, label)
 \code{x}, invisibly. Called for its file output.
 }
 \description{
-Writes \verb{expression-mean-<label>.csv}, and additionally
-\verb{expression-mean-<label>-per-sample.csv} when \code{x} has more than one sample.
+Writes \verb{expression-mean-<label>.csv} from \code{\link[Seurat:AverageExpression]{Seurat::AverageExpression()}}.
+Writes \verb{expression-raw-<label>.csv} from \code{\link[Seurat:AggregateExpression]{Seurat::AggregateExpression()}}.
+When \code{x} has more than one sample, it also writes a \code{-per-sample} version of
+each table.
 }

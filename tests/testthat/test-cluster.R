@@ -16,6 +16,15 @@ test_that("cluster stats and expression functions write their tables", {
   calculate_cluster_expression(test_data, label = "test")
   expect_true(file.exists("expression-mean-test.csv"))
   expect_true(file.exists("expression-mean-test-per-sample.csv"))
+  expect_true(file.exists("expression-raw-test-per-sample.csv"))
+  expression_raw <- readr::read_csv(
+    "expression-raw-test.csv",
+    show_col_types = FALSE
+  )
+  expect_equal(
+    sum(expression_raw[, -1]),
+    sum(SeuratObject::LayerData(test_data, layer = "counts"))
+  )
 })
 
 test_that("calculate_cluster_markers writes markers and heatmaps", {

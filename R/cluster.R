@@ -442,10 +442,12 @@ calculate_cluster_stats <- function(x, label) {
   invisible(x)
 }
 
-#' Per-cluster average expression (non-log space).
+#' Per-cluster average expression (non-log space) and summed raw counts.
 #'
-#' Writes `expression-mean-<label>.csv`, and additionally
-#' `expression-mean-<label>-per-sample.csv` when `x` has more than one sample.
+#' Writes `expression-mean-<label>.csv` from [Seurat::AverageExpression()].
+#' Writes `expression-raw-<label>.csv` from [Seurat::AggregateExpression()].
+#' When `x` has more than one sample, it also writes a `-per-sample` version of
+#' each table.
 #'
 #' @param x Seurat object with an identity set, such as via [set_identity()].
 #' @param label Suffix for the output filenames.
@@ -457,20 +459,32 @@ calculate_cluster_stats <- function(x, label) {
 calculate_cluster_expression <- function(x, label) {
   message("cluster names: ", str_c(levels(x), collapse = ", "))
 
+  write_exp_table <- function(exp_mat, file, digits = 3) {
+    exp_mat <- as.matrix(round(exp_mat, digits))
+    if (digits == 0) {
+      storage.mode(exp_mat) <- "integer"
+    }
+    exp_tbl <- as.data.frame(exp_mat)
+    exp_tbl <- rownames_to_column(exp_tbl, "gene")
+    exp_tbl <- arrange(exp_tbl, .data$gene)
+    write_csv(exp_tbl, file)
+    Sys.sleep(1)
+  }
+
   # gene expression for an "average" cell in each identity class (averaging and
   # output are in non-log space)
-  cluster_avg_exp <- AverageExpression(x, assays = "RNA", verbose = FALSE)[[
-    "RNA"
-  ]]
-  cluster_avg_exp <- cluster_avg_exp |>
-    round(3) |>
-    as.data.frame() |>
-    rownames_to_column("gene") |>
-    arrange(.data$gene)
-  write_csv(cluster_avg_exp, glue("expression-mean-{label}.csv"))
-  Sys.sleep(1)
+  cluster_avg_exp <- AverageExpression(x, assays = "RNA", verbose = FALSE)
+  write_exp_table(cluster_avg_exp[["RNA"]], glue("expression-mean-{label}.csv"))
 
-  # cluster averages split by sample (orig.ident)
+  # sum of raw counts in each identity class (pseudobulk)
+  cluster_raw_exp <- AggregateExpression(x, assays = "RNA", verbose = FALSE)
+  write_exp_table(
+    cluster_raw_exp[["RNA"]],
+    glue("expression-raw-{label}.csv"),
+    digits = 0
+  )
+
+  # cluster tables split by sample (orig.ident)
   num_samples <- n_distinct(x@meta.data$orig.ident)
   if (num_samples > 1) {
     x@meta.data$persample <- paste0(Idents(x), "|", x@meta.data$orig.ident)
@@ -479,14 +493,22 @@ calculate_cluster_expression <- function(x, label) {
       assays = "RNA",
       group.by = "persample",
       verbose = FALSE
-    )[["RNA"]]
-    sample_avg_exp <- sample_avg_exp |>
-      round(3) |>
-      as.data.frame() |>
-      rownames_to_column("gene") |>
-      arrange(.data$gene)
-    write_csv(sample_avg_exp, glue("expression-mean-{label}-per-sample.csv"))
-    Sys.sleep(1)
+    )
+    write_exp_table(
+      sample_avg_exp[["RNA"]],
+      glue("expression-mean-{label}-per-sample.csv")
+    )
+    sample_raw_exp <- AggregateExpression(
+      x,
+      assays = "RNA",
+      group.by = "persample",
+      verbose = FALSE
+    )
+    write_exp_table(
+      sample_raw_exp[["RNA"]],
+      glue("expression-raw-{label}-per-sample.csv"),
+      digits = 0
+    )
   }
 
   invisible(x)

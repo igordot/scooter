@@ -1267,7 +1267,6 @@ if (opts$create) {
 
       # create UMAP/tSNE plot (should already exist in the main directory)
       dr_filename <- glue("dr-{grouping_label}-{clust_label}")
-      qs2::qs_save(seurat_obj, file = "seurat_obj.qs2", nthreads = 4)
       seurat_obj <- scooter::plot_clusters(
         seurat_obj,
         resolution = opts$cluster_var,
