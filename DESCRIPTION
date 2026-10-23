@@ -42,10 +42,13 @@ Imports:
     uwot (>= 0.2.1)
 Suggests:
     anndataR,
+    AzimuthAPI,
     hdf5r,
     rhdf5,
     roxygen2,
     testthat
+Remotes: 
+    satijalab/AzimuthAPI
 biocViews:
 Config/roxygen2/version: 8.1.0
 Encoding: UTF-8

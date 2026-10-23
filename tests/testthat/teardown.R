@@ -7,3 +7,5 @@
 # in tests/testthat/ uses these extensions, so matching by extension alone is safe.
 generated_files <- list.files(pattern = "\\.(png|pdf|csv|csv\\.gz)$")
 unlink(generated_files)
+# the annotation functions write into an annotation/ subdirectory
+unlink("annotation", recursive = TRUE)

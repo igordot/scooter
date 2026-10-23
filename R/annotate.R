@@ -157,3 +157,111 @@ transfer_labels <- function(
 
   query
 }
+
+#' Annotate with Pan-human Azimuth
+#'
+#' Annotates `query` with Pan-human Azimuth, a neural network trained on
+#' 23 human tissues. Install the AzimuthAPI package from GitHub
+#' (`satijalab/AzimuthAPI`).
+#'
+#' Unlike [transfer_labels()], the function needs no reference object.
+#'
+#' @param query Query Seurat object.
+#' @param query_assay Assay in `query` to annotate.
+#' @param verbose Print progress messages.
+#'
+#' @return `query` with these columns added to its metadata:
+#'   `pan_human_azimuth_label` (the most specific label),
+#'   `pan_human_azimuth_final_level_confidence` (its confidence),
+#'   `pan_human_azimuth_broad`, `pan_human_azimuth_medium`,
+#'   `pan_human_azimuth_fine`, `pan_human_azimuth_final_level_labels`,
+#'   `pan_human_azimuth_full_consistent_hierarchy` and
+#'   `pan_human_azimuth_full_hierarchical_labels`. The function writes the
+#'   columns of AzimuthAPI, under their own names and after a `cell` column,
+#'   to `annotation/annotation-pan-human-azimuth.csv.gz`. It also writes
+#'   `dr-umap-<column>.png` for each metadata column, except those with too
+#'   many groups to color.
+#'
+#' @references
+#'   Pan-human Azimuth website: <https://satijalab.org/pan_human_azimuth>
+#'
+#'   Sarkar S, Li Z, Molla G, Shenoy A, Zhang B, Collins D, et al.
+#'   Organism-scale annotation with Pan-human Azimuth. bioRxiv.
+#'   2026 Jul 21. \doi{10.64898/2026.07.16.738997}
+#'
+#' @importFrom readr write_csv
+#' @export
+annotate_pan_human_azimuth <- function(
+  query,
+  query_assay = "RNA",
+  verbose = TRUE
+) {
+  check_installed("AzimuthAPI", reason = "to run Pan-human Azimuth.")
+  if (!"umap" %in% Reductions(query)) {
+    stop("query needs a 'umap' reduction to plot the annotations.")
+  }
+  if ("pan_human_azimuth_label" %in% colnames(query@meta.data)) {
+    stop("query already has a 'pan_human_azimuth_label' column.")
+  }
+
+  if (verbose) {
+    message("uploading normalized data to the Pan-human Azimuth server")
+  }
+  annotated <- AzimuthAPI::CloudAzimuth(query, assay = query_assay)
+
+  azimuth_cols <- setdiff(
+    colnames(annotated@meta.data),
+    colnames(query@meta.data)
+  )
+  annotation <- annotated@meta.data[azimuth_cols]
+  annotation_dir <- "annotation"
+  dir.create(annotation_dir, showWarnings = FALSE)
+  write_csv(
+    as_tibble(annotation, rownames = "cell"),
+    glue("{annotation_dir}/annotation-pan-human-azimuth.csv.gz")
+  )
+
+  metadata_cols <- paste0(
+    "pan_human_azimuth_",
+    sub("^azimuth_", "", azimuth_cols)
+  )
+  metadata <- setNames(annotation, metadata_cols)
+  metadata[] <- lapply(
+    metadata,
+    \(x) if (is.character(x)) replace(x, x %in% "False", NA) else x
+  )
+
+  if (verbose) {
+    message(glue(
+      "cells annotated: {sum(!is.na(metadata$pan_human_azimuth_label))}, ",
+      "distinct labels: ",
+      "{n_distinct(metadata$pan_human_azimuth_label, na.rm = TRUE)}"
+    ))
+    message(glue(
+      "cells with inconsistent hierarchy: ",
+      "{sum(!metadata$pan_human_azimuth_full_consistent_hierarchy, na.rm = TRUE)}"
+    ))
+  }
+
+  query <- AddMetaData(query, metadata = metadata)
+
+  confidence_col <- "pan_human_azimuth_final_level_confidence"
+  plot_dr_feature(
+    query,
+    feature = confidence_col,
+    reduction = "umap",
+    file_prefix = glue("dr-umap-{confidence_col}"),
+    file_format = "png"
+  )
+  for (group_col in setdiff(metadata_cols, confidence_col)) {
+    plot_dr_group(
+      query,
+      reduction = "umap",
+      group_by = group_col,
+      file_prefix = glue("dr-umap-{group_col}"),
+      file_format = "png"
+    )
+  }
+
+  query
+}
