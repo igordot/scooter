@@ -348,12 +348,11 @@ test_that("as_data_frame_seurat converts metadata, reduction, and assay to dataf
 
 test_that("metadata and reduction embeddings are collected into one table", {
   test_data <- SeuratObject::pbmc_small
+  csv_file <- tempfile(fileext = ".csv.gz")
+  on.exit(unlink(csv_file))
 
-  meta_tbl <- save_metadata(
-    test_data,
-    reduction = c("tsne", "pca"),
-    file = NULL
-  )
+  save_metadata(test_data, reduction = c("tsne", "pca"), file = csv_file)
+  meta_tbl <- readr::read_csv(csv_file, show_col_types = FALSE)
 
   # one row per cell, joined on a `cell` column
   expect_s3_class(meta_tbl, "tbl_df")
@@ -376,29 +375,17 @@ test_that("metadata and reduction embeddings are collected into one table", {
 
 test_that("save_metadata skips reductions that are absent", {
   test_data <- SeuratObject::pbmc_small
+  csv_file <- tempfile(fileext = ".csv.gz")
+  on.exit(unlink(csv_file))
+
   # umap is not in pbmc_small, so it must be skipped rather than error
-  meta_tbl <- save_metadata(
-    test_data,
-    reduction = c("tsne", "umap"),
-    file = NULL
-  )
+  save_metadata(test_data, reduction = c("tsne", "umap"), file = csv_file)
+  meta_tbl <- readr::read_csv(csv_file, show_col_types = FALSE)
 
   expect_equal(nrow(meta_tbl), ncol(test_data))
   expect_true(any(grepl("^tSNE_", colnames(meta_tbl))))
   # the umap key is lower case ("umap_1"), so match case insensitively
   expect_false(any(grepl("umap", colnames(meta_tbl), ignore.case = TRUE)))
-})
-
-test_that("save_metadata writes a csv when file is not NULL", {
-  test_data <- SeuratObject::pbmc_small
-  csv_file <- tempfile(fileext = ".csv.gz")
-  on.exit(unlink(csv_file))
-
-  meta_tbl <- save_metadata(test_data, reduction = "tsne", file = csv_file)
-
-  expect_true(file.exists(csv_file))
-  csv_tbl <- readr::read_csv(csv_file, show_col_types = FALSE)
-  expect_equal(nrow(csv_tbl), nrow(meta_tbl))
 })
 
 test_that("save_counts collects the counts matrix into one table", {

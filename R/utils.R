@@ -257,10 +257,9 @@ as_data_frame_seurat <- function(
 #' @param x A Seurat object.
 #' @param reduction Reductions to join onto the metadata.
 #' @param digits Number of digits to round the embeddings to.
-#' @param file Path to write the table to as a csv. Set to `NULL` to skip
-#'   writing and just return the tibble.
+#' @param file Path to write the table to as a csv.
 #'
-#' @return A tibble with one row per cell.
+#' @return The table written to `file`, invisibly.
 #'
 #' @export
 save_metadata <- function(
@@ -286,11 +285,7 @@ save_metadata <- function(
 
   metadata_tbl <- arrange(metadata_tbl, .data$cell)
 
-  if (!is.null(file)) {
-    write_csv(metadata_tbl, file)
-  }
-
-  metadata_tbl
+  write_csv(metadata_tbl, file = file)
 }
 
 #' Report the size of an object's slots, largest first.

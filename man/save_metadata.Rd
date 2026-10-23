@@ -18,11 +18,10 @@ save_metadata(
 
 \item{digits}{Number of digits to round the embeddings to.}
 
-\item{file}{Path to write the table to as a csv. Set to \code{NULL} to skip
-writing and just return the tibble.}
+\item{file}{Path to write the table to as a csv.}
 }
 \value{
-A tibble with one row per cell.
+The table written to \code{file}, invisibly.
 }
 \description{
 Joins the requested reductions onto the cell metadata on a \code{cell} column.
