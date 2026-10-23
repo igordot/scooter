@@ -7,6 +7,7 @@
 #' @import Seurat
 #' @import tibble
 #' @importFrom glue glue
+#' @importFrom grDevices colorRampPalette
 #' @importFrom stats mad median quantile setNames
 ## usethis namespace: end
 NULL

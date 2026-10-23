@@ -312,6 +312,7 @@ save_metadata <- function(
 #' @return A tibble with one row per slot/element, largest first: `path` (its
 #'   position, `" > "`-separated) and `size` (human-readable, e.g. "1.2 Mb").
 #'
+#' @importFrom methods slot slotNames
 #' @export
 profile_object_size <- function(x, max_depth = 3) {
   walk <- function(value, path, depth) {

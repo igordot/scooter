@@ -108,12 +108,17 @@ importFrom(ggsci,
 )
 importFrom(glue,glue)
 importFrom(grDevices,
+  colorRampPalette,
   dev.off,
   pdf,
   png
 )
 importFrom(irlba,prcomp_irlba)
-importFrom(methods,is)
+importFrom(methods,
+  is,
+  slot,
+  slotNames
+)
 importFrom(pheatmap,pheatmap)
 importFrom(purrr,reduce)
 importFrom(readr,write_csv)
