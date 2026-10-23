@@ -345,7 +345,7 @@ plot_cluster_markers_top <- function(
   # non-log space)
   cluster_avg_exp <- AverageExpression(
     x,
-    assay = "RNA",
+    assays = "RNA",
     features = genes,
     verbose = FALSE
   )[["RNA"]]
@@ -419,7 +419,7 @@ plot_cluster_markers_heatmap <- function(
   marker_genes <- markers_tbl |> pull(gene) |> unique() |> sort()
   cluster_avg_exp <- AverageExpression(
     x,
-    assay = "RNA",
+    assays = "RNA",
     features = marker_genes,
     verbose = FALSE
   )[["RNA"]]

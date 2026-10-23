@@ -459,7 +459,7 @@ calculate_cluster_expression <- function(x, label) {
 
   # gene expression for an "average" cell in each identity class (averaging and
   # output are in non-log space)
-  cluster_avg_exp <- AverageExpression(x, assay = "RNA", verbose = FALSE)[[
+  cluster_avg_exp <- AverageExpression(x, assays = "RNA", verbose = FALSE)[[
     "RNA"
   ]]
   cluster_avg_exp <- cluster_avg_exp |>
@@ -476,7 +476,7 @@ calculate_cluster_expression <- function(x, label) {
     x@meta.data$persample <- paste0(Idents(x), "|", x@meta.data$orig.ident)
     sample_avg_exp <- AverageExpression(
       x,
-      assay = "RNA",
+      assays = "RNA",
       group.by = "persample",
       verbose = FALSE
     )[["RNA"]]
