@@ -25,7 +25,8 @@ For older Seurat versions, see the
 - [`as_data_frame_seurat()`](https://igordot.github.io/scooter/reference/as_data_frame_seurat.md)
   : Function to extract data from Seurat object.
 - [`calculate_cluster_expression()`](https://igordot.github.io/scooter/reference/calculate_cluster_expression.md)
-  : Per-cluster average expression (non-log space).
+  : Per-cluster average expression (non-log space) and summed raw
+  counts.
 - [`calculate_cluster_markers()`](https://igordot.github.io/scooter/reference/calculate_cluster_markers.md)
   : Calculate cluster markers (versus all other clusters, or pairwise)
   and plot them.

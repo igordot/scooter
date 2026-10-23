@@ -1,8 +1,11 @@
-# Per-cluster average expression (non-log space).
+# Per-cluster average expression (non-log space) and summed raw counts.
 
-Writes `expression-mean-<label>.csv`, and additionally
-`expression-mean-<label>-per-sample.csv` when `x` has more than one
-sample.
+Writes `expression-mean-<label>.csv` from
+[`Seurat::AverageExpression()`](https://satijalab.org/seurat/reference/AverageExpression.html).
+Writes `expression-raw-<label>.csv` from
+[`Seurat::AggregateExpression()`](https://satijalab.org/seurat/reference/AggregateExpression.html).
+When `x` has more than one sample, it also writes a `-per-sample`
+version of each table.
 
 ## Usage
 
