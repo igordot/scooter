@@ -127,6 +127,8 @@ plot_scatter <- function(
   return(current_plot)
 }
 
+#' @importFrom stats as.dendrogram dist hclust order.dendrogram
+#' @noRd
 cluster_stats_bar <- function(
   metadata,
   group1,
@@ -393,7 +395,6 @@ plot_cluster_markers_top <- function(
 #' @importFrom grDevices dev.off pdf png
 #' @importFrom pheatmap pheatmap
 #' @importFrom readr write_csv
-#' @importFrom stats quantile
 #' @export
 plot_cluster_markers_heatmap <- function(
   x,

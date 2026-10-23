@@ -125,9 +125,14 @@ importFrom(rlang,
 )
 importFrom(scales,comma)
 importFrom(stats,
+  as.dendrogram,
+  dist,
+  hclust,
   mad,
   median,
-  quantile
+  order.dendrogram,
+  quantile,
+  setNames
 )
 importFrom(stringr,
   str_c,

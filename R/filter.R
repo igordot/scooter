@@ -326,7 +326,6 @@ filter_cells.Seurat <- function(
 #'
 #' @return A named numeric vector, `c(min, max)`.
 #'
-#' @importFrom stats median mad
 #' @noRd
 mad_outlier_bounds <- function(values, nmads = 3, log = FALSE) {
   x <- if (log) log(values) else values
