@@ -31,9 +31,8 @@ save_metadata(
 
 - file:
 
-  Path to write the table to as a csv. Set to `NULL` to skip writing and
-  just return the tibble.
+  Path to write the table to as a csv.
 
 ## Value
 
-A tibble with one row per cell.
+The table written to `file`, invisibly.
