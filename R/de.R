@@ -49,7 +49,10 @@ differential_expression_per_cluster <- function(
   x <- set_identity(x = x, identity_column = cluster_column)
   clusters <- levels(x)
   for (clust_name in clusters) {
-    message(glue("calculating DE genes for cluster {clust_name}"))
+    write_message(
+      glue("calculating DE genes for cluster {clust_name}"),
+      log_file
+    )
 
     # subset to the specific cluster
     clust_obj <- subset(x, idents = clust_name)
@@ -57,8 +60,11 @@ differential_expression_per_cluster <- function(
     # revert back to the differential expression grouping variable labels
     clust_obj <- set_identity(x = clust_obj, identity_column = group_column)
 
-    message("cluster cells: ", ncol(clust_obj))
-    message("cluster groups: ", paste(levels(clust_obj), collapse = ", "))
+    write_message(glue("cluster cells: {ncol(clust_obj)}"), log_file)
+    write_message(
+      glue("cluster groups: {toString(levels(clust_obj))}"),
+      log_file
+    )
 
     # compare the groups that have more than 10 cells in this cluster
     group_sizes <- table(Idents(clust_obj))
@@ -71,7 +77,10 @@ differential_expression_per_cluster <- function(
         g1 <- group_combinations[1, combination_num]
         g2 <- group_combinations[2, combination_num]
         comparison_label <- glue("{g1}-vs-{g2}")
-        message(glue("comparison: {clust_name} {g1} vs {g2}"))
+        write_message(
+          glue("comparison: {clust_name} {g1} vs {g2}"),
+          log_file
+        )
 
         filename_label <- glue(
           "{de_dir}/de-{cluster_column}-{clust_name}-{comparison_label}-{test}"
@@ -127,7 +136,10 @@ differential_expression_per_cluster <- function(
           ) |>
           dplyr::arrange(.data$p_val_adj, .data$p_val)
 
-        message(glue("{comparison_label} num genes: {nrow(de_genes)}"))
+        write_message(
+          glue("{comparison_label} num genes: {nrow(de_genes)}"),
+          log_file
+        )
 
         # save stats table
         if (write) {
@@ -137,7 +149,7 @@ differential_expression_per_cluster <- function(
         de_all_genes_tbl <- bind_rows(de_all_genes_tbl, de_genes)
       }
     } else {
-      message("skip cluster: ", clust_name)
+      write_message(glue("skip cluster: {clust_name}"), log_file)
     }
 
     message(" ")

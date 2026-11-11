@@ -44,6 +44,11 @@ normalize_counts <- function(
   log_file = NULL
 ) {
   method <- match.arg(method, c("log", "sct"))
+  write_message(glue("normalization method: {method}"), log_file)
+  write_message(
+    glue("variable genes requested: {num_variable_genes}"),
+    log_file
+  )
 
   # Benchmarks show multisession buys nothing here (~tied with sequential,
   # 1.7k-35k cells). It also crashes outright on a large merged object

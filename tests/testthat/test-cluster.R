@@ -106,9 +106,11 @@ test_that("differential_expression_per_cluster writes DE tables", {
     differential_expression_per_cluster(
       test_data,
       cluster_column = "RNA_snn_res.1",
-      group_column = "three_groups"
+      group_column = "three_groups",
+      log_file = "de.log"
     )
   )
+  expect_true(any(grepl("^comparison: ", readLines("de.log"))))
   expect_gt(nrow(de_tbl), 0)
   expect_false("small" %in% c(de_tbl$group1, de_tbl$group2))
 })
