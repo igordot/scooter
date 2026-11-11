@@ -542,8 +542,7 @@ calculate_cluster_markers <- function(x, label, test, pairwise = FALSE) {
   message("marker test: ", test)
 
   # get cluster names, keeping only clusters with more than 10 cells
-  clusters <- Idents(x) |> as.character() |> unique() |> sort()
-  clusters <- clusters[table(Idents(x)) > 10]
+  clusters <- names(which(table(Idents(x)) > 10))
 
   if (!pairwise) {
     # standard cluster markers calculation
