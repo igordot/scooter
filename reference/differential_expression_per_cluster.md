@@ -50,4 +50,4 @@ differential_expression_per_cluster(
 
 ## Value
 
-.
+A tibble with the genes of all comparisons.
