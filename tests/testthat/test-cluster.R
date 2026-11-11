@@ -1,7 +1,6 @@
 test_that("cluster stats and expression functions write their tables", {
   withr::local_dir(withr::local_tempdir())
   test_data <- SeuratObject::pbmc_small
-  # calculate_cluster_stats() reads the umap reduction when tsne is present
   test_data <- RunUMAP(test_data, dims = 1:5, verbose = FALSE)
   test_data$total_counts <- test_data$nCount_RNA
   test_data$detected_genes <- test_data$nFeature_RNA
@@ -12,6 +11,22 @@ test_that("cluster stats and expression functions write their tables", {
   expect_true(file.exists("metadata-test.csv.gz"))
   expect_true(file.exists("summary-test.csv"))
   expect_true(file.exists("summary-test-per-sample.csv"))
+
+  # tsne and umap are each optional
+  umap_only <- test_data
+  umap_only[["tsne"]] <- NULL
+  calculate_cluster_stats(umap_only, label = "umap")
+  metadata_umap <- readr::read_csv(
+    "metadata-umap.csv.gz",
+    show_col_types = FALSE
+  )
+  expect_false(any(grepl("tsne", colnames(metadata_umap), ignore.case = TRUE)))
+  expect_true(any(grepl("umap", colnames(metadata_umap), ignore.case = TRUE)))
+
+  umap_only[["umap"]] <- NULL
+  calculate_cluster_stats(umap_only, label = "none")
+  expect_false(file.exists("metadata-none.csv.gz"))
+  expect_true(file.exists("summary-none.csv"))
 
   calculate_cluster_expression(test_data, label = "test")
   expect_true(file.exists("expression-mean-test.csv"))

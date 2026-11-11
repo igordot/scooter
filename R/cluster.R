@@ -385,18 +385,16 @@ calculate_cluster_stats <- function(x, label) {
     sample_name = "orig.ident",
     "cluster"
   )
-  if (!is.null(x@reductions$tsne)) {
-    tsne_tbl <- x[["tsne"]]@cell.embeddings |>
+  # add the embeddings of each reduction that is present
+  dr_names <- intersect(c("tsne", "umap"), Reductions(x))
+  for (dr_name in dr_names) {
+    dr_tbl <- Embeddings(x, reduction = dr_name) |>
       round(3) |>
       as.data.frame() |>
       rownames_to_column("cell")
-    umap_tbl <- x[["umap"]]@cell.embeddings |>
-      round(3) |>
-      as.data.frame() |>
-      rownames_to_column("cell")
-    metadata_tbl <- metadata_tbl |>
-      full_join(tsne_tbl, by = "cell") |>
-      full_join(umap_tbl, by = "cell")
+    metadata_tbl <- full_join(metadata_tbl, dr_tbl, by = "cell")
+  }
+  if (length(dr_names) > 0) {
     metadata_tbl <- metadata_tbl |> arrange(.data$cell)
     write_csv(metadata_tbl, glue("metadata-{label}.csv.gz"))
   }
