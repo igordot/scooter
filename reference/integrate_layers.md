@@ -70,10 +70,8 @@ integrate_layers(
 
   Extra arguments for whichever method `IntegrateLayers()` dispatches
   to - e.g. `theta`/`lambda`/`sigma`/`tau`/`nclust` for "harmony", or
-  `k.filter`/`sample.tree`/ `normalization.method` for "cca"/"rpca". An
-  unrecognized name errors (via
-  [`rlang::check_dots_used()`](https://rlang.r-lib.org/reference/check_dots_used.html))
-  rather than being silently dropped by the method function's own `...`.
+  `k.filter`/`sample.tree`/ `normalization.method` for "cca"/"rpca". A
+  name that the method does not take is an error.
 
 ## Value
 
