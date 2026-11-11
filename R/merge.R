@@ -58,6 +58,22 @@ merge_seurat_objects <- function(
     obj
   })
 
+  # merge() adds a suffix to duplicate cell names, which breaks the cell IDs
+  if (anyDuplicated(unlist(lapply(seurat_object_list, colnames)))) {
+    stop("the objects share cell names (duplicate sample names?)")
+  }
+
+  # a sample name in two objects would pool two samples into one
+  # (an object without the sample_name column adds no names to that check)
+  for (name_column in c("orig.ident", "sample_name")) {
+    sample_names <- lapply(seurat_object_list, function(so) {
+      unique(as.character(so@meta.data[[name_column]]))
+    })
+    if (anyDuplicated(unlist(sample_names))) {
+      stop(glue("the objects share sample names ({name_column})"))
+    }
+  }
+
   # Each object may carry its own per-sample PCA/tSNE/UMAP/clustering. None
   # of that is meaningful once merged, so this strips it before merging,
   # rather than let it leak into the combined object.

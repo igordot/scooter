@@ -217,6 +217,29 @@ test_that("merging accepts a mix of objects and analysis directory paths", {
     merge_seurat_objects(list(obj1, file.path(tempdir(), "no-such-dir"))),
     "path not found"
   )
+
+  expect_error(
+    merge_seurat_objects(list(obj1, obj1)),
+    "share cell names"
+  )
+
+  # same sample name, different cell names
+  obj1_renamed <- SeuratObject::RenameCells(
+    obj1,
+    new.names = paste0(colnames(obj1), "x")
+  )
+  expect_error(
+    merge_seurat_objects(list(obj1, obj1_renamed)),
+    "share sample names \\(orig.ident\\)"
+  )
+
+  # different orig.ident, same sample_name
+  obj1$sample_name <- "s"
+  obj2$sample_name <- "s"
+  expect_error(
+    merge_seurat_objects(list(obj1, obj2)),
+    "share sample names \\(sample_name\\)"
+  )
 })
 
 test_that("integration stops when a batch is too small to weight", {
