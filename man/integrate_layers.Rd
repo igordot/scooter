@@ -48,8 +48,7 @@ are an error.}
 \item{...}{Extra arguments for whichever method \code{IntegrateLayers()}
 dispatches to - e.g. \code{theta}/\code{lambda}/\code{sigma}/\code{tau}/\code{nclust} for
 "harmony", or \code{k.filter}/\code{sample.tree}/ \code{normalization.method} for
-"cca"/"rpca". An unrecognized name errors (via \code{\link[rlang:check_dots_used]{rlang::check_dots_used()}})
-rather than being silently dropped by the method function's own \code{...}.}
+"cca"/"rpca". A name that the method does not take is an error.}
 }
 \value{
 A Seurat object with rejoined layers and an \code{int_reduction}-named

@@ -256,13 +256,12 @@ integrate_seurat_object <- function(
 #' @param ... Extra arguments for whichever method `IntegrateLayers()`
 #'   dispatches to - e.g. `theta`/`lambda`/`sigma`/`tau`/`nclust` for
 #'   "harmony", or `k.filter`/`sample.tree`/ `normalization.method` for
-#'   "cca"/"rpca". An unrecognized name errors (via [rlang::check_dots_used()])
-#'   rather than being silently dropped by the method function's own `...`.
+#'   "cca"/"rpca". A name that the method does not take is an error.
 #'
 #' @return A Seurat object with rejoined layers and an `int_reduction`-named
 #'   reduction (`"cca"`, `"rpca"`, or `"harmony"`).
 #'
-#' @importFrom rlang check_installed check_dots_used
+#' @importFrom rlang check_installed
 #' @export
 integrate_layers <- function(
   x,
@@ -289,6 +288,25 @@ integrate_layers <- function(
   )
   if (!int_reduction %in% names(int_methods)) {
     stop(glue("integration reduction type {int_reduction} is not valid"))
+  }
+
+  # Stop on a `...` argument that the method does not take: a typo, or an
+  # argument of a different int_reduction. HarmonyIntegration() drops such an
+  # argument without an error. cca/rpca pass `...` to FindIntegrationAnchors().
+  int_method <- int_methods[[int_reduction]]
+  method_args <- names(formals(int_method))
+  if (int_reduction != "harmony") {
+    method_args <- c(method_args, names(formals(FindIntegrationAnchors)))
+  }
+  extra_args <- list(...)
+  unknown_args <- setdiff(
+    rlang::names2(extra_args),
+    setdiff(method_args, "...")
+  )
+  if (length(unknown_args) > 0) {
+    stop(glue(
+      "arguments not used by {int_reduction}: {toString(unknown_args)}"
+    ))
   }
 
   # fail before the expensive steps rather than inside IntegrateLayers()
@@ -335,28 +353,27 @@ integrate_layers <- function(
 
   int_args <- list(
     object = x,
-    method = int_methods[[int_reduction]],
+    method = int_method,
     orig.reduction = "pca",
     new.reduction = int_reduction,
     assay = assay,
-    k.weight = k_weight,
     verbose = FALSE
   )
-  # harmony takes neither anchors nor dims. HarmonyIntegration() has no
-  # `dims` formal at all, so passing one falls into its own unused `...` and
-  # is silently dropped instead of erroring. This is the same failure mode
-  # as an unmatched `...` argument. See the roxygen note on `num_dim` above
-  # for what controls its effective dimensionality instead.
+  # harmony takes no anchors, dims, or weights. HarmonyIntegration() has no
+  # such formals, so each one falls into its own unused `...` and is
+  # silently dropped instead of erroring. See the roxygen note on `num_dim`
+  # above for what controls its effective dimensionality instead.
   if (int_reduction != "harmony") {
     int_args$dims <- 1:num_dim
     int_args$k.anchor <- k_anchor
+    int_args$k.weight <- k_weight
   }
 
   # extra method-specific tuning (harmony's theta/lambda/sigma/..., or
   # cca/rpca's k.filter/ sample.tree/...) arrives via `...` rather than named
   # params here - there is too much of it, disjoint per method, to hand-copy
   # and keep in sync with Seurat/harmony's own defaults
-  int_args <- c(int_args, list(...))
+  int_args <- c(int_args, extra_args)
 
   # IntegrateLayers() always computes a `features` default, even though
   # int_args never sets one. It forwards that default to whichever method
@@ -365,11 +382,6 @@ integrate_layers <- function(
   # harmless. int_args cannot prevent it by leaving `features` unset, since
   # the default comes from IntegrateLayers() itself.
   integrated_obj <- suppressMessages(do.call(IntegrateLayers, int_args))
-
-  # catches a `...` argument no method function ever touched: a typo, or an
-  # argument that only applies to a different int_reduction. Without this
-  # check, that argument would be silently dropped instead of erroring.
-  check_dots_used()
 
   # the per-batch layers are no longer needed once the correction is computed,
   # and leaving them split makes GetAssayData() error out downstream

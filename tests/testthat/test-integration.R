@@ -106,7 +106,10 @@ test_that("Seurat object layers can be integrated", {
       split_obj,
       num_dim = 10,
       int_reduction = "rpca",
-      k_weight = 20
+      k_weight = 20,
+      # `...` arguments: one of RPCAIntegration(), one of FindIntegrationAnchors()
+      k.filter = NA,
+      k.score = 20
     )
   ))
 
@@ -168,6 +171,25 @@ test_that("integration rejects invalid arguments", {
   expect_error(
     integrate_layers(list(), num_dim = 10, int_reduction = "nonsense"),
     "is not valid"
+  )
+
+  # a `...` argument that the method does not take
+  expect_error(
+    integrate_layers(list(), num_dim = 10, k.filterr = 5),
+    "not used by cca: k.filterr"
+  )
+  expect_error(
+    integrate_layers(list(), num_dim = 10, theta = 2),
+    "not used by cca: theta"
+  )
+  expect_error(
+    integrate_layers(
+      list(),
+      num_dim = 10,
+      int_reduction = "harmony",
+      k.filter = 5
+    ),
+    "not used by harmony: k.filter"
   )
 })
 
