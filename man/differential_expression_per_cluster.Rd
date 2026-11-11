@@ -31,7 +31,7 @@ expressin within each split.}
 \item{log_file}{log file.}
 }
 \value{
-.
+A tibble with the genes of all comparisons.
 }
 \description{
 Calculate differentially expressed genes within each subpopulation/cluster

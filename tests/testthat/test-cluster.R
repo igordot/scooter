@@ -89,4 +89,26 @@ test_that("differential_expression_per_cluster writes DE tables", {
   )
   de_files <- list.files("differential-expression", pattern = "-all\\.csv$")
   expect_gt(length(de_files), 0)
+
+  # one group per cluster, so no cluster has a comparison
+  test_data$one_group <- "g"
+  de_tbl <- differential_expression_per_cluster(
+    test_data,
+    cluster_column = "RNA_snn_res.1",
+    group_column = "one_group"
+  )
+  expect_equal(nrow(de_tbl), 0)
+
+  # a group with 10 cells or fewer does not stop the other comparisons
+  test_data$three_groups <- rep(c("a", "b"), length.out = ncol(test_data))
+  test_data$three_groups[1:3] <- "small"
+  de_tbl <- suppressWarnings(
+    differential_expression_per_cluster(
+      test_data,
+      cluster_column = "RNA_snn_res.1",
+      group_column = "three_groups"
+    )
+  )
+  expect_gt(nrow(de_tbl), 0)
+  expect_false("small" %in% c(de_tbl$group1, de_tbl$group2))
 })

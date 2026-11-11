@@ -9,7 +9,7 @@
 #' @param write Boolean to save results to disk.
 #' @param log_file log file.
 #'
-#' @return .
+#' @return A tibble with the genes of all comparisons.
 #'
 #' @importFrom readr write_csv
 #' @export
@@ -33,8 +33,17 @@ differential_expression_per_cluster <- function(
     dir.create(de_dir)
   }
 
-  # results table
-  de_all_genes_tbl <- tibble()
+  # results table (with columns, so that it is valid with no comparisons)
+  de_all_genes_tbl <- tibble(
+    cluster = character(),
+    group1 = character(),
+    group2 = character(),
+    de_test = character(),
+    gene = character(),
+    log2FC = numeric(),
+    p_val = numeric(),
+    p_val_adj = numeric()
+  )
 
   # get DE genes for each cluster
   x <- set_identity(x = x, identity_column = cluster_column)
@@ -51,13 +60,12 @@ differential_expression_per_cluster <- function(
     message("cluster cells: ", ncol(clust_obj))
     message("cluster groups: ", paste(levels(clust_obj), collapse = ", "))
 
-    # continue if cluster has multiple groups and more than 10 cells in each
-    # group
-    if (
-      n_distinct(Idents(clust_obj)) > 1 && min(table(Idents(clust_obj))) > 10
-    ) {
+    # compare the groups that have more than 10 cells in this cluster
+    group_sizes <- table(Idents(clust_obj))
+    groups <- names(which(group_sizes > 10))
+    if (length(groups) > 1) {
       # iterate through sample/library combinations (relevant if more than two)
-      group_combinations <- combn(levels(clust_obj), m = 2, simplify = TRUE)
+      group_combinations <- combn(groups, m = 2, simplify = TRUE)
       for (combination_num in 1:ncol(group_combinations)) {
         # determine combination
         g1 <- group_combinations[1, combination_num]
@@ -81,7 +89,7 @@ differential_expression_per_cluster <- function(
           base = 2,
           fc.name = "log2FC",
           only.pos = FALSE,
-          print.bar = FALSE
+          verbose = FALSE
         )
 
         # perform some light filtering and clean up
