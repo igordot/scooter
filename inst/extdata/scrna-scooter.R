@@ -963,7 +963,8 @@ colors_clusters <- scooter::get_color_scheme("clusters")
 
 # analysis info
 analysis_step <- "unknown"
-out_dir <- opts$analysis_dir
+# remove trailing slashes (out_dir is the prefix of the integrate output dir)
+out_dir <- sub("/+$", "", opts$analysis_dir)
 
 # original working dir (before moving to analysis dir)
 original_wd <- getwd()
@@ -982,6 +983,12 @@ if (!is.null(opts$genes_csv)) {
   } else {
     stop(glue("genes table {opts$genes_csv} does not exist"))
   }
+}
+if (opts$merge) {
+  opts$sample_analysis_dir <- normalizePath(
+    opts$sample_analysis_dir,
+    mustWork = TRUE
+  )
 }
 
 # create a new directory for a new analysis or exit if one already exists
@@ -1075,9 +1082,8 @@ if (opts$create) {
   # directories. scooter::merge_seurat_objects() resolves each directory to
   # its seurat_obj.qs2, loads it, strips its own per-sample reductions, and
   # merges the result.
-  sample_analysis_dirs <- file.path(original_wd, opts$sample_analysis_dir)
   seurat_obj <- scooter::merge_seurat_objects(
-    sample_analysis_dirs,
+    opts$sample_analysis_dir,
     log_file = "merge.log"
   )
 
