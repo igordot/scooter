@@ -81,6 +81,20 @@ filter_cells.default <- function(
   max_mt <- as.numeric(max_mt)
   min_cells <- as.numeric(min_cells)
 
+  # a comparison with NA removes every cell
+  cutoffs <- c(
+    num_mads = num_mads,
+    min_genes = min_genes,
+    max_genes = max_genes,
+    min_counts = min_counts,
+    max_counts = max_counts,
+    max_mt = max_mt,
+    min_cells = min_cells
+  )
+  if (anyNA(cutoffs)) {
+    stop(glue("not a number: {toString(names(which(is.na(cutoffs))))}"))
+  }
+
   # glue() on a zero-length value returns character(0), swallowing the whole
   # message
   show <- function(cutoff) if (length(cutoff)) as.character(cutoff) else "none"

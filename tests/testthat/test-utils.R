@@ -551,3 +551,10 @@ test_that("resolve_seurat_object errors on a directory with multiple qs2/rds fil
 
   expect_error(resolve_seurat_object(analysis_dir), "multiple .rds/.qs2 files")
 })
+
+test_that("filter_cells stops on a cutoff that is not a number", {
+  expect_error(
+    suppressWarnings(filter_cells(data.frame(), min_genes = "none")),
+    "not a number: min_genes"
+  )
+})
