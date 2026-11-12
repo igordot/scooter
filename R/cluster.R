@@ -188,7 +188,7 @@ calculate_clusters <- function(x, ...) {
 calculate_clusters.default <- function(
   x,
   num_dim,
-  num_neighbors = 20,
+  num_neighbors = 30,
   res = NULL,
   algorithm = 4,
   log_file = NULL,
@@ -277,7 +277,7 @@ calculate_clusters.Seurat <- function(
   assay,
   reduction,
   num_dim,
-  num_neighbors = 20,
+  num_neighbors = 30,
   res = NULL,
   algorithm = 4,
   log_file = NULL,
