@@ -186,6 +186,9 @@ test_that("Seurat obj can be created", {
   pbmc_mat <- get_test_counts_matrix()
   pbmc_obj <- initialize_seurat_object(counts_matrix = pbmc_mat)
   expect_s4_class(pbmc_obj, "Seurat")
+
+  pbmc_obj <- initialize_seurat_object(pbmc_mat, project = "my_study")
+  expect_equal(SeuratObject::Project(pbmc_obj), "my_study")
 })
 
 test_that("Assay can be added to Seurat object", {

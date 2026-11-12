@@ -257,7 +257,7 @@ initialize_seurat_object <- function(
   # Create seurat object
   so <- CreateSeuratObject(
     counts = counts_matrix,
-    project = "proj",
+    project = project,
     assay = assay,
     names.field = 1,
     names.delim = ":",
