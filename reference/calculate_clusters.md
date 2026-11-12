@@ -14,7 +14,7 @@ calculate_clusters(
   assay,
   reduction,
   num_dim,
-  num_neighbors = 20,
+  num_neighbors = 30,
   res = NULL,
   algorithm = 4,
   log_file = NULL,
