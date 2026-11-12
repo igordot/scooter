@@ -107,7 +107,9 @@ normalize_counts <- function(
   }
 
   # both methods have selected variable features by this point
-  hvf_tbl <- HVFInfo(x) |>
+  # (SCTransform() puts them in a new "SCT" assay)
+  vf_assay <- if (method == "sct") "SCT" else assay
+  hvf_tbl <- HVFInfo(x, assay = vf_assay) |>
     round(3) |>
     rownames_to_column("gene")
 
@@ -121,7 +123,7 @@ normalize_counts <- function(
   )[1]
   hvf_tbl <- hvf_tbl |> arrange(-.data[[rank_col]])
 
-  var_plot <- VariableFeaturePlot(x, pt.size = 0.5)
+  var_plot <- VariableFeaturePlot(x, assay = vf_assay, pt.size = 0.5)
   var_plot <- LabelPoints(
     var_plot,
     points = head(hvf_tbl$gene, 30),

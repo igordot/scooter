@@ -367,6 +367,12 @@ run_tsne.Seurat <- function(
   # RunTSNE picks the single one that is set (it errors if none or several are)
   dims <- if (is.null(num_dim)) NULL else seq_len(as.integer(num_dim))
 
+  # RunTSNE() has no assay argument: it reads `features` from the default assay
+  default_assay <- DefaultAssay(x)
+  if (!is.null(features)) {
+    DefaultAssay(x) <- assay
+  }
+
   dr_name <- glue("tsne{suffix}")
   x <- RunTSNE(
     x,
@@ -379,6 +385,7 @@ run_tsne.Seurat <- function(
     reduction.key = glue("tSNE{suffix}_"),
     ...
   )
+  DefaultAssay(x) <- default_assay
   # Catches a `...` argument RunTSNE() never touched: a typo, or a
   # parameter Seurat renamed. Without this check, it would be silently
   # dropped instead of erroring.

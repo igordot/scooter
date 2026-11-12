@@ -190,3 +190,31 @@ test_that("run dr umap", {
 
   expect_equal(names(s_obj_dr@reductions), c("pcatest", "umaptest"))
 })
+
+test_that("assay is used when it is not the default assay", {
+  withr::local_dir(withr::local_tempdir())
+  test_data <- SeuratObject::pbmc_small
+  counts <- SeuratObject::LayerData(test_data, assay = "RNA", layer = "counts")
+  suppressWarnings(
+    test_data[["other"]] <- SeuratObject::CreateAssay5Object(
+      counts = counts[1:20, ]
+    )
+  )
+  SeuratObject::DefaultAssay(test_data) <- "other"
+
+  test_data <- suppressWarnings(
+    normalize_counts(test_data, assay = "RNA", num_variable_genes = 50)
+  )
+  expect_length(SeuratObject::VariableFeatures(test_data, assay = "RNA"), 50)
+
+  # genes that are only in the RNA assay
+  test_data <- run_tsne(
+    test_data,
+    assay = "RNA",
+    features = rownames(counts)[21:230],
+    perplexity = 10,
+    file_format = "png"
+  )
+  expect_true("tsne" %in% SeuratObject::Reductions(test_data))
+  expect_equal(SeuratObject::DefaultAssay(test_data), "other")
+})

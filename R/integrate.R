@@ -70,12 +70,13 @@ integrate_seurat_object <- function(
   x <- split_layers_by_batch(
     x,
     batch_var = batch_var,
+    assay = assay,
     num_variable_genes = num_variable_genes,
     num_dim = num_dim,
     log_file = log_file
   )
 
-  var_genes_list <- variable_features_by_batch(x)
+  var_genes_list <- variable_features_by_batch(x, assay = assay)
 
   # eulerr and UpSetR return base plots, so they go through a device rather
   # than ggsave()
@@ -153,7 +154,7 @@ integrate_seurat_object <- function(
       group_by = group_by,
       color_scheme = get_color_scheme("samples"),
       file_prefix = glue(
-        "dr-{int_reduction}-{DefaultAssay(x)}-{num_dim}-{group_by}"
+        "dr-{int_reduction}-{assay}-{num_dim}-{group_by}"
       ),
       file_format = "png"
     )
@@ -166,7 +167,7 @@ integrate_seurat_object <- function(
     x,
     reduction = int_reduction,
     num_dim = num_dim,
-    assay = DefaultAssay(x),
+    assay = assay,
     file_format = "png"
   )
   for (group_by in unique(c(batch_var, "orig.ident"))) {
@@ -176,7 +177,7 @@ integrate_seurat_object <- function(
       group_by = group_by,
       color_scheme = get_color_scheme("samples"),
       file_prefix = glue(
-        "dr-tsne-{DefaultAssay(x)}-{int_reduction}-{num_dim}-{group_by}"
+        "dr-tsne-{assay}-{int_reduction}-{num_dim}-{group_by}"
       ),
       file_format = "png"
     )
@@ -188,7 +189,7 @@ integrate_seurat_object <- function(
     reduction = int_reduction,
     num_dim = num_dim,
     num_neighbors = num_neighbors,
-    assay = DefaultAssay(x),
+    assay = assay,
     file_format = "png"
   )
   for (group_by in unique(c(batch_var, "orig.ident"))) {
@@ -198,7 +199,7 @@ integrate_seurat_object <- function(
       group_by = group_by,
       color_scheme = get_color_scheme("samples"),
       file_prefix = glue(
-        "dr-umap-{DefaultAssay(x)}-{int_reduction}-{num_dim}-{group_by}"
+        "dr-umap-{assay}-{int_reduction}-{num_dim}-{group_by}"
       ),
       file_format = "png"
     )
